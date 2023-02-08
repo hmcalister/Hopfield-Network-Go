@@ -1,11 +1,18 @@
+// Definitions of activation functions for the Hopfield Network
+//
+// Includes map from network domain to activation function
 package activationfunction
 
 import (
-	"gonum.org/v1/gonum/mat"
-
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+
+	"gonum.org/v1/gonum/mat"
 )
 
+// Defines an ActivationFunction as a function taking a reference to a vector.
+//
+// This redefinition is mainly to enforce self documenting code. Note the type signature
+// implies an ActivationFunction will change the vector directly - not return a new vector!
 type ActivationFunction func(*mat.VecDense)
 
 func binaryDomainMappingFunction(vector *mat.VecDense) {
@@ -28,12 +35,12 @@ func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	}
 }
 
-func continuousDomainMappingFunction(vector *mat.VecDense) {
+func identityMappingFunction(vector *mat.VecDense) {
 
 }
 
 var DomainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
 	networkdomain.BinaryDomain:     binaryDomainMappingFunction,
 	networkdomain.BipolarDomain:    bipolarDomainMappingFunction,
-	networkdomain.ContinuousDomain: continuousDomainMappingFunction,
+	networkdomain.ContinuousDomain: identityMappingFunction,
 }
