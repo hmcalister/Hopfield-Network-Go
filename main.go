@@ -1,30 +1,34 @@
 package main
 
 import (
-	"fmt"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/states"
 )
 
+const DIMENSION int = 100
+const DOMAIN networkdomain.NetworkDomain = networkdomain.BinaryDomain
+
 // Main method for entry point
 func main() {
 
-	builder := hopfieldnetwork.NewHopfieldNetworkBuilder().
-		SetNetworkDimension(100).
-		SetNetworkDomain(networkdomain.BinaryDomain)
+	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
+		SetNetworkDimension(DIMENSION).
+		SetNetworkDomain(DOMAIN).
+		SetRandMatrixInit(true).
+		SetMaximumRelaxationIterations(100).
+		Build()
 
-	network := builder.Build()
-	fmt.Printf("%#v\n", network)
-
-	stateGenBuilder := states.NewStateGeneratorBuilder().
-		SetRandMin(-10).
+	stateGenerator := states.NewStateGeneratorBuilder().
+		SetRandMin(-1).
 		SetRandMax(1).
-		SetGeneratorDimension(100).
-		SetGeneratorDomain(networkdomain.BinaryDomain)
-	s1 := stateGenBuilder.Build()
-	s2 := stateGenBuilder.Build()
-	fmt.Printf("%#v\n%#v\n", s1, s2)
+		SetGeneratorDimension(DIMENSION).
+		SetGeneratorDomain(DOMAIN).
+		Build()
 
-	fmt.Printf("%#v\n", s1.NextState())
+	stableStates := stateGenerator.CreateStateCollection(50)
+	network.TestHebb(stableStates)
+	states := stateGenerator.CreateStateCollection(1000)
+	network.ConcurrentRelaxStates(states, 1)
+	// fmt.Printf("%#v", network)
 }
