@@ -2,12 +2,23 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfieldnetwork/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+	"time"
+
+	"golang.org/x/exp/rand"
+	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/stat/distuv"
 )
 
 type HopfieldNetworkBuilder struct {
-	dimension int
-	domain    networkdomain.NetworkDomain
+	randMatrixInit                 bool
+	dimension                      int
+	forceSymmetric                 bool
+	forceZeroDiagonal              bool
+	domain                         networkdomain.NetworkDomain
+	maximumRelaxationUnstableUnits int
+	maximumRelaxationIterations    int
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -16,9 +27,51 @@ type HopfieldNetworkBuilder struct {
 // Users should explicitly set at least these values before building.
 func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 	return &HopfieldNetworkBuilder{
-		dimension: 0,
-		domain:    networkdomain.UnspecifiedDomain,
+		randMatrixInit:                 false,
+		dimension:                      0,
+		forceSymmetric:                 true,
+		forceZeroDiagonal:              true,
+		domain:                         networkdomain.UnspecifiedDomain,
+		maximumRelaxationUnstableUnits: 0,
+		maximumRelaxationIterations:    100,
 	}
+}
+
+// Set the randMatrixInit flag in the builder. If true, the new network will have a weight matrix
+// initialized with random standard Gaussian values. If false (default) the matrix will have a zero weight matrix.
+func (networkBuilder *HopfieldNetworkBuilder) SetRandMatrixInit(randMatrixInitFlag bool) *HopfieldNetworkBuilder {
+	networkBuilder.randMatrixInit = randMatrixInitFlag
+	return networkBuilder
+}
+
+// Set the dimension of the HopfieldNetwork - i.e. the dimension of the square matrix.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+//
+// Must be set specified Build can be called
+func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDimension(dimension int) *HopfieldNetworkBuilder {
+	networkBuilder.dimension = dimension
+	return networkBuilder
+}
+
+// Set state of the ForceSymmetric flag in the network.
+//
+// If true, the network will always have a symmetric weight matrix (W_ij == W_ji).
+//
+// This value defaults to true if not explicitly set.
+func (networkBuilder *HopfieldNetworkBuilder) SetForceSymmetric(symmetricFlag bool) *HopfieldNetworkBuilder {
+	networkBuilder.forceSymmetric = symmetricFlag
+	return networkBuilder
+}
+
+// Set state of the ForceZeroDiagonal flag in the network.
+//
+// If true, the network will always have a zero-diagonal weight matrix (W_ii == 0).
+//
+// This value defaults to true if not explicitly set.
+func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalFlag bool) *HopfieldNetworkBuilder {
+	networkBuilder.forceZeroDiagonal = zeroDiagonalFlag
+	return networkBuilder
 }
 
 // Set the domain of the HopfieldNetwork - i.e. what numbers are allowed to exist in states.
@@ -34,13 +87,23 @@ func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDomain(domain networkdom
 	return networkBuilder
 }
 
-// Set the dimension of the HopfieldNetwork - i.e. the dimension of the square matrix.
+// Set the maximum number of units that are allowed to be unstable for a state to be considered relaxed.
+//
+// Defaults to 0 (state must be perfectly stable). Typically this value should be around 0.01 - 0.1 of the network dimension
 //
 // Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationUnstableUnits(maximumRelaxationUnstableUnits int) *HopfieldNetworkBuilder {
+	networkBuilder.maximumRelaxationUnstableUnits = maximumRelaxationUnstableUnits
+	return networkBuilder
+}
+
+// Set the maximum number iterations allowed to occur before erroring out from the relaxation.
 //
-// Must be set specified Build can be called
-func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDimension(dimension int) *HopfieldNetworkBuilder {
-	networkBuilder.dimension = dimension
+// Defaults to 100. This is typically a good enough value.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationIterations(maximumRelaxationIterations int) *HopfieldNetworkBuilder {
+	networkBuilder.maximumRelaxationIterations = maximumRelaxationIterations
 	return networkBuilder
 }
 
@@ -52,14 +115,44 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 
 	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
 		panic("HopfieldNetworkBuilder encountered an error during build! Domain must be explicitly set to a valid network domain!")
+
+	}
+	randSrc := rand.NewSource((uint64(time.Now().UnixNano())))
+	randomGenerator := rand.New(randSrc)
+
+	var matrix *mat.Dense
+	if networkBuilder.randMatrixInit {
+		normalDistribution := distuv.Normal{
+			Mu:    0,
+			Sigma: 1,
+			Src:   randSrc,
+		}
+		matrixData := make([]float64, networkBuilder.dimension*networkBuilder.dimension)
+		for i := range matrixData {
+			matrixData[i] = normalDistribution.Rand()
+		}
+		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, matrixData)
+	} else {
+		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, nil)
+		matrix.Zero()
 	}
 
 	activationFunction := activationfunction.DomainToActivationFunctionMap[networkBuilder.domain]
+	networkEnergyFunction := energyfunction.DomainToNetworkEnergyFunctionMap[networkBuilder.domain]
+	unitEnergyFunction := energyfunction.DomainToUnitEnergyFunctionMap[networkBuilder.domain]
 
 	return HopfieldNetwork{
-		dimension:          networkBuilder.dimension,
-		domain:             networkBuilder.domain,
-		activationFunction: activationFunction,
+		matrix:                         matrix,
+		dimension:                      networkBuilder.dimension,
+		forceSymmetric:                 networkBuilder.forceSymmetric,
+		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
+		domain:                         networkBuilder.domain,
+		activationFunction:             activationFunction,
+		networkEnergyFunction:          networkEnergyFunction,
+		unitEnergyFunction:             unitEnergyFunction,
+		randomGenerator:                randomGenerator,
+		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
+		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
 	}
 
 }
