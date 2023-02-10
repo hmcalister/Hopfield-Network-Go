@@ -4,7 +4,7 @@ package networkdomain
 // Defines the NetworkDomain type as an int32 to work as an Enum.
 //
 // Note this is mainly done to enforce self documenting code.
-type NetworkDomain int32
+type NetworkDomain int
 
 // The possible Network Domains represented as an Enum.
 const (
