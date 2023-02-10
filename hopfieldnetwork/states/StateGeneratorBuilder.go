@@ -3,6 +3,7 @@ package states
 import (
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+	"time"
 
 	"golang.org/x/exp/rand"
 
@@ -22,20 +23,24 @@ import (
 //
 // Domain defines what values can exist within the generated vector.
 type StateGeneratorBuilder struct {
-	rand_min  float64
-	rand_max  float64
-	seed      uint64
-	dimension int
-	domain    networkdomain.NetworkDomain
+	randMin       float64
+	randMax       float64
+	seed          uint64
+	seedGenerator *rand.Rand
+	dimension     int
+	domain        networkdomain.NetworkDomain
 }
 
 func NewStateGeneratorBuilder() *StateGeneratorBuilder {
+	seedGenSrc := rand.NewSource(uint64(time.Now().Nanosecond()))
+	seedGen := rand.New(seedGenSrc)
 	return &StateGeneratorBuilder{
-		rand_min:  -1,
-		rand_max:  1,
-		seed:      0,
-		dimension: 0,
-		domain:    networkdomain.UnspecifiedDomain,
+		randMin:       -1,
+		randMax:       1,
+		seed:          0,
+		seedGenerator: seedGen,
+		dimension:     0,
+		domain:        networkdomain.UnspecifiedDomain,
 	}
 }
 
@@ -44,8 +49,8 @@ func NewStateGeneratorBuilder() *StateGeneratorBuilder {
 // Be aware that rand_min must be strictly less than rand_max to build.
 //
 // Note a reference to the builder is returned to allow for chaining.
-func (builder *StateGeneratorBuilder) SetRandMin(rand_min float64) *StateGeneratorBuilder {
-	builder.rand_min = rand_min
+func (builder *StateGeneratorBuilder) SetRandMin(randMin float64) *StateGeneratorBuilder {
+	builder.randMin = randMin
 	return builder
 }
 
@@ -54,8 +59,8 @@ func (builder *StateGeneratorBuilder) SetRandMin(rand_min float64) *StateGenerat
 // Be aware that rand_max must be strictly greater than rand_min to build.
 //
 // Note a reference to the builder is returned to allow for chaining.
-func (builder *StateGeneratorBuilder) SetRandMax(rand_max float64) *StateGeneratorBuilder {
-	builder.rand_max = rand_max
+func (builder *StateGeneratorBuilder) SetRandMax(randMax float64) *StateGeneratorBuilder {
+	builder.randMax = randMax
 	return builder
 }
 
@@ -94,7 +99,7 @@ func (builder *StateGeneratorBuilder) SetGeneratorDomain(domain networkdomain.Ne
 //
 // Note this function panics if builder is invalid - perhaps instead an error could be bubbled up? This is probably okay though.
 func (builder *StateGeneratorBuilder) checkValid() {
-	if builder.rand_min >= builder.rand_max {
+	if builder.randMin >= builder.randMax {
 		panic("StateGeneratorBuilder encountered an error during build! rand_min must be strictly smaller than rand_max!")
 	}
 
@@ -121,14 +126,14 @@ func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 
 	var seed uint64
 	if builder.seed == 0 {
-		seed = rand.Uint64()
+		seed = builder.seedGenerator.Uint64()
 	} else {
 		seed = builder.seed
 	}
 
 	rand_dist := distuv.Uniform{
-		Min: builder.rand_min,
-		Max: builder.rand_max,
+		Min: builder.randMin,
+		Max: builder.randMax,
 		Src: rand.NewSource(seed),
 	}
 
