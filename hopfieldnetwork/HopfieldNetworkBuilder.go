@@ -2,7 +2,6 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
 	"time"
 
@@ -138,8 +137,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 	}
 
 	activationFunction := activationfunction.DomainToActivationFunctionMap[networkBuilder.domain]
-	networkEnergyFunction := energyfunction.DomainToNetworkEnergyFunctionMap[networkBuilder.domain]
-	unitEnergyFunction := energyfunction.DomainToUnitEnergyFunctionMap[networkBuilder.domain]
 
 	return HopfieldNetwork{
 		matrix:                         matrix,
@@ -148,8 +145,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		domain:                         networkBuilder.domain,
 		activationFunction:             activationFunction,
-		networkEnergyFunction:          networkEnergyFunction,
-		unitEnergyFunction:             unitEnergyFunction,
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
