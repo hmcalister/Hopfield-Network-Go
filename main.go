@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfieldnetwork/hopfieldnetwork/states"
@@ -26,9 +27,13 @@ func main() {
 		SetGeneratorDomain(DOMAIN).
 		Build()
 
-	stableStates := stateGenerator.CreateStateCollection(50)
-	network.TestHebb(stableStates)
 	states := stateGenerator.CreateStateCollection(1000)
-	network.ConcurrentRelaxStates(states, 1)
-	// fmt.Printf("%#v", network)
+	relaxResults := network.ConcurrentRelaxStates(states, 10)
+	numStable := 0
+	for _, r := range relaxResults {
+		if r {
+			numStable++
+		}
+	}
+	fmt.Println(numStable)
 }
