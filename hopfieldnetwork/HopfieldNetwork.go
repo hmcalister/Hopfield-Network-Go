@@ -24,12 +24,19 @@ type HopfieldNetwork struct {
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	activationFunction             activationfunction.ActivationFunction
-	networkEnergyFunction          energyfunction.NetworkEnergyFunction
-	unitEnergyFunction             energyfunction.UnitEnergyFunction
 	randomGenerator                *rand.Rand
 }
 
-// Get a reference to the weight matrix of this network
+// Get a reference to the weight matrix of this network.
+//
+// Note that this gives a reference to the matrix
+// meaning the caller can update the matrix!
+//
+// This behavior may change in future.
+//
+// # Returns
+//
+// A references to the matrix of this network
 func (network HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
 }
@@ -70,26 +77,53 @@ func (network HopfieldNetwork) getUnitIndices() []int {
 	return unitIndices
 }
 
-// Get the energy of a given state
+// Get the energy of a given state with respect to the network matrix.
+//
+// # Arguments
+//
+// * `state`: The vector to measure the energy of.
+//
+// # Returns
+//
+// A float64 representing the energy of the given state with respect to the network.
+// Note a lower energy is more stable - but a negative state energy may still be unstable!
 func (network HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
-	return network.networkEnergyFunction(network.matrix, state)
+	return energyfunction.StateEnergy(network.matrix, state)
 }
 
-// Get the energy of a given unit (indexed by i) in the state
-func (network HopfieldNetwork) UnitEnergy(state *mat.VecDense, i int) float64 {
-	return network.unitEnergyFunction(network.matrix, state, i)
+// Get the energy of a given unit (indexed by i) in the state with respect to the network matrix.
+//
+// # Arguments
+//
+// * `state`: The vector to measure the energy of.
+// * `unit_index`: The unit index into the vector to measure.
+//
+// # Returns
+//
+// A float64 representing the energy of the given unit within the state.
+func (network HopfieldNetwork) UnitEnergy(state *mat.VecDense, unit_index int) float64 {
+	return energyfunction.UnitEnergy(network.matrix, state, unit_index)
 }
 
-// Get ALL the unit energies as a slice
+// Get the energy of a each unit within a state with respect to the network matrix.
+//
+// # Arguments
+//
+// * `state`: The vector to measure the energy of.
+//
+// # Returns
+//
+// A slice of float64 representing the energy of the given state's units with respect to the network.
 func (network HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
-	unitEnergies := make([]float64, network.dimension)
-	for i := range unitEnergies {
-		unitEnergies[i] = network.UnitEnergy(state, i)
-	}
-	return unitEnergies
+	unitEnergies := energyfunction.AllUnitEnergies(network.matrix, state)
+	return unitEnergies.RawVector().Data
 }
 
-// Update a state one step in a randomly permuted ordering of units
+// Update a state one step in a randomly permuted ordering of units.
+//
+// # Arguments
+//
+// * `state`: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
 func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
@@ -105,6 +139,14 @@ func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 }
 
 // Relax a state by updating until the number of unstable units is below the threshold defined by the network.
+//
+// # Arguments
+//
+// * `state`: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
+//
+// # Returns
+//
+// Returns `true“ if the state is stable before the maximum iteration number was reached, `false` otherwise
 func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	// We create a list of unit indices to use for randomly updating units
 	unitIndices := network.getUnitIndices()
@@ -143,8 +185,12 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 // Defines a thread-orientated approach to relaxing states. Useful if the number of states to update
 // is large. Note this function is intended to be used as a goroutine, i.e. go network.ConcurrentRelaxState(ch)
 //
-// stateChannel is a channel to pass the next state to be updated to the goroutine. This channel should be
-// created and passed before the goroutines are created.
+// This method uses IndexedWrappers to ensure the results of each relaxation are identifiable to the original states given.
+//
+// # Arguments
+//
+// * `stateChannel`: A channel to pass the next state to be updated to the goroutine. This channel should be created and passed before the goroutines are created.
+// * `resultChannel`: A channel to pass the result of the relaxation back to the master thread.
 func (network HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[bool]) {
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
@@ -200,9 +246,24 @@ StateRecvLoop:
 	}
 }
 
-// Relaxes a set of states and notes if the state is stable or not
-func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) {
-	stateChannel := make(chan *hopfieldutils.IndexedWrapper[*mat.VecDense], 10)
+// Relaxes a set of states and notes if the state is stable or not.
+//
+// This method works concurrently, and is the most (time) efficient way to relax a large number of states.
+//
+// TODO: Currently all states are dispatched before results are processed. This is done by having a large enough buffer to
+// hold ALL the results. It would be MUCH better to process results in a select statement along with dispatching new states.
+//
+// # Arguments
+//
+// * `states`: A slice of states that are to be relaxed. The order of this slice corresponds to the order of the returned bools.
+// * `numThreads`: An integer determining how many threads to run. Please note the master thread does not run any calculations,
+// as it only dispatches states and handles results. Please check how many threads your system supports.
+//
+// # Returns
+//
+// A slice of bool corresponding to the state slice given, with each bool representing if that state is stable.
+func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) []bool {
+	stateChannel := make(chan *hopfieldutils.IndexedWrapper[*mat.VecDense], numThreads)
 	resultChannel := make(chan *hopfieldutils.IndexedWrapper[bool], len(states))
 	results := make([]bool, len(states))
 
@@ -219,20 +280,15 @@ func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, num
 	close(stateChannel)
 
 	resultsReceived := 0
-	numStable := 0
 	for wrappedResult := range resultChannel {
 		results[wrappedResult.Index] = wrappedResult.Data
 		resultsReceived++
-
-		if wrappedResult.Data {
-			numStable++
-		}
 
 		if resultsReceived >= len(states) {
 			break
 		}
 	}
-	fmt.Println(numStable)
+	return results
 }
 
 func (network HopfieldNetwork) TestHebb(states []*mat.VecDense) {
