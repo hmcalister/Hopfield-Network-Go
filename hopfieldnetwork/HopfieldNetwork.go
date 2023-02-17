@@ -128,6 +128,49 @@ func (network HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
 	return unitEnergies.RawVector().Data
 }
 
+// Determine if a given state is unstable.
+//
+// Checks the number of units with positive energy against
+// the number of allowable unstable units in the network parameters
+//
+// # Arguments
+//
+// * `state`: A state to check the stability of
+//
+// # Returns
+//
+// The stability of the state, true for stable, false for unstable
+func (network HopfieldNetwork) StateIsStable(state *mat.VecDense) bool {
+	stateEnergies := network.AllUnitEnergies(state)
+
+	unstableCount := 0
+	for _, energy := range stateEnergies {
+		if energy > 0 {
+			unstableCount += 1
+		}
+	}
+
+	return unstableCount <= network.maximumRelaxationUnstableUnits
+}
+
+// Determine if ALL states in the given list are stable.
+//
+// # Arguments
+//
+// * `States`: A list of states to check
+//
+// # Returns
+//
+// True if all states in the list are stable, false if any state is unstable
+func (network HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool {
+	for _, state := range states {
+		if !network.StateIsStable(state) {
+			return false
+		}
+	}
+	return true
+}
+
 // Update a state one step in a randomly permuted ordering of units.
 //
 // # Arguments
@@ -162,7 +205,6 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	newState := mat.NewVecDense(network.dimension, nil)
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	var unstableUnits int
 	for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		for unitIndex := range unitIndices {
@@ -174,14 +216,7 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
 		// and returning true (stable) if the number of unstable units is less than or equal to
 		// the network parameter set from the builder
-		unstableUnits = 0
-		unitEnergies := network.AllUnitEnergies(state)
-		for _, energy := range unitEnergies {
-			if energy > 0 {
-				unstableUnits += 1
-			}
-		}
-		if unstableUnits <= network.maximumRelaxationUnstableUnits {
+		if network.StateIsStable(state) {
 			return true
 		}
 	}
@@ -205,7 +240,6 @@ func (network HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *ho
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
-	var unstableUnits int
 	var currentState *mat.VecDense
 
 	// This loop will take an indexed state from the channel until the channel is closed by the sender.
@@ -218,26 +252,13 @@ StateRecvLoop:
 
 		for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-			for unitIndex := range unitIndices {
+			for _, unitIndex := range unitIndices {
 				newState.MulVec(network.matrix, currentState)
-				network.activationFunction(newState)
 				currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
+				network.activationFunction(currentState)
 			}
 
-			// Here we check the unit energies, counting how many unstable units there are (E>0)
-			// and returning true (stable) if the number of unstable units is less than or equal to
-			// the network parameter set from the builder
-			unstableUnits = 0
-			unitEnergies := network.AllUnitEnergies(currentState)
-			for _, energy := range unitEnergies {
-				if energy > 0 {
-					unstableUnits += 1
-				}
-			}
-
-			// If we have a stable enough state (within unstable units tolerance)
-			// send back true (stable) along with the index
-			if unstableUnits <= network.maximumRelaxationUnstableUnits {
+			if network.StateIsStable(currentState) {
 				resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
 					Index: currentStateWrapped.Index,
 					Data:  true,
