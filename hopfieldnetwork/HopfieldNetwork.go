@@ -3,10 +3,10 @@ package hopfieldnetwork
 
 import (
 	"fmt"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/energyfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
-	"hmcalister/hopfieldnetwork/hopfieldutils"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldutils"
 
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"

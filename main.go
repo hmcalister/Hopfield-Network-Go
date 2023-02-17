@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/states"
+	"hmcalister/hopfield/hopfieldnetwork"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldnetwork/states"
 )
 
 const DIMENSION int = 100

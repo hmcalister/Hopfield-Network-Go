@@ -1,8 +1,8 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"time"
 
 	"golang.org/x/exp/rand"

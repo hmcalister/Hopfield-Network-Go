@@ -1,4 +1,4 @@
-module hmcalister/hopfieldnetwork
+module hmcalister/hopfield
 
 go 1.19
 

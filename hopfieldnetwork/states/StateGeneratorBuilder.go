@@ -1,8 +1,8 @@
 package states
 
 import (
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -87,7 +87,7 @@ func (builder *StateGeneratorBuilder) SetGeneratorDimension(dimension int) *Stat
 // Set the domain of the StateGenerator. This will in turn set the activation function to be used
 // to ensure states end up as valid.
 //
-// Domain must be a valid networkDomain from the [hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain] subpackage.
+// Domain must be a valid networkDomain from the [hmcalister/hopfield/hopfieldnetwork/networkdomain] subpackage.
 //
 // Note a reference to the builder is returned to allow for chaining.
 func (builder *StateGeneratorBuilder) SetGeneratorDomain(domain networkdomain.NetworkDomain) *StateGeneratorBuilder {
@@ -120,7 +120,7 @@ func (builder *StateGeneratorBuilder) checkValid() {
 //
 // Dimension must be a strictly positive integer and match the Hopfield Network dimension.
 //
-// Domain must be a valid networkDomain from the [hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain] subpackage.
+// Domain must be a valid networkDomain from the [hmcalister/hopfield/hopfieldnetwork/networkdomain] subpackage.
 func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 	builder.checkValid()
 
