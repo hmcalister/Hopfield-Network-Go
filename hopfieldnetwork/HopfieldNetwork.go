@@ -3,10 +3,10 @@ package hopfieldnetwork
 
 import (
 	"fmt"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/energyfunction"
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
-	"hmcalister/hopfieldnetwork/hopfieldutils"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldutils"
 
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
@@ -21,6 +21,8 @@ type HopfieldNetwork struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	domain                         networkdomain.NetworkDomain
+	learningRule                   LearningRule
+	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	activationFunction             activationfunction.ActivationFunction
@@ -41,6 +43,15 @@ func (network HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
 }
 
+// Get the dimension of the network
+//
+// # Returns
+//
+// The dimension of this network as an int
+func (network HopfieldNetwork) GetDimension() int {
+	return network.dimension
+}
+
 // Implement Stringer for nicer formatting
 func (network HopfieldNetwork) String() string {
 	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n\tDomain: %s\n",
@@ -49,8 +60,6 @@ func (network HopfieldNetwork) String() string {
 }
 
 // Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set.
-//
-// This function is private as only matrix updates should need to call it.
 func (network HopfieldNetwork) cleanMatrix() {
 	if network.forceZeroDiagonal {
 		for i := 0; i < network.dimension; i++ {
@@ -119,6 +128,68 @@ func (network HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
 	return unitEnergies.RawVector().Data
 }
 
+// Determine if a given state is unstable.
+//
+// Checks the number of units with positive energy against
+// the number of allowable unstable units in the network parameters
+//
+// # Arguments
+//
+// * `state`: A state to check the stability of
+//
+// # Returns
+//
+// The stability of the state, true for stable, false for unstable
+func (network HopfieldNetwork) StateIsStable(state *mat.VecDense) bool {
+	stateEnergies := network.AllUnitEnergies(state)
+
+	unstableCount := 0
+	for _, energy := range stateEnergies {
+		if energy > 0 {
+			unstableCount += 1
+		}
+	}
+
+	return unstableCount <= network.maximumRelaxationUnstableUnits
+}
+
+// Determine if ALL states in the given list are stable.
+//
+// # Arguments
+//
+// * `States`: A list of states to check
+//
+// # Returns
+//
+// True if all states in the list are stable, false if any state is unstable
+func (network HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool {
+	for _, state := range states {
+		if !network.StateIsStable(state) {
+			return false
+		}
+	}
+	return true
+}
+
+// Update the weight matrix of the network to learn a new set of states.
+//
+// Note this implementation currently simply adds the learning rule output
+// to the current weight matrix.
+//
+// # Arguments
+//
+// * `states`: A collection of states to learn
+func (network HopfieldNetwork) LearnStates(states []*mat.VecDense) {
+	for _epoch := 0; _epoch < network.epochs; _epoch++ {
+		if network.AllStatesAreStable(states) {
+			return
+		}
+		learningRuleResult := network.learningRule(network, states)
+		network.matrix.Add(network.matrix, learningRuleResult)
+		network.cleanMatrix()
+	}
+}
+
 // Update a state one step in a randomly permuted ordering of units.
 //
 // # Arguments
@@ -153,7 +224,6 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	newState := mat.NewVecDense(network.dimension, nil)
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	var unstableUnits int
 	for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		for unitIndex := range unitIndices {
@@ -165,14 +235,7 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
 		// and returning true (stable) if the number of unstable units is less than or equal to
 		// the network parameter set from the builder
-		unstableUnits = 0
-		unitEnergies := network.AllUnitEnergies(state)
-		for _, energy := range unitEnergies {
-			if energy > 0 {
-				unstableUnits += 1
-			}
-		}
-		if unstableUnits <= network.maximumRelaxationUnstableUnits {
+		if network.StateIsStable(state) {
 			return true
 		}
 	}
@@ -196,7 +259,6 @@ func (network HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *ho
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
-	var unstableUnits int
 	var currentState *mat.VecDense
 
 	// This loop will take an indexed state from the channel until the channel is closed by the sender.
@@ -209,26 +271,13 @@ StateRecvLoop:
 
 		for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-			for unitIndex := range unitIndices {
+			for _, unitIndex := range unitIndices {
 				newState.MulVec(network.matrix, currentState)
-				network.activationFunction(newState)
 				currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
+				network.activationFunction(currentState)
 			}
 
-			// Here we check the unit energies, counting how many unstable units there are (E>0)
-			// and returning true (stable) if the number of unstable units is less than or equal to
-			// the network parameter set from the builder
-			unstableUnits = 0
-			unitEnergies := network.AllUnitEnergies(currentState)
-			for _, energy := range unitEnergies {
-				if energy > 0 {
-					unstableUnits += 1
-				}
-			}
-
-			// If we have a stable enough state (within unstable units tolerance)
-			// send back true (stable) along with the index
-			if unstableUnits <= network.maximumRelaxationUnstableUnits {
+			if network.StateIsStable(currentState) {
 				resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
 					Index: currentStateWrapped.Index,
 					Data:  true,
@@ -238,10 +287,10 @@ StateRecvLoop:
 			} // if unstable
 		} // for iterationIndex
 
-		// If we reach this
+		// If we reach this then we did not relax correctly
 		resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
 			Index: currentStateWrapped.Index,
-			Data:  true,
+			Data:  false,
 		}
 	}
 }
@@ -289,16 +338,4 @@ func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, num
 		}
 	}
 	return results
-}
-
-func (network HopfieldNetwork) TestHebb(states []*mat.VecDense) {
-	for _, state := range states {
-		for i := 0; i < network.dimension; i++ {
-			for j := 0; j < network.dimension; j++ {
-				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
-				val += network.matrix.At(i, j)
-				network.matrix.Set(i, j, val)
-			}
-		}
-	}
 }

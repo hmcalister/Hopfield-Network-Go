@@ -4,7 +4,7 @@
 package activationfunction
 
 import (
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/networkdomain"
+	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 
 	"gonum.org/v1/gonum/mat"
 )

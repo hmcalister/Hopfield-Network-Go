@@ -2,7 +2,7 @@
 package states
 
 import (
-	"hmcalister/hopfieldnetwork/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat/distuv"
@@ -10,7 +10,7 @@ import (
 
 // Define a struct that can generate new states.
 //
-// Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfieldnetwork/hopfieldnetwork/states].
+// Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
 	rng                distuv.Uniform
 	dimension          int
