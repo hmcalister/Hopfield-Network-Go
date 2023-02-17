@@ -20,3 +20,17 @@ import (
 // A pointer to a new matrix that stabilizes the given states as much as possible.
 type LearningRule func(HopfieldNetwork, []*mat.VecDense) *mat.Dense
 
+// Define the different learning rule options.
+//
+// This enum allows for the user to select a learning rule via the builder interface,
+// but is also used to map from type of learning rule to specific implementation
+// based on network domain.
+//
+// The integer type is redefined here to avoid type mismatches in code.
+type LearningRuleEnum int
+
+const (
+	HebbianLearningRule LearningRuleEnum = iota
+	DeltaLearningRule   LearningRuleEnum = iota
+)
+
