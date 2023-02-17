@@ -320,15 +320,3 @@ func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, num
 	}
 	return results
 }
-
-func (network HopfieldNetwork) TestHebb(states []*mat.VecDense) {
-	for _, state := range states {
-		for i := 0; i < network.dimension; i++ {
-			for j := 0; j < network.dimension; j++ {
-				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
-				val += network.matrix.At(i, j)
-				network.matrix.Set(i, j, val)
-			}
-		}
-	}
-}
