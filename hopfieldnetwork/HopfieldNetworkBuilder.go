@@ -155,7 +155,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 	if networkBuilder.randMatrixInit {
 		normalDistribution := distuv.Normal{
 			Mu:    0,
-			Sigma: 1,
+			Sigma: 0.01,
 			Src:   randSrc,
 		}
 		matrixData := make([]float64, networkBuilder.dimension*networkBuilder.dimension)
