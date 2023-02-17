@@ -171,6 +171,25 @@ func (network HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool {
 	return true
 }
 
+// Update the weight matrix of the network to learn a new set of states.
+//
+// Note this implementation currently simply adds the learning rule output
+// to the current weight matrix.
+//
+// # Arguments
+//
+// * `states`: A collection of states to learn
+func (network HopfieldNetwork) LearnStates(states []*mat.VecDense) {
+	for _epoch := 0; _epoch < network.epochs; _epoch++ {
+		if network.AllStatesAreStable(states) {
+			return
+		}
+		learningRuleResult := network.learningRule(network, states)
+		network.matrix.Add(network.matrix, learningRuleResult)
+		network.cleanMatrix()
+	}
+}
+
 // Update a state one step in a randomly permuted ordering of units.
 //
 // # Arguments
