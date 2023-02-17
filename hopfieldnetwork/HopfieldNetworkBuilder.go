@@ -16,6 +16,8 @@ type HopfieldNetworkBuilder struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	domain                         networkdomain.NetworkDomain
+	learningRule                   LearningRule
+	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 }
@@ -86,6 +88,32 @@ func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDomain(domain networkdom
 	return networkBuilder
 }
 
+// Set the learning rule of this network based on the LearningRuleEnum selected.
+//
+// Note this call requires the network domain to be set. If the network domain is not set, a panic occurs.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+//
+// Must be specified before Build can be called.
+func (networkBuilder *HopfieldNetworkBuilder) SetNetworkLearningRule(learningRule LearningRuleEnum) *HopfieldNetworkBuilder {
+	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
+		panic("HopfieldNetworkBuilder encountered an error! Domain must be explicitly set to select a learning rule!")
+	}
+
+	networkBuilder.learningRule = getLearningRule(learningRule, networkBuilder.domain)
+	return networkBuilder
+}
+
+// Set the number of epochs to train for.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+//
+// Must be specified before Build can be called.
+func (networkBuilder *HopfieldNetworkBuilder) SetEpochs(epochs int) *HopfieldNetworkBuilder {
+	networkBuilder.epochs = epochs
+	return networkBuilder
+}
+
 // Set the maximum number of units that are allowed to be unstable for a state to be considered relaxed.
 //
 // Defaults to 0 (state must be perfectly stable). Typically this value should be around 0.01 - 0.1 of the network dimension
@@ -114,8 +142,12 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 
 	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
 		panic("HopfieldNetworkBuilder encountered an error during build! Domain must be explicitly set to a valid network domain!")
-
 	}
+
+	if networkBuilder.epochs <= 0 {
+		panic("HopfieldNetworkBuilder encountered an error during build! Epochs must be a positive integer!")
+	}
+
 	randSrc := rand.NewSource((uint64(time.Now().UnixNano())))
 	randomGenerator := rand.New(randSrc)
 
@@ -144,6 +176,8 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		domain:                         networkBuilder.domain,
+		learningRule:                   networkBuilder.learningRule,
+		epochs:                         networkBuilder.epochs,
 		activationFunction:             activationFunction,
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,

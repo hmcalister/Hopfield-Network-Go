@@ -21,6 +21,8 @@ type HopfieldNetwork struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	domain                         networkdomain.NetworkDomain
+	learningRule                   LearningRule
+	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	activationFunction             activationfunction.ActivationFunction
@@ -41,6 +43,15 @@ func (network HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
 }
 
+// Get the dimension of the network
+//
+// # Returns
+//
+// The dimension of this network as an int
+func (network HopfieldNetwork) GetDimension() int {
+	return network.dimension
+}
+
 // Implement Stringer for nicer formatting
 func (network HopfieldNetwork) String() string {
 	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n\tDomain: %s\n",
@@ -49,8 +60,6 @@ func (network HopfieldNetwork) String() string {
 }
 
 // Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set.
-//
-// This function is private as only matrix updates should need to call it.
 func (network HopfieldNetwork) cleanMatrix() {
 	if network.forceZeroDiagonal {
 		for i := 0; i < network.dimension; i++ {
