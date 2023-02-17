@@ -268,10 +268,10 @@ StateRecvLoop:
 			} // if unstable
 		} // for iterationIndex
 
-		// If we reach this
+		// If we reach this then we did not relax correctly
 		resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
 			Index: currentStateWrapped.Index,
-			Data:  true,
+			Data:  false,
 		}
 	}
 }
