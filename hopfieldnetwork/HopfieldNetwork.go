@@ -202,11 +202,14 @@ func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 
 	// First we must determine the (random) order of updating.
 	hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
+	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 	// Now we can update each index in a random order
-	for unitIndex := range unitIndices {
-		newState.MulVec(network.matrix, state)
-		network.activationFunction(newState)
-		state.SetVec(unitIndex, newState.AtVec(unitIndex))
+	for _, chunk := range chunkedIndices {
+		for _, unitIndex := range chunk {
+			newState.MulVec(network.matrix, state)
+			network.activationFunction(newState)
+			state.SetVec(unitIndex, newState.AtVec(unitIndex))
+		}
 	}
 }
 
@@ -227,10 +230,13 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
 	for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-		for unitIndex := range unitIndices {
-			newState.MulVec(network.matrix, state)
-			network.activationFunction(newState)
-			state.SetVec(unitIndex, newState.AtVec(unitIndex))
+		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
+		for _, chunk := range chunkedIndices {
+			for _, unitIndex := range chunk {
+				newState.MulVec(network.matrix, state)
+				network.activationFunction(newState)
+				state.SetVec(unitIndex, newState.AtVec(unitIndex))
+			}
 		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
@@ -272,10 +278,13 @@ StateRecvLoop:
 
 		for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-			for _, unitIndex := range unitIndices {
-				newState.MulVec(network.matrix, currentState)
-				currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
-				network.activationFunction(currentState)
+			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
+			for _, chunk := range chunkedIndices {
+				for _, unitIndex := range chunk {
+					newState.MulVec(network.matrix, currentState)
+					currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
+					network.activationFunction(currentState)
+				}
 			}
 
 			if network.StateIsStable(currentState) {
