@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -44,10 +45,10 @@ const MIN_DIMENSION = 50
 const MAX_DIMENSION = 100
 
 const MIN_TARGET_STATES_RATIO = 0.05
-const MAX_TARGET_STATES_RATIO = 0.5
+const MAX_TARGET_STATES_RATIO = 1.0
 
-const MIN_UNITS_UPDATED_RATIO = 0
-const MAX_UNITS_UPDATED_RATIO = 1
+const MIN_UNITS_UPDATED_RATIO = 0.0
+const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
