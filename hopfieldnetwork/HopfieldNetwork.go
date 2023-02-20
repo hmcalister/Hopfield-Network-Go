@@ -206,9 +206,9 @@ func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
+		newState.MulVec(network.matrix, state)
+		network.activationFunction(newState)
 		for _, unitIndex := range chunk {
-			newState.MulVec(network.matrix, state)
-			network.activationFunction(newState)
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
 	}
