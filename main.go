@@ -4,7 +4,9 @@ import (
 	"flag"
 	"log"
 	"os"
+	"time"
 
+	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 
 	"hmcalister/hopfield/hopfieldnetwork"
@@ -64,9 +66,18 @@ func main() {
 	dataWriter := hopfieldutils.ParquetWriter(*dataFilePath, new(DataEntry))
 	defer dataWriter.WriteStop()
 
-	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
-	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
-	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO}
+	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
+
+	dimensionDistSeed := srcGenerator.Uint64()
+	targetStatesRatioDistSeed := srcGenerator.Uint64()
+	unitsUpdatedRatioDistSeed := srcGenerator.Uint64()
+	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION, Src: rand.NewSource(dimensionDistSeed)}
+	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO, Src: rand.NewSource(targetStatesRatioDistSeed)}
+	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO, Src: rand.NewSource(unitsUpdatedRatioDistSeed)}
+	InfoLogger.Printf("dimensionDist: %#v, Src: %v\n", dimensionDist, dimensionDistSeed)
+	InfoLogger.Printf("targetStatesRatioDist: %#v, Src: %v\n", targetStatesRatioDist, targetStatesRatioDistSeed)
+	InfoLogger.Printf("unitsUpdatedRatioDist: %#v, Src: %v\n", unitsUpdatedRatioDist, unitsUpdatedRatioDistSeed)
+
 	for trial := 0; trial < *numTrials; trial++ {
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
