@@ -281,10 +281,10 @@ StateRecvLoop:
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
+				newState.MulVec(network.matrix, currentState)
+				network.activationFunction(newState)
 				for _, unitIndex := range chunk {
-					newState.MulVec(network.matrix, currentState)
 					currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
-					network.activationFunction(currentState)
 				}
 			}
 
