@@ -16,6 +16,7 @@ import (
 var (
 	numTrials     *int
 	numTestStates *int
+	numThreads    *int
 	dataFilePath  *string
 	InfoLogger    *log.Logger
 	ErrorLogger   *log.Logger
@@ -34,6 +35,7 @@ func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	dataFilePath = flag.String("dataFile", "data/data.pq", "The file to write test data to. Data is in a parquet format.")
+	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
 
@@ -112,7 +114,7 @@ func main() {
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
-		testResults := network.ConcurrentRelaxStates(testStates, 8)
+		testResults := network.ConcurrentRelaxStates(testStates, *numThreads)
 
 		numStable := 0
 		numStepsTotal := 0
