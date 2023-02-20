@@ -68,8 +68,20 @@ func main() {
 
 		floatDimension := dimensionDist.Rand()
 		dimension := int(floatDimension)
+
 		numTargetStates := int(floatDimension * targetStatesRatioDist.Rand())
+		if numTargetStates < 0 {
+			numTargetStates = 0
+		} else if numTargetStates > dimension {
+			numTargetStates = dimension
+		}
+
 		unitsUpdated := int(floatDimension * unitsUpdatedRatioDist.Rand())
+		if unitsUpdated < 1 {
+			unitsUpdated = 1
+		} else if unitsUpdated > dimension {
+			unitsUpdated = dimension
+		}
 
 		InfoLogger.Printf("Dimension: %v\n", dimension)
 		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
