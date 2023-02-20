@@ -111,15 +111,22 @@ func main() {
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		testResults := network.ConcurrentRelaxStates(testStates, 8)
+
 		numStable := 0
+		numStepsTotal := 0
 		for _, result := range testResults {
-			if result {
+			if result.Stable {
 				numStable += 1
+				numStepsTotal += result.NumSteps
 			}
 		}
 
-		InfoLogger.Printf("Stable Test States: %v\n", numStable)
+		numStepsAvg := float64(numStepsTotal) / float64(numStable)
 
-		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable)})
+		InfoLogger.Printf("Stable Test States: %v\n", numStable)
+		InfoLogger.Printf("Total Stable States Steps Taken: %v\n", numStepsTotal)
+		InfoLogger.Printf("Mean Stable States Steps Taken: %v\n", numStepsAvg)
+
+		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable), fmt.Sprintf("%f", numStepsAvg)})
 	}
 }
