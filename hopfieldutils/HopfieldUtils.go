@@ -19,3 +19,34 @@ type IndexedWrapper[T any] struct {
 	Index int
 	Data  T
 }
+
+// Allows a slice to be chunked into smaller slices. Returns a slice of slices.
+//
+// Note the final chunk may be smaller than chunkSize if there is a remainder upon division.
+//
+// # Arguments
+//
+// * `slice`: The slice to chunk.
+//
+// * `chunkSize`: The number of items to fit into each chunk.
+//
+// # Returns
+//
+// A slice of slices, where each internal slice (expect possibly the last one) has
+// a number of items equal to chunkSize from the original list
+func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
+	var chunkedSlices [][]T
+
+	for i := 0; i < len(slice); i++ {
+		chunkEnd := i + chunkSize
+
+		// Ensure we do not run off the end of the array
+		if chunkEnd > len(slice) {
+			chunkEnd = len(slice)
+		}
+
+		chunkedSlices = append(chunkedSlices, slice[i:chunkEnd])
+	}
+
+	return chunkedSlices
+}
