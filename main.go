@@ -15,14 +15,16 @@ import (
 )
 
 var (
-	numTrials    *int
-	dataFilePath *string
-	InfoLogger   *log.Logger
-	ErrorLogger  *log.Logger
+	numTrials     *int
+	numTestStates *int
+	dataFilePath  *string
+	InfoLogger    *log.Logger
+	ErrorLogger   *log.Logger
 )
 
 func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
+	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	dataFilePath = flag.String("dataFile", "data/data.csv", "The file to write test data to. Data is in a CSV format.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -46,8 +48,6 @@ const MAX_TARGET_STATES_RATIO = 0.5
 
 const MIN_UNITS_UPDATED_RATIO = 0
 const MAX_UNITS_UPDATED_RATIO = 1
-
-const TEST_STATES = 1000
 
 // Main method for entry point
 func main() {
@@ -73,7 +73,7 @@ func main() {
 		InfoLogger.Printf("Dimension: %v\n", dimension)
 		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
 		InfoLogger.Printf("Units Updated: %v\n", unitsUpdated)
-		InfoLogger.Printf("Test States: %v\n", TEST_STATES)
+		InfoLogger.Printf("Test States: %v\n", *numTestStates)
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(dimension).
@@ -96,7 +96,7 @@ func main() {
 		targetStates := stateGenerator.CreateStateCollection(numTargetStates)
 		network.LearnStates(targetStates)
 
-		testStates := stateGenerator.CreateStateCollection(TEST_STATES)
+		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		testResults := network.ConcurrentRelaxStates(testStates, 8)
 		numStable := 0
 		for _, result := range testResults {
@@ -107,6 +107,6 @@ func main() {
 
 		InfoLogger.Printf("Stable Test States: %v\n", numStable)
 
-		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(TEST_STATES), strconv.Itoa(numStable)})
+		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable)})
 	}
 }
