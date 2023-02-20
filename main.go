@@ -15,19 +15,21 @@ import (
 )
 
 var (
+	numTrials    *int
 	dataFilePath *string
 	InfoLogger   *log.Logger
 	ErrorLogger  *log.Logger
 )
 
 func init() {
+	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	dataFilePath = flag.String("dataFile", "data/data.csv", "The file to write test data to. Data is in a CSV format.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
 
 	logFile, err := os.Create(*logFilePath)
 	if err != nil {
-		panic("Cound not open log file!")
+		panic("Could not open log file!")
 	}
 
 	InfoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -35,8 +37,6 @@ func init() {
 }
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
-
-const TRIALS = 1000
 
 const MIN_DIMENSION = 50
 const MAX_DIMENSION = 100
@@ -62,7 +62,7 @@ func main() {
 	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
 	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
 	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO}
-	for trial := 0; trial < TRIALS; trial++ {
+	for trial := 0; trial < *numTrials; trial++ {
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
 		floatDimension := dimensionDist.Rand()
