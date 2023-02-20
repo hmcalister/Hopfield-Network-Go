@@ -58,7 +58,7 @@ func main() {
 	datawriter := csv.NewWriter(datafile)
 	defer datawriter.Flush()
 
-	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States"})
+	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States", "Mean Stable States Steps Taken"})
 
 	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
 	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
