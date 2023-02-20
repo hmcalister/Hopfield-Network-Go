@@ -182,12 +182,13 @@ func (network HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool {
 // * `states`: A collection of states to learn
 func (network HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 	for _epoch := 0; _epoch < network.epochs; _epoch++ {
-		if network.AllStatesAreStable(states) {
-			return
-		}
 		learningRuleResult := network.learningRule(network, states)
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
+
+		if network.AllStatesAreStable(states) {
+			return
+		}
 	}
 }
 
