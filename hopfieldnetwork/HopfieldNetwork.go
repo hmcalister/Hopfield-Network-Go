@@ -25,6 +25,7 @@ type HopfieldNetwork struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	unitsUpdatedPerStep            int
 	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 }
