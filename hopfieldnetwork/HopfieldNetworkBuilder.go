@@ -20,6 +20,7 @@ type HopfieldNetworkBuilder struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	unitsUpdatedPerStep            int
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -35,6 +36,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		domain:                         networkdomain.UnspecifiedDomain,
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
+		unitsUpdatedPerStep:            1,
 	}
 }
 
@@ -134,6 +136,17 @@ func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationIterations(max
 	return networkBuilder
 }
 
+// Set the number of units that are update by each step / each matrix multiplication.
+//
+// Default to 1. This is the typical Hopfield behavior and is assured to be stable given enough time.
+// Values larger than 1 may result in poor performance. Do not use a value larger than the dimension of the network.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetUnitsUpdatedPerStep(unitsUpdatedPerStep int) *HopfieldNetworkBuilder {
+	networkBuilder.unitsUpdatedPerStep = unitsUpdatedPerStep
+	return networkBuilder
+}
+
 // Build and return a new HopfieldNetwork using the parameters specified with builder methods.
 func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 	if networkBuilder.dimension <= 0 {
@@ -146,6 +159,10 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 
 	if networkBuilder.epochs <= 0 {
 		panic("HopfieldNetworkBuilder encountered an error during build! Epochs must be a positive integer!")
+	}
+
+	if networkBuilder.unitsUpdatedPerStep < 0 || networkBuilder.unitsUpdatedPerStep > networkBuilder.dimension {
+		panic("HopfieldNetworkBuilder encountered an error during build! unitsUpdatedPerStep must be aa positive integer that is smaller than the network dimension!")
 	}
 
 	randSrc := rand.NewSource((uint64(time.Now().UnixNano())))
@@ -182,6 +199,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
+		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 	}
 
 }
