@@ -92,8 +92,8 @@ func main() {
 			SetNetworkDimension(dimension).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
-			SetEpochs(100).
+			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
+			SetEpochs(1).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(unitsUpdated).
