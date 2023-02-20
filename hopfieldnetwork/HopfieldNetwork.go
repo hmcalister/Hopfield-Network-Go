@@ -182,12 +182,13 @@ func (network HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool {
 // * `states`: A collection of states to learn
 func (network HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 	for _epoch := 0; _epoch < network.epochs; _epoch++ {
-		if network.AllStatesAreStable(states) {
-			return
-		}
 		learningRuleResult := network.learningRule(network, states)
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
+
+		if network.AllStatesAreStable(states) {
+			return
+		}
 	}
 }
 
@@ -205,9 +206,9 @@ func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
+		newState.MulVec(network.matrix, state)
+		network.activationFunction(newState)
 		for _, unitIndex := range chunk {
-			newState.MulVec(network.matrix, state)
-			network.activationFunction(newState)
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
 	}
@@ -228,13 +229,13 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	newState := mat.NewVecDense(network.dimension, nil)
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+	for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
+			newState.MulVec(network.matrix, state)
+			network.activationFunction(newState)
 			for _, unitIndex := range chunk {
-				newState.MulVec(network.matrix, state)
-				network.activationFunction(newState)
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
 		}
@@ -276,14 +277,14 @@ StateRecvLoop:
 	for currentStateWrapped := range stateChannel {
 		currentState = currentStateWrapped.Data
 
-		for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+		for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
+				newState.MulVec(network.matrix, currentState)
+				network.activationFunction(newState)
 				for _, unitIndex := range chunk {
-					newState.MulVec(network.matrix, currentState)
 					currentState.SetVec(unitIndex, newState.AtVec(unitIndex))
-					network.activationFunction(currentState)
 				}
 			}
 
