@@ -1,18 +1,16 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
-	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"gonum.org/v1/gonum/stat/distuv"
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
+	"hmcalister/hopfield/hopfieldutils"
 )
 
 var (
@@ -23,10 +21,19 @@ var (
 	ErrorLogger   *log.Logger
 )
 
+type DataEntry struct {
+	Dimension            int     `parquet:"name=dimension, type=INT32"`
+	TargetStates         int     `parquet:"name=targetStates, type=INT32"`
+	UnitsUpdated         int     `parquet:"name=unitsUpdated, type=INT32"`
+	TestStates           int     `parquet:"name=testStates, type=INT32"`
+	NumStable            int     `parquet:"name=stableStates, type=INT32"`
+	MeanStableStepsTaken float64 `parquet:"name=meanStableStepsTaken, type=FLOAT"`
+}
+
 func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	dataFilePath = flag.String("dataFile", "data/data.csv", "The file to write test data to. Data is in a CSV format.")
+	dataFilePath = flag.String("dataFile", "data/data.pq", "The file to write test data to. Data is in a parquet format.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
 
@@ -52,13 +59,8 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
-	datafile, _ := os.Create(*dataFilePath)
-	defer datafile.Close()
-
-	datawriter := csv.NewWriter(datafile)
-	defer datawriter.Flush()
-
-	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States", "Mean Stable States Steps Taken"})
+	dataWriter := hopfieldutils.ParquetWriter(*dataFilePath, new(DataEntry))
+	defer dataWriter.WriteStop()
 
 	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
 	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
@@ -124,9 +126,15 @@ func main() {
 		numStepsAvg := float64(numStepsTotal) / float64(numStable)
 
 		InfoLogger.Printf("Stable Test States: %v\n", numStable)
-		InfoLogger.Printf("Total Stable States Steps Taken: %v\n", numStepsTotal)
 		InfoLogger.Printf("Mean Stable States Steps Taken: %v\n", numStepsAvg)
 
-		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable), fmt.Sprintf("%f", numStepsAvg)})
+		dataWriter.Write(DataEntry{
+			Dimension:            dimension,
+			TargetStates:         numTargetStates,
+			UnitsUpdated:         unitsUpdated,
+			TestStates:           *numTestStates,
+			NumStable:            numStable,
+			MeanStableStepsTaken: numStepsAvg,
+		})
 	}
 }
