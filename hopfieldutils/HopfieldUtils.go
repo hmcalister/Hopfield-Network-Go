@@ -37,7 +37,11 @@ type IndexedWrapper[T any] struct {
 func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
 	var chunkedSlices [][]T
 
-	for i := 0; i < len(slice); i++ {
+	if chunkSize <= 0 {
+		panic("chunkSize must be a positive integer!")
+	}
+
+	for i := 0; i < len(slice); i += chunkSize {
 		chunkEnd := i + chunkSize
 
 		// Ensure we do not run off the end of the array
