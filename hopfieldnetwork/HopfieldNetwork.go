@@ -229,7 +229,7 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 	newState := mat.NewVecDense(network.dimension, nil)
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+	for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
@@ -277,7 +277,7 @@ StateRecvLoop:
 	for currentStateWrapped := range stateChannel {
 		currentState = currentStateWrapped.Data
 
-		for iterationIndex := 0; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+		for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
