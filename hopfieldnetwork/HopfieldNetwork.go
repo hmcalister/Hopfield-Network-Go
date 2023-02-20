@@ -30,6 +30,22 @@ type HopfieldNetwork struct {
 	randomGenerator                *rand.Rand
 }
 
+// Representation of the result of a relaxation of a state.
+//
+// State is the state vector that has been relaxed.
+//
+// unitEnergies is a vector representing the energies of each unit.
+//
+// stable is a bool representing if the state was stable when relaxation finished.
+//
+// numSteps is an int representing the number of steps taken when relaxation finished.
+type RelaxationResult struct {
+	State        *mat.VecDense
+	UnitEnergies []float64
+	Stable       bool
+	NumSteps     int
+}
+
 // Get a reference to the weight matrix of this network.
 //
 // Note that this gives a reference to the matrix
@@ -222,8 +238,8 @@ func (network HopfieldNetwork) UpdateState(state *mat.VecDense) {
 //
 // # Returns
 //
-// Returns `true“ if the state is stable before the maximum iteration number was reached, `false` otherwise
-func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
+// A slice of RelaxationResult, each representing the result of relaxing a specific state.
+func (network HopfieldNetwork) RelaxState(state *mat.VecDense) RelaxationResult {
 	// We create a list of unit indices to use for randomly updating units
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
@@ -244,13 +260,23 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 		// and returning true (stable) if the number of unstable units is less than or equal to
 		// the network parameter set from the builder
 		if network.StateIsStable(state) {
-			return true
+			return RelaxationResult{
+				State:        state,
+				UnitEnergies: network.AllUnitEnergies(state),
+				Stable:       true,
+				NumSteps:     iterationIndex,
+			}
 		}
 	}
 
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
-	return false
+	return RelaxationResult{
+		State:        state,
+		UnitEnergies: network.AllUnitEnergies(state),
+		Stable:       false,
+		NumSteps:     network.maximumRelaxationUnstableUnits,
+	}
 }
 
 // Defines a thread-orientated approach to relaxing states. Useful if the number of states to update
@@ -262,7 +288,7 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 //
 // * `stateChannel`: A channel to pass the next state to be updated to the goroutine. This channel should be created and passed before the goroutines are created.
 // * `resultChannel`: A channel to pass the result of the relaxation back to the master thread.
-func (network HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[bool]) {
+func (network HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[RelaxationResult]) {
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
@@ -289,9 +315,14 @@ StateRecvLoop:
 			}
 
 			if network.StateIsStable(currentState) {
-				resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
+				resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
 					Index: currentStateWrapped.Index,
-					Data:  true,
+					Data: RelaxationResult{
+						State:        currentState,
+						UnitEnergies: network.AllUnitEnergies(currentState),
+						Stable:       true,
+						NumSteps:     iterationIndex,
+					},
 				}
 				// We need not carry on with this state - continue and get the next one
 				continue StateRecvLoop
@@ -299,9 +330,14 @@ StateRecvLoop:
 		} // for iterationIndex
 
 		// If we reach this then we did not relax correctly
-		resultChannel <- &hopfieldutils.IndexedWrapper[bool]{
+		resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
 			Index: currentStateWrapped.Index,
-			Data:  false,
+			Data: RelaxationResult{
+				State:        currentState,
+				UnitEnergies: network.AllUnitEnergies(currentState),
+				Stable:       false,
+				NumSteps:     network.maximumRelaxationIterations,
+			},
 		}
 	}
 }
@@ -321,11 +357,11 @@ StateRecvLoop:
 //
 // # Returns
 //
-// A slice of bool corresponding to the state slice given, with each bool representing if that state is stable.
-func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) []bool {
+// A slice of RelaxationResult, each representing the result of relaxing a specific state.
+func (network HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) []RelaxationResult {
 	stateChannel := make(chan *hopfieldutils.IndexedWrapper[*mat.VecDense], numThreads)
-	resultChannel := make(chan *hopfieldutils.IndexedWrapper[bool], len(states))
-	results := make([]bool, len(states))
+	resultChannel := make(chan *hopfieldutils.IndexedWrapper[RelaxationResult], len(states))
+	results := make([]RelaxationResult, len(states))
 
 	// Start all the concurrent channels
 	for i := 0; i < numThreads; i++ {
