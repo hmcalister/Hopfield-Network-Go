@@ -162,7 +162,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 	}
 
 	if networkBuilder.unitsUpdatedPerStep < 0 || networkBuilder.unitsUpdatedPerStep > networkBuilder.dimension {
-		panic("HopfieldNetworkBuilder encountered an error during build! unitsUpdatedPerStep must be aa positive integer that is smaller than the network dimension!")
+		panic("HopfieldNetworkBuilder encountered an error during build! unitsUpdatedPerStep must be a positive integer that is smaller than the network dimension!")
 	}
 
 	randSrc := rand.NewSource((uint64(time.Now().UnixNano())))
