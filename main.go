@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -44,10 +45,10 @@ const MIN_DIMENSION = 50
 const MAX_DIMENSION = 100
 
 const MIN_TARGET_STATES_RATIO = 0.05
-const MAX_TARGET_STATES_RATIO = 0.5
+const MAX_TARGET_STATES_RATIO = 1.0
 
-const MIN_UNITS_UPDATED_RATIO = 0
-const MAX_UNITS_UPDATED_RATIO = 1
+const MIN_UNITS_UPDATED_RATIO = 0.0
+const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
@@ -57,7 +58,7 @@ func main() {
 	datawriter := csv.NewWriter(datafile)
 	defer datawriter.Flush()
 
-	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States"})
+	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States", "Mean Stable States Steps Taken"})
 
 	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
 	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
@@ -67,8 +68,20 @@ func main() {
 
 		floatDimension := dimensionDist.Rand()
 		dimension := int(floatDimension)
+
 		numTargetStates := int(floatDimension * targetStatesRatioDist.Rand())
+		if numTargetStates < 0 {
+			numTargetStates = 0
+		} else if numTargetStates > dimension {
+			numTargetStates = dimension
+		}
+
 		unitsUpdated := int(floatDimension * unitsUpdatedRatioDist.Rand())
+		if unitsUpdated < 1 {
+			unitsUpdated = 1
+		} else if unitsUpdated > dimension {
+			unitsUpdated = dimension
+		}
 
 		InfoLogger.Printf("Dimension: %v\n", dimension)
 		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
@@ -79,8 +92,8 @@ func main() {
 			SetNetworkDimension(dimension).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
-			SetEpochs(100).
+			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
+			SetEpochs(1).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(unitsUpdated).
@@ -98,15 +111,22 @@ func main() {
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		testResults := network.ConcurrentRelaxStates(testStates, 8)
+
 		numStable := 0
+		numStepsTotal := 0
 		for _, result := range testResults {
-			if result {
+			if result.Stable {
 				numStable += 1
+				numStepsTotal += result.NumSteps
 			}
 		}
 
-		InfoLogger.Printf("Stable Test States: %v\n", numStable)
+		numStepsAvg := float64(numStepsTotal) / float64(numStable)
 
-		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable)})
+		InfoLogger.Printf("Stable Test States: %v\n", numStable)
+		InfoLogger.Printf("Total Stable States Steps Taken: %v\n", numStepsTotal)
+		InfoLogger.Printf("Mean Stable States Steps Taken: %v\n", numStepsAvg)
+
+		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(*numTestStates), strconv.Itoa(numStable), fmt.Sprintf("%f", numStepsAvg)})
 	}
 }
