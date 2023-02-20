@@ -1,39 +1,112 @@
 package main
 
 import (
-	"fmt"
+	"encoding/csv"
+	"flag"
+	"log"
+	"os"
+	"strconv"
+
+	"gonum.org/v1/gonum/stat/distuv"
+
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 )
 
-const DIMENSION int = 100
-const DOMAIN networkdomain.NetworkDomain = networkdomain.BinaryDomain
+var (
+	dataFilePath *string
+	InfoLogger   *log.Logger
+	ErrorLogger  *log.Logger
+)
+
+func init() {
+	dataFilePath = flag.String("dataFile", "data/data.csv", "The file to write test data to. Data is in a CSV format.")
+	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	flag.Parse()
+
+	logFile, err := os.Create(*logFilePath)
+	if err != nil {
+		panic("Cound not open log file!")
+	}
+
+	InfoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	ErrorLogger = log.New(logFile, "Error: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
+
+const TRIALS = 1000
+
+const MIN_DIMENSION = 50
+const MAX_DIMENSION = 100
+
+const MIN_TARGET_STATES_RATIO = 0.05
+const MAX_TARGET_STATES_RATIO = 0.5
+
+const MIN_UNITS_UPDATED_RATIO = 0
+const MAX_UNITS_UPDATED_RATIO = 1
+
+const TEST_STATES = 1000
 
 // Main method for entry point
 func main() {
+	datafile, _ := os.Create(*dataFilePath)
+	defer datafile.Close()
 
-	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
-		SetNetworkDimension(DIMENSION).
-		SetNetworkDomain(DOMAIN).
-		SetRandMatrixInit(true).
-		SetMaximumRelaxationIterations(100).
-		Build()
+	datawriter := csv.NewWriter(datafile)
+	defer datawriter.Flush()
 
-	stateGenerator := states.NewStateGeneratorBuilder().
-		SetRandMin(-1).
-		SetRandMax(1).
-		SetGeneratorDimension(DIMENSION).
-		SetGeneratorDomain(DOMAIN).
-		Build()
+	datawriter.Write([]string{"Dimension", "Target States", "Units Activated", "Test States", "Stable Test States"})
 
-	states := stateGenerator.CreateStateCollection(1000)
-	relaxResults := network.ConcurrentRelaxStates(states, 10)
-	numStable := 0
-	for _, r := range relaxResults {
-		if r {
-			numStable++
+	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION}
+	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO}
+	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO}
+	for trial := 0; trial < TRIALS; trial++ {
+		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
+
+		floatDimension := dimensionDist.Rand()
+		dimension := int(floatDimension)
+		numTargetStates := int(floatDimension * targetStatesRatioDist.Rand())
+		unitsUpdated := int(floatDimension * unitsUpdatedRatioDist.Rand())
+
+		InfoLogger.Printf("Dimension: %v\n", dimension)
+		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
+		InfoLogger.Printf("Units Updated: %v\n", unitsUpdated)
+		InfoLogger.Printf("Test States: %v\n", TEST_STATES)
+
+		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
+			SetNetworkDimension(dimension).
+			SetNetworkDomain(DOMAIN).
+			SetRandMatrixInit(false).
+			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
+			SetEpochs(100).
+			SetMaximumRelaxationIterations(100).
+			SetMaximumRelaxationUnstableUnits(0).
+			SetUnitsUpdatedPerStep(unitsUpdated).
+			Build()
+
+		stateGenerator := states.NewStateGeneratorBuilder().
+			SetRandMin(-1).
+			SetRandMax(1).
+			SetGeneratorDimension(dimension).
+			SetGeneratorDomain(DOMAIN).
+			Build()
+
+		targetStates := stateGenerator.CreateStateCollection(numTargetStates)
+		network.LearnStates(targetStates)
+
+		testStates := stateGenerator.CreateStateCollection(TEST_STATES)
+		testResults := network.ConcurrentRelaxStates(testStates, 8)
+		numStable := 0
+		for _, result := range testResults {
+			if result {
+				numStable += 1
+			}
 		}
+
+		InfoLogger.Printf("Stable Test States: %v\n", numStable)
+
+		datawriter.Write([]string{strconv.Itoa(dimension), strconv.Itoa(numTargetStates), strconv.Itoa(unitsUpdated), strconv.Itoa(TEST_STATES), strconv.Itoa(numStable)})
 	}
-	fmt.Println(numStable)
 }
