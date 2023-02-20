@@ -233,9 +233,9 @@ func (network HopfieldNetwork) RelaxState(state *mat.VecDense) (stable bool) {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
+			newState.MulVec(network.matrix, state)
+			network.activationFunction(newState)
 			for _, unitIndex := range chunk {
-				newState.MulVec(network.matrix, state)
-				network.activationFunction(newState)
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
 		}
