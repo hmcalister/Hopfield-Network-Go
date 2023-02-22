@@ -221,6 +221,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 //
 // * `states`: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
+	network.learnedStates = append(network.learnedStates, states...)
 	for _epoch := 0; _epoch < network.epochs; _epoch++ {
 		learningRuleResult := network.learningRule(network, states)
 		network.matrix.Add(network.matrix, learningRuleResult)
@@ -295,6 +296,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 				NumSteps:           iterationIndex,
 				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 			}
+			network.dataCollector.CallbackStableStateRelaxed(&result)
 			return &result
 		}
 	}
