@@ -101,6 +101,9 @@ func (collector *DataCollector) WriteStop() {
 	if collector.onStableStateRelaxedDataWriter != nil {
 		collector.onStableStateRelaxedDataWriter.WriteStop()
 	}
+	if collector.onTrialEndDataWriter != nil {
+		collector.onTrialEndDataWriter.WriteStop()
+	}
 }
 
 // Starts collecting data. Should be run in a new goroutine to allow
