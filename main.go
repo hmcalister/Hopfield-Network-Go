@@ -10,6 +10,7 @@ import (
 	"gonum.org/v1/gonum/stat/distuv"
 
 	"hmcalister/hopfield/hopfieldnetwork"
+	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 )
@@ -53,11 +54,10 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
-	dataCollector := hopfieldnetwork.NewDataCollector().
-		AddOnStableStateRelaxed(*stateLevelDataPath).
-		AddOnTrialEnd(*trialLevelDataPath)
+	dataCollector := datacollector.NewDataCollector().
+		AddStateRelaxedHandler(*stateLevelDataPath)
 	defer dataCollector.WriteStop()
-	go dataCollector.StartCollecting()
+	go dataCollector.CollectData()
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	dimensionDistSeed := srcGenerator.Uint64()
@@ -119,7 +119,6 @@ func main() {
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		_ = network.ConcurrentRelaxStates(testStates, *numThreads)
 
-		dataCollector.OnTrialEndChannel <- struct{}{}
 	}
 
 	dataCollector.WriteStop()
