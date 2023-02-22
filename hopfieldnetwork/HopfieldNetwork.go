@@ -33,6 +33,7 @@ type HopfieldNetwork struct {
 	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
+	dataCollector                  *DataCollector
 }
 
 // Representation of the result of a relaxation of a state.

@@ -21,6 +21,7 @@ type HopfieldNetworkBuilder struct {
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
+	dataCollector                  *DataCollector
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -37,6 +38,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		unitsUpdatedPerStep:            1,
+		dataCollector:                  NewDataCollector(),
 	}
 }
 
@@ -147,8 +149,16 @@ func (networkBuilder *HopfieldNetworkBuilder) SetUnitsUpdatedPerStep(unitsUpdate
 	return networkBuilder
 }
 
+// Set the DataCollector to be used in the network.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetDataCollector(dataCollector *DataCollector) *HopfieldNetworkBuilder {
+	networkBuilder.dataCollector = dataCollector
+	return networkBuilder
+}
+
 // Build and return a new HopfieldNetwork using the parameters specified with builder methods.
-func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
+func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	if networkBuilder.dimension <= 0 {
 		panic("HopfieldNetworkBuilder encountered an error during build! Dimension must be explicitly set to a positive integer!")
 	}
@@ -187,7 +197,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 
 	activationFunction := activationfunction.DomainToActivationFunctionMap[networkBuilder.domain]
 
-	return HopfieldNetwork{
+	return &HopfieldNetwork{
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
@@ -200,6 +210,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() HopfieldNetwork {
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
+		dataCollector:                  networkBuilder.dataCollector,
 	}
 
 }
