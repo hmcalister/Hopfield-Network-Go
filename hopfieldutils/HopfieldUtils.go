@@ -14,6 +14,27 @@ func ShuffleList[T comparable](randomGenerator *rand.Rand, list []T) {
 	})
 }
 
+// Checks if a given element is in a slice
+//
+// # Arguments
+//
+// * `slice`: The slice to check over
+//
+// * `elem`: The element to check for
+//
+// # Returns
+//
+// True if the element is present, false otherwise
+func IsInSlice[T comparable](slice []T, elem T) bool {
+	for _, item := range slice {
+		if item == elem {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Finds the distances from a given vector to all vectors in a slice
 //
 // # Arguments
