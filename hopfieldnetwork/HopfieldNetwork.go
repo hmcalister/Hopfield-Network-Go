@@ -311,6 +311,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		NumSteps:           network.maximumRelaxationUnstableUnits,
 		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 	}
+	network.dataCollector.CallbackUnstableStateRelaxed(&result)
 	return &result
 }
 
@@ -357,6 +358,7 @@ StateRecvLoop:
 					NumSteps:           iterationIndex,
 					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 				}
+				network.dataCollector.CallbackStableStateRelaxed(&result)
 
 				resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
 					Index: currentStateWrapped.Index,
@@ -375,6 +377,7 @@ StateRecvLoop:
 			NumSteps:           network.maximumRelaxationIterations,
 			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 		}
+		network.dataCollector.CallbackUnstableStateRelaxed(&result)
 		resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
 			Index: currentStateWrapped.Index,
 			Data:  result,
