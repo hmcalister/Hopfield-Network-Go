@@ -1,11 +1,46 @@
 package hopfieldnetwork
 
+//
+// Adding to the data collector:
+//
+// To add to the data collector, first identify what data you want to collect.
+// If the data is a direct measurement (e.g. a RelaxationResult), easy!
+// If it is something more derived (e.g. the number of stable states per trial) then add a variable to the var block below.
+//
+// Add a callback function to the callback section, add a channel to the data collector, initialize the channel in the new method
+// in the StartCollecting method have the new channel call the callback function...
+//
+// This needs to be refactored...
+//
+
 import (
 	"hmcalister/hopfield/hopfieldutils"
 
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/writer"
+)
+
+// ------------------------------------------------------------------------------------------------
+// DATA COLLECTION TIMING ENUM
+// ------------------------------------------------------------------------------------------------
+
+const (
+	dataCollector_OnStateRelaxed       = iota
+	dataCollector_OnStableStateRelaxed = iota
+	dataCollector_OnTrialEnd           = iota
+)
+
+// ------------------------------------------------------------------------------------------------
+// DATA COLLECTION VARIABLES
+// ------------------------------------------------------------------------------------------------
+
+var (
+	stableStateRelaxedCounter   int = 0
+	unstableStateRelaxedCounter int = 0
+	trialCounter                int = 0
+
+	stableStateTotalSteps int = 0
 )
 
 // Create a new parquet writer to a given file path, using a given struct.
@@ -37,28 +72,6 @@ func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) *writer.
 
 	return parquetDataWriter
 }
-
-// ------------------------------------------------------------------------------------------------
-// DATA COLLECTION TIMING ENUM
-// ------------------------------------------------------------------------------------------------
-
-const (
-	dataCollector_OnStateRelaxed       = iota
-	dataCollector_OnStableStateRelaxed = iota
-	dataCollector_OnTrialEnd           = iota
-)
-
-// ------------------------------------------------------------------------------------------------
-// DATA COLLECTION VARIABLES
-// ------------------------------------------------------------------------------------------------
-
-var (
-	stableStateRelaxedCounter   int = 0
-	unstableStateRelaxedCounter int = 0
-	trialCounter                int = 0
-
-	stableStateTotalSteps int = 0
-)
 
 // ------------------------------------------------------------------------------------------------
 // DATA COLLECTOR STRUCT AND BASE METHODS
