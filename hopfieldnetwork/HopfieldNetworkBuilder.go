@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"time"
 
@@ -21,7 +22,7 @@ type HopfieldNetworkBuilder struct {
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
-	dataCollector                  *DataCollector
+	dataCollector                  *datacollector.DataCollector
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -38,7 +39,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		unitsUpdatedPerStep:            1,
-		dataCollector:                  NewDataCollector(),
+		dataCollector:                  datacollector.NewDataCollector(),
 	}
 }
 
@@ -152,7 +153,7 @@ func (networkBuilder *HopfieldNetworkBuilder) SetUnitsUpdatedPerStep(unitsUpdate
 // Set the DataCollector to be used in the network.
 //
 // Note this method returns the builder pointer so chained calls can be used.
-func (networkBuilder *HopfieldNetworkBuilder) SetDataCollector(dataCollector *DataCollector) *HopfieldNetworkBuilder {
+func (networkBuilder *HopfieldNetworkBuilder) SetDataCollector(dataCollector *datacollector.DataCollector) *HopfieldNetworkBuilder {
 	networkBuilder.dataCollector = dataCollector
 	return networkBuilder
 }
