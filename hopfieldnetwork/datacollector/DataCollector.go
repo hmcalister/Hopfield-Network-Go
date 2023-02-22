@@ -36,6 +36,12 @@ type DataCollector struct {
 }
 
 func (collector *DataCollector) CollectData() {
+	if len(collector.handlers) == 0 {
+		for {
+			<-collector.EventChannel
+		}
+	}
+
 	for {
 		event := <-collector.EventChannel
 
