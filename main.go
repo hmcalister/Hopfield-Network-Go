@@ -13,6 +13,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
+	"hmcalister/hopfield/hopfieldutils"
 )
 
 var (
@@ -54,8 +55,7 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
-	dataCollector := datacollector.NewDataCollector().
-		AddStateRelaxedHandler(*stateLevelDataPath)
+	dataCollector := datacollector.NewDataCollector()
 	defer dataCollector.WriteStop()
 	go dataCollector.CollectData()
 
@@ -117,7 +117,25 @@ func main() {
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
-		_ = network.ConcurrentRelaxStates(testStates, *numThreads)
+		relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
+
+		for stateIndex, result := range relaxationResults {
+			currentTestState := testStates[stateIndex]
+			event := datacollector.StateRelaxedData{
+				TrialIndex:             trial,
+				StateIndex:             stateIndex,
+				Stable:                 result.Stable,
+				NumSteps:               result.NumSteps,
+				FinalState:             currentTestState.RawVector().Data,
+				FinalStateEnergyVector: network.AllUnitEnergies(currentTestState),
+				DistancesToLearned:     result.DistancesToLearned,
+			}
+
+			dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+				Index: datacollector.DataCollectionEvent_OnStateRelax,
+				Data:  event,
+			}
+		}
 
 	}
 
