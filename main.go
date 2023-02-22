@@ -57,6 +57,7 @@ func main() {
 		AddOnStableStateRelaxed(*stateLevelDataPath).
 		AddOnTrialEnd(*trialLevelDataPath)
 	defer dataCollector.WriteStop()
+	go dataCollector.StartCollecting()
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	dimensionDistSeed := srcGenerator.Uint64()
@@ -118,6 +119,8 @@ func main() {
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		_ = network.ConcurrentRelaxStates(testStates, *numThreads)
 
-		dataCollector.CallbackTrialEnd()
+		dataCollector.OnTrialEndChannel <- struct{}{}
 	}
+
+	dataCollector.WriteStop()
 }
