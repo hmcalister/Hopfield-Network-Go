@@ -4,6 +4,7 @@ package hopfieldnetwork
 import (
 	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldutils"
@@ -33,26 +34,7 @@ type HopfieldNetwork struct {
 	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
-	dataCollector                  *DataCollector
-}
-
-// Representation of the result of a relaxation of a state.
-//
-// State is the state vector that has been relaxed.
-//
-// UnitEnergies is a vector representing the energies of each unit.
-//
-// Stable is a bool representing if the state was stable when relaxation finished.
-//
-// NumSteps is an int representing the number of steps taken when relaxation finished.
-//
-// DistancesToAllLearned is an array of distances to all learned states.
-type RelaxationResult struct {
-	State              *mat.VecDense
-	UnitEnergies       []float64
-	Stable             bool
-	NumSteps           int
-	DistancesToLearned []float64
+	dataCollector                  *datacollector.DataCollector
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -111,6 +93,18 @@ func (network *HopfieldNetwork) GetMatrix() *mat.Dense {
 // The dimension of this network as an int
 func (network *HopfieldNetwork) GetDimension() int {
 	return network.dimension
+}
+
+// Get the learned states of this network
+//
+// Note that this gives a reference to the matrix
+// meaning the caller can update the matrix!
+//
+// # Returns
+//
+// A list of vectors representing the learned states of this network
+func (network *HopfieldNetwork) GetLearnedStates() []*mat.VecDense {
+	return network.learnedStates
 }
 
 // Implement Stringer for nicer formatting
@@ -238,6 +232,12 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 // STATE UPDATE AND RELAXATION METHODS
 // ------------------------------------------------------------------------------------------------
 
+type RelaxationResult struct {
+	Stable             bool
+	NumSteps           int
+	DistancesToLearned []float64
+}
+
 // Update a state one step in a randomly permuted ordering of units.
 //
 // # Arguments
@@ -275,7 +275,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	newState := mat.NewVecDense(network.dimension, nil)
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+	for stepIndex := 1; stepIndex < network.maximumRelaxationIterations; stepIndex++ {
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
@@ -291,13 +291,10 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		// the network parameter set from the builder
 		if network.StateIsStable(state) {
 			result := RelaxationResult{
-				State:              state,
-				UnitEnergies:       network.AllUnitEnergies(state),
 				Stable:             true,
-				NumSteps:           iterationIndex,
+				NumSteps:           stepIndex,
 				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 			}
-			network.dataCollector.OnStableStateRelaxedChannel <- result
 			return &result
 		}
 	}
@@ -305,13 +302,10 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
 	result := RelaxationResult{
-		State:              state,
-		UnitEnergies:       network.AllUnitEnergies(state),
 		Stable:             false,
-		NumSteps:           network.maximumRelaxationUnstableUnits,
+		NumSteps:           network.maximumRelaxationIterations,
 		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 	}
-	network.dataCollector.OnUnstableStateRelaxedChannel <- result
 	return &result
 }
 
@@ -336,10 +330,10 @@ func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *h
 	//
 	// We name this loop so we can continue directly if the state is already stable.
 StateRecvLoop:
-	for currentStateWrapped := range stateChannel {
-		state = currentStateWrapped.Data
+	for wrappedState := range stateChannel {
+		state = wrappedState.Data
 
-		for iterationIndex := 1; iterationIndex < network.maximumRelaxationIterations; iterationIndex++ {
+		for stepIndex := 1; stepIndex < network.maximumRelaxationIterations; stepIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
@@ -352,16 +346,13 @@ StateRecvLoop:
 
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
-					State:              state,
-					UnitEnergies:       network.AllUnitEnergies(state),
 					Stable:             true,
-					NumSteps:           iterationIndex,
+					NumSteps:           stepIndex,
 					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 				}
-				network.dataCollector.OnStableStateRelaxedChannel <- result
 
 				resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
-					Index: currentStateWrapped.Index,
+					Index: wrappedState.Index,
 					Data:  result,
 				}
 				// We need not carry on with this state - continue and get the next one
@@ -371,15 +362,13 @@ StateRecvLoop:
 
 		// If we reach this then we did not relax correctly
 		result := RelaxationResult{
-			State:              state,
-			UnitEnergies:       network.AllUnitEnergies(state),
 			Stable:             false,
 			NumSteps:           network.maximumRelaxationIterations,
 			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
 		}
-		network.dataCollector.OnUnstableStateRelaxedChannel <- result
+
 		resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
-			Index: currentStateWrapped.Index,
+			Index: wrappedState.Index,
 			Data:  result,
 		}
 	}
