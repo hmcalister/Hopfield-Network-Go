@@ -12,13 +12,13 @@ package datacollector
 //
 // DistancesToAllLearned is an array of distances to all learned states.
 type StateRelaxedData struct {
-	// TrialIndex int `parquet:"name=TrialIndex, type=INT32"`
-	StateIndex int `parquet:"name=StateIndex, type=INT32"`
-	// State              []float64 `parquet:"name=State, type=DOUBLE, repetitiontype=REPEATED"`
-	// Stable             bool      `parquet:"name=Stable, type=BOOL"`
-	// NumSteps           int       `parquet:"name=NumSteps, type=DOUBLE"`
-	// StateEnergyVector  []float64 `parquet:"name=StateEnergyVector, type=DOUBLE, repetitiontype=REPEATED"`
-	// DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
+	TrialIndex             int       `parquet:"name=TrialIndex, type=INT32"`
+	StateIndex             int       `parquet:"name=StateIndex, type=INT32"`
+	Stable                 bool      `parquet:"name=Stable, type=BOOLEAN"`
+	NumSteps               int       `parquet:"name=NumSteps, type=INT32"`
+	FinalState             []float64 `parquet:"name=FinalState, type=DOUBLE, repetitiontype=REPEATED"`
+	FinalStateEnergyVector []float64 `parquet:"name=FinalStateEnergyVector, type=DOUBLE, repetitiontype=REPEATED"`
+	DistancesToLearned     []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
 type onStateRelaxedHandler struct {
