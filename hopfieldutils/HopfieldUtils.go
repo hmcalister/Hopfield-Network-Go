@@ -123,32 +123,3 @@ func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
 
 	return chunkedSlices
 }
-
-// Create a new parquet writer to a given file path, using a given struct.
-//
-// This is a utility method to avoid the same boilerplate code over and over.
-//
-// See this example (https://github.com/xitongsys/parquet-go/blob/master/example/local_flat.go)
-// for information on how to format the structs and use this method nicely.
-//
-// It may be wise to call `defer writer.WriteStop()` after calling this method!
-//
-// # Arguments
-//
-// * `dataFilePath`: The path to the data file required
-//
-// * `dataStruct`: A valid struct for writing in the parquet format. Should be called with
-// new(struct) as argument.
-//
-// # Returns
-//
-// A ParquetWriter to the data file in question.
-func ParquetWriter[T interface{}](dataFilePath string, dataStruct T) *writer.ParquetWriter {
-	dataFileWriter, _ := local.NewLocalFileWriter(dataFilePath)
-	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 1)
-	parquetDataWriter.RowGroupSize = 128 * 1024 * 1024 //128MB
-	parquetDataWriter.PageSize = 8 * 1024              //8K
-	parquetDataWriter.CompressionType = parquet.CompressionCodec_SNAPPY
-
-	return parquetDataWriter
-}
