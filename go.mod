@@ -9,6 +9,8 @@ require (
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
 )
 
+require github.com/ompluscator/dynamic-struct v1.4.0 // indirect
+
 require (
 	github.com/apache/arrow/go/arrow v0.0.0-20200730104253-651201b0f516 // indirect
 	github.com/apache/thrift v0.18.0 // indirect
