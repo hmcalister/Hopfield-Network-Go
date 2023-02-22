@@ -65,10 +65,16 @@ var (
 // ------------------------------------------------------------------------------------------------
 
 type DataCollector struct {
-	onStableStateRelaxedDataWriter   *writer.ParquetWriter
+	onStableStateRelaxedDataWriter *writer.ParquetWriter
+	OnStableStateRelaxedChannel    chan RelaxationResult
+
 	onUnstableStateRelaxedDataWriter *writer.ParquetWriter
-	onTrialEndDataWriter             *writer.ParquetWriter
-	dataCollectionTimings            []int
+	OnUnstableStateRelaxedChannel    chan RelaxationResult
+
+	onTrialEndDataWriter *writer.ParquetWriter
+	OnTrialEndChannel    chan struct{}
+
+	dataCollectionTimings []int
 }
 
 // Create a new data writer.
@@ -77,7 +83,15 @@ type DataCollector struct {
 // To add a data collection event, call one of the Add* methods on the resulting DataCollector object.
 // This will make that callback trigger a collection event.
 func NewDataCollector() *DataCollector {
-	return &DataCollector{}
+	onStableStateRelaxedChannel := make(chan RelaxationResult, 10)
+	onUnstableStateRelaxedChannel := make(chan RelaxationResult, 10)
+	onTrialEndChannel := make(chan struct{}, 1)
+
+	return &DataCollector{
+		OnStableStateRelaxedChannel:   onStableStateRelaxedChannel,
+		OnUnstableStateRelaxedChannel: onUnstableStateRelaxedChannel,
+		OnTrialEndChannel:             onTrialEndChannel,
+	}
 }
 
 func (collector *DataCollector) WriteStop() {
@@ -86,6 +100,21 @@ func (collector *DataCollector) WriteStop() {
 	}
 	if collector.onStableStateRelaxedDataWriter != nil {
 		collector.onStableStateRelaxedDataWriter.WriteStop()
+	}
+}
+
+// Starts collecting data. Should be run in a new goroutine to allow
+// for listening on the channels.
+func (collector *DataCollector) StartCollecting() {
+	for {
+		select {
+		case result := <-collector.OnStableStateRelaxedChannel:
+			collector.CallbackStableStateRelaxed(&result)
+		case result := <-collector.OnUnstableStateRelaxedChannel:
+			collector.CallbackUnstableStateRelaxed(&result)
+		case <-collector.OnTrialEndChannel:
+			collector.CallbackTrialEnd()
+		}
 	}
 }
 
