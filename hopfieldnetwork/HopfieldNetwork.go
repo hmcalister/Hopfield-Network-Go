@@ -4,6 +4,7 @@ package hopfieldnetwork
 import (
 	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldutils"
@@ -33,26 +34,7 @@ type HopfieldNetwork struct {
 	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
-	dataCollector                  *DataCollector
-}
-
-// Representation of the result of a relaxation of a state.
-//
-// State is the state vector that has been relaxed.
-//
-// UnitEnergies is a vector representing the energies of each unit.
-//
-// Stable is a bool representing if the state was stable when relaxation finished.
-//
-// NumSteps is an int representing the number of steps taken when relaxation finished.
-//
-// DistancesToAllLearned is an array of distances to all learned states.
-type RelaxationResult struct {
-	State              *mat.VecDense
-	UnitEnergies       []float64
-	Stable             bool
-	NumSteps           int
-	DistancesToLearned []float64
+	dataCollector                  *datacollector.DataCollector
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -269,7 +251,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 // # Returns
 //
 // A RelaxationResult, representing the result of relaxing a specific state.
-func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResult {
+func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *datacollector.StateRelaxedData {
 	// We create a list of unit indices to use for randomly updating units
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
@@ -290,28 +272,20 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		// and returning true (stable) if the number of unstable units is less than or equal to
 		// the network parameter set from the builder
 		if network.StateIsStable(state) {
-			result := RelaxationResult{
-				State:              state,
-				UnitEnergies:       network.AllUnitEnergies(state),
-				Stable:             true,
-				NumSteps:           iterationIndex,
-				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
+			result := datacollector.StateRelaxedData{
+				StateIndex: 0,
 			}
-			network.dataCollector.OnStableStateRelaxedChannel <- result
+			network.dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{Index: datacollector.DataCollectionEvent_OnStateRelax, Data: result}
 			return &result
 		}
 	}
 
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
-	result := RelaxationResult{
-		State:              state,
-		UnitEnergies:       network.AllUnitEnergies(state),
-		Stable:             false,
-		NumSteps:           network.maximumRelaxationUnstableUnits,
-		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
+	result := datacollector.StateRelaxedData{
+		StateIndex: 0,
 	}
-	network.dataCollector.OnUnstableStateRelaxedChannel <- result
+	network.dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{Index: datacollector.DataCollectionEvent_OnStateRelax, Data: result}
 	return &result
 }
 
@@ -324,7 +298,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 //
 // * `stateChannel`: A channel to pass the next state to be updated to the goroutine. This channel should be created and passed before the goroutines are created.
 // * `resultChannel`: A channel to pass the result of the relaxation back to the master thread.
-func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[RelaxationResult]) {
+func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[datacollector.StateRelaxedData]) {
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
@@ -351,16 +325,12 @@ StateRecvLoop:
 			}
 
 			if network.StateIsStable(state) {
-				result := RelaxationResult{
-					State:              state,
-					UnitEnergies:       network.AllUnitEnergies(state),
-					Stable:             true,
-					NumSteps:           iterationIndex,
-					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
+				result := datacollector.StateRelaxedData{
+					StateIndex: currentStateWrapped.Index,
 				}
-				network.dataCollector.OnStableStateRelaxedChannel <- result
+				network.dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{Index: datacollector.DataCollectionEvent_OnStateRelax, Data: result}
 
-				resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
+				resultChannel <- &hopfieldutils.IndexedWrapper[datacollector.StateRelaxedData]{
 					Index: currentStateWrapped.Index,
 					Data:  result,
 				}
@@ -370,15 +340,12 @@ StateRecvLoop:
 		} // for iterationIndex
 
 		// If we reach this then we did not relax correctly
-		result := RelaxationResult{
-			State:              state,
-			UnitEnergies:       network.AllUnitEnergies(state),
-			Stable:             false,
-			NumSteps:           network.maximumRelaxationIterations,
-			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state),
+		result := datacollector.StateRelaxedData{
+			StateIndex: currentStateWrapped.Index,
 		}
-		network.dataCollector.OnUnstableStateRelaxedChannel <- result
-		resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
+		network.dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{Index: datacollector.DataCollectionEvent_OnStateRelax, Data: result}
+
+		resultChannel <- &hopfieldutils.IndexedWrapper[datacollector.StateRelaxedData]{
 			Index: currentStateWrapped.Index,
 			Data:  result,
 		}
@@ -401,10 +368,10 @@ StateRecvLoop:
 // # Returns
 //
 // A slice of RelaxationResult, each representing the result of relaxing a specific state.
-func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) []*RelaxationResult {
+func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, numThreads int) []*datacollector.StateRelaxedData {
 	stateChannel := make(chan *hopfieldutils.IndexedWrapper[*mat.VecDense], numThreads)
-	resultChannel := make(chan *hopfieldutils.IndexedWrapper[RelaxationResult], len(states))
-	results := make([]*RelaxationResult, len(states))
+	resultChannel := make(chan *hopfieldutils.IndexedWrapper[datacollector.StateRelaxedData], len(states))
+	results := make([]*datacollector.StateRelaxedData, len(states))
 
 	// Start all the concurrent channels
 	for i := 0; i < numThreads; i++ {
