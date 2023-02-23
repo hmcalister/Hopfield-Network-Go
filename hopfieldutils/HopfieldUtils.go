@@ -43,15 +43,17 @@ func IsInSlice[T comparable](slice []T, elem T) bool {
 //
 // * `vector`: The element to check the distance to
 //
+// * `norm`: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
+//
 // # Return
 //
 // A []float64 representing the distances from the given vector to the slice vectors
-func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense) []float64 {
+func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense, norm float64) []float64 {
 	tempVec := mat.NewVecDense(vector.Len(), nil)
 	distances := make([]float64, len(slice))
 	for index, item := range slice {
 		tempVec.SubVec(item, vector)
-		distances[index] = tempVec.Norm(2)
+		distances[index] = tempVec.Norm(norm)
 	}
 	return distances
 }
@@ -64,12 +66,14 @@ func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense) []
 //
 // * `vector`: The element to check the distance to
 //
+// * `norm`: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
+//
 // # Return
 //
 // A float64 representing the distance from the given vector to the closest vector in the slice
-func DistanceToClosestVec(slice []*mat.VecDense, vector *mat.VecDense) float64 {
+func DistanceToClosestVec(slice []*mat.VecDense, vector *mat.VecDense, norm float64) float64 {
 	minDist := math.Inf(+1)
-	allDistances := DistancesToVectorCollection(slice, vector)
+	allDistances := DistancesToVectorCollection(slice, vector, norm)
 	for _, item := range allDistances {
 		if item < minDist {
 			minDist = item
