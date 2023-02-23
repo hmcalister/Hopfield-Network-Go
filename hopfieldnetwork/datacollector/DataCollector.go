@@ -31,7 +31,7 @@ const (
 // ------------------------------------------------------------------------------------------------
 
 type DataCollector struct {
-	handlers     []handler
+	handlers     []*dataHandler
 	EventChannel chan hopfieldutils.IndexedWrapper[interface{}]
 }
 
@@ -47,7 +47,7 @@ func (collector *DataCollector) CollectData() {
 
 		for _, handler := range collector.handlers {
 			if handler.getEventID() == event.Index {
-				handler.handleEvent(event.Data)
+				handler.handleEvent(handler.dataWriter, event.Data)
 			}
 		}
 	}
@@ -60,7 +60,7 @@ func (collector *DataCollector) CollectData() {
 // This will make that callback trigger a collection event.
 func NewDataCollector() *DataCollector {
 	return &DataCollector{
-		handlers:     make([]handler, 0),
+		handlers:     make([]*dataHandler, 0),
 		EventChannel: make(chan hopfieldutils.IndexedWrapper[interface{}], 100),
 	}
 }
@@ -69,20 +69,4 @@ func (collector *DataCollector) WriteStop() {
 	for _, handler := range collector.handlers {
 		handler.writeStop()
 	}
-}
-
-// ------------------------------------------------------------------------------------------------
-// DATA HANDLER ADDITION METHODS
-// ------------------------------------------------------------------------------------------------
-
-// Add a state relaxed event handler.
-func (collector *DataCollector) AddStateRelaxedHandler(stateRelaxedDataFile string) *DataCollector {
-	collector.handlers = append(collector.handlers, newOnStateRelaxedCollector(stateRelaxedDataFile))
-	return collector
-}
-
-// Add a trial end event handler.
-func (collector *DataCollector) AddOnTrialEndHandler(stateRelaxedDataFile string) *DataCollector {
-	collector.handlers = append(collector.handlers, newOnTrialEndHandler(stateRelaxedDataFile))
-	return collector
 }
