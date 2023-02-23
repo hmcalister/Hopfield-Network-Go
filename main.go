@@ -10,33 +10,26 @@ import (
 	"gonum.org/v1/gonum/stat/distuv"
 
 	"hmcalister/hopfield/hopfieldnetwork"
+	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 	"hmcalister/hopfield/hopfieldutils"
 )
 
 var (
-	numTrials     *int
-	numTestStates *int
-	numThreads    *int
-	dataFilePath  *string
-	InfoLogger    *log.Logger
-	ErrorLogger   *log.Logger
+	numTrials          *int
+	numTestStates      *int
+	numThreads         *int
+	stateLevelDataPath *string
+	trialLevelDataPath *string
+	InfoLogger         *log.Logger
 )
-
-type DataEntry struct {
-	Dimension            int     `parquet:"name=dimension, type=INT32"`
-	TargetStates         int     `parquet:"name=targetStates, type=INT32"`
-	UnitsUpdated         int     `parquet:"name=unitsUpdated, type=INT32"`
-	TestStates           int     `parquet:"name=testStates, type=INT32"`
-	NumStable            int     `parquet:"name=stableStates, type=INT32"`
-	MeanStableStepsTaken float64 `parquet:"name=meanStableStepsTaken, type=FLOAT"`
-}
 
 func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	dataFilePath = flag.String("dataFile", "data/data.pq", "The file to write test data to. Data is in a parquet format.")
+	stateLevelDataPath = flag.String("stateDataFile", "data/stateData.pq", "The file to write test data about states to. Data is in a parquet format.")
+	trialLevelDataPath = flag.String("trialDataFile", "data/trialData.pq", "The file to write test data about trials to. Data is in a parquet format.")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -47,7 +40,6 @@ func init() {
 	}
 
 	InfoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	ErrorLogger = log.New(logFile, "Error: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
@@ -63,11 +55,13 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
-	dataWriter := hopfieldutils.ParquetWriter(*dataFilePath, new(DataEntry))
-	defer dataWriter.WriteStop()
+	collector := datacollector.NewDataCollector().
+		AddStateRelaxedHandler(*stateLevelDataPath).
+		AddOnTrialEndHandler(*trialLevelDataPath)
+	defer collector.WriteStop()
+	go collector.CollectData()
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-
 	dimensionDistSeed := srcGenerator.Uint64()
 	targetStatesRatioDistSeed := srcGenerator.Uint64()
 	unitsUpdatedRatioDistSeed := srcGenerator.Uint64()
@@ -101,7 +95,6 @@ func main() {
 		InfoLogger.Printf("Dimension: %v\n", dimension)
 		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
 		InfoLogger.Printf("Units Updated: %v\n", unitsUpdated)
-		InfoLogger.Printf("Test States: %v\n", *numTestStates)
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(dimension).
@@ -112,6 +105,7 @@ func main() {
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(unitsUpdated).
+			SetDataCollector(collector).
 			Build()
 
 		stateGenerator := states.NewStateGeneratorBuilder().
@@ -125,29 +119,42 @@ func main() {
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
-		testResults := network.ConcurrentRelaxStates(testStates, *numThreads)
+		relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
 
-		numStable := 0
-		numStepsTotal := 0
-		for _, result := range testResults {
+		trialNumStable := 0
+		trialStableStepsTaken := 0
+		for stateIndex, result := range relaxationResults {
+			currentTestState := testStates[stateIndex]
+			event := datacollector.StateRelaxedData{
+				TrialIndex:             trial,
+				StateIndex:             stateIndex,
+				Stable:                 result.Stable,
+				NumSteps:               result.NumSteps,
+				FinalState:             currentTestState.RawVector().Data,
+				FinalStateEnergyVector: network.AllUnitEnergies(currentTestState),
+				DistancesToLearned:     result.DistancesToLearned,
+			}
+
+			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+				Index: datacollector.DataCollectionEvent_OnStateRelax,
+				Data:  event,
+			}
+
 			if result.Stable {
-				numStable += 1
-				numStepsTotal += result.NumSteps
+				trialNumStable += 1
+				trialStableStepsTaken += result.NumSteps
 			}
 		}
-
-		numStepsAvg := float64(numStepsTotal) / float64(numStable)
-
-		InfoLogger.Printf("Stable Test States: %v\n", numStable)
-		InfoLogger.Printf("Mean Stable States Steps Taken: %v\n", numStepsAvg)
-
-		dataWriter.Write(DataEntry{
-			Dimension:            dimension,
-			TargetStates:         numTargetStates,
-			UnitsUpdated:         unitsUpdated,
-			TestStates:           *numTestStates,
-			NumStable:            numStable,
-			MeanStableStepsTaken: numStepsAvg,
-		})
+		trialResult := datacollector.OnTrialEndData{
+			TrialIndex:                 trial,
+			NumberStableStates:         trialNumStable,
+			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
+		}
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_OnTrialEnd,
+			Data:  trialResult,
+		}
 	}
+
+	collector.WriteStop()
 }

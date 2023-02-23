@@ -18,7 +18,7 @@ import (
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-type LearningRule func(HopfieldNetwork, []*mat.VecDense) *mat.Dense
+type LearningRule func(*HopfieldNetwork, []*mat.VecDense) *mat.Dense
 
 // Define the different learning rule options.
 //
@@ -70,7 +70,7 @@ func getLearningRule(learningRule LearningRuleEnum, domain networkdomain.Network
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func binaryHebbian(network HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func binaryHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
 	for _, state := range states {
@@ -95,7 +95,7 @@ func binaryHebbian(network HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func bipolarHebbian(network HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func bipolarHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
 	for _, state := range states {
@@ -120,7 +120,7 @@ func bipolarHebbian(network HopfieldNetwork, states []*mat.VecDense) *mat.Dense 
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func delta(network HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
 
