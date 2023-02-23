@@ -6,34 +6,21 @@ import (
 	"github.com/xitongsys/parquet-go/writer"
 )
 
-// Define the handler interface which all handlers must implement
-//
-// getEventID allows the DataCollector to determine if this handler responds to the given ID.
-// In future this may change to a slice of ints so a handler can respond to many events
-//
-// handleEvent is the core functionality of a handler, where the event given to the
-// data collector is cast to a struct and written to a file.
-//
-// writeStop is a function to stop writing and close the file.
-type handler interface {
-	getEventID() int
-	handleEvent(event interface{})
-	writeStop()
+// Define the handleEvent function to be a template across all handlers
+type handleEventFn func(*writer.ParquetWriter, interface{})
+
+// A dataHandler specifies what events it listens to, and what to do when that event occurs
+type dataHandler struct {
+	eventID     int
+	dataWriter  *writer.ParquetWriter
+	handleEvent handleEventFn
 }
 
-// The default data handler (embedded by most handler structs directly)
-// implements getEventID and writeStop already, as well as dealing with
-// the eventID and writer fields.
-type defaultDataHandler struct {
-	eventID    int
-	dataWriter *writer.ParquetWriter
-}
-
-func (handler *defaultDataHandler) getEventID() int {
+func (handler *dataHandler) getEventID() int {
 	return handler.eventID
 }
 
-func (handler *defaultDataHandler) writeStop() {
+func (handler *dataHandler) writeStop() {
 	handler.dataWriter.WriteStop()
 }
 
@@ -58,7 +45,7 @@ func (handler *defaultDataHandler) writeStop() {
 // A ParquetWriter to the data file in question.
 func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) *writer.ParquetWriter {
 	dataFileWriter, _ := local.NewLocalFileWriter(dataFilePath)
-	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 1)
+	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 4)
 	parquetDataWriter.RowGroupSize = 128 * 1024 * 1024 //128MB
 	parquetDataWriter.PageSize = 8 * 1024              //8K
 	parquetDataWriter.CompressionType = parquet.CompressionCodec_SNAPPY
