@@ -132,7 +132,11 @@ func main() {
 				NumSteps:               result.NumSteps,
 				FinalState:             currentTestState.RawVector().Data,
 				FinalStateEnergyVector: network.AllUnitEnergies(currentTestState),
-				DistancesToLearned:     result.DistancesToLearned,
+				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(
+					network.GetLearnedStates(),
+					currentTestState,
+					1.0,
+				),
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
@@ -147,6 +151,7 @@ func main() {
 		}
 		trialResult := datacollector.OnTrialEndData{
 			TrialIndex:                 trial,
+			UnitsUpdated:               unitsUpdated,
 			NumberStableStates:         trialNumStable,
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}
