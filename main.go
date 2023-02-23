@@ -55,9 +55,11 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
-	dataCollector := datacollector.NewDataCollector()
-	defer dataCollector.WriteStop()
-	go dataCollector.CollectData()
+	collector := datacollector.NewDataCollector().
+		AddStateRelaxedHandler(*stateLevelDataPath).
+		AddOnTrialEndHandler(*trialLevelDataPath)
+	defer collector.WriteStop()
+	go collector.CollectData()
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	dimensionDistSeed := srcGenerator.Uint64()
@@ -103,7 +105,7 @@ func main() {
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(unitsUpdated).
-			SetDataCollector(dataCollector).
+			SetDataCollector(collector).
 			Build()
 
 		stateGenerator := states.NewStateGeneratorBuilder().
@@ -119,6 +121,8 @@ func main() {
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
 
+		trialNumStable := 0
+		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
 			currentTestState := testStates[stateIndex]
 			event := datacollector.StateRelaxedData{
@@ -131,13 +135,26 @@ func main() {
 				DistancesToLearned:     result.DistancesToLearned,
 			}
 
-			dataCollector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
 				Index: datacollector.DataCollectionEvent_OnStateRelax,
 				Data:  event,
 			}
-		}
 
+			if result.Stable {
+				trialNumStable += 1
+				trialStableStepsTaken += result.NumSteps
+			}
+		}
+		trialResult := datacollector.OnTrialEndData{
+			TrialIndex:                 trial,
+			NumberStableStates:         trialNumStable,
+			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
+		}
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_OnTrialEnd,
+			Data:  trialResult,
+		}
 	}
 
-	dataCollector.WriteStop()
+	collector.WriteStop()
 }
