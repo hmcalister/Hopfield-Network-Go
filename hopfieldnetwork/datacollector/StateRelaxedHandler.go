@@ -1,5 +1,7 @@
 package datacollector
 
+import "github.com/xitongsys/parquet-go/writer"
+
 // Representation of the result of a relaxation of a state.
 //
 // State is the state vector that has been relaxed.
@@ -21,20 +23,21 @@ type StateRelaxedData struct {
 	DistancesToLearned     []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
-type onStateRelaxedHandler struct {
-	defaultDataHandler
+// Add a state relaxed event handler.
+func (collector *DataCollector) AddStateRelaxedHandler(stateRelaxedDataFile string) *DataCollector {
+	collector.handlers = append(collector.handlers, newOnStateRelaxedCollector(stateRelaxedDataFile))
+	return collector
 }
 
-func newOnStateRelaxedCollector(dataFile string) *onStateRelaxedHandler {
-	return &onStateRelaxedHandler{
-		defaultDataHandler: defaultDataHandler{
-			eventID:    DataCollectionEvent_OnStateRelax,
-			dataWriter: newParquetWriter(dataFile, new(StateRelaxedData)),
-		},
+func newOnStateRelaxedCollector(dataFile string) *dataHandler {
+	return &dataHandler{
+		eventID:     DataCollectionEvent_OnStateRelax,
+		dataWriter:  newParquetWriter(dataFile, new(StateRelaxedData)),
+		handleEvent: handleStateRelaxedEvent,
 	}
 }
 
-func (collector *onStateRelaxedHandler) handleEvent(event interface{}) {
+func handleStateRelaxedEvent(writer *writer.ParquetWriter, event interface{}) {
 	result := event.(StateRelaxedData)
-	collector.dataWriter.Write(result)
+	writer.Write(result)
 }
