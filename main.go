@@ -43,12 +43,8 @@ func init() {
 }
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
-
-const MIN_DIMENSION = 50
-const MAX_DIMENSION = 100
-
-const MIN_TARGET_STATES_RATIO = 0.05
-const MAX_TARGET_STATES_RATIO = 1.0
+const DIMENSION = 100
+const TARGET_STATES_RATIO = 0.1
 
 const MIN_UNITS_UPDATED_RATIO = 0.0
 const MAX_UNITS_UPDATED_RATIO = 1.0
@@ -62,42 +58,24 @@ func main() {
 	go collector.CollectData()
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-	dimensionDistSeed := srcGenerator.Uint64()
-	targetStatesRatioDistSeed := srcGenerator.Uint64()
 	unitsUpdatedRatioDistSeed := srcGenerator.Uint64()
-	dimensionDist := distuv.Uniform{Min: MIN_DIMENSION, Max: MAX_DIMENSION, Src: rand.NewSource(dimensionDistSeed)}
-	targetStatesRatioDist := distuv.Uniform{Min: MIN_TARGET_STATES_RATIO, Max: MAX_TARGET_STATES_RATIO, Src: rand.NewSource(targetStatesRatioDistSeed)}
 	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO, Src: rand.NewSource(unitsUpdatedRatioDistSeed)}
-	InfoLogger.Printf("dimensionDist: %#v, Src: %v\n", dimensionDist, dimensionDistSeed)
-	InfoLogger.Printf("targetStatesRatioDist: %#v, Src: %v\n", targetStatesRatioDist, targetStatesRatioDistSeed)
 	InfoLogger.Printf("unitsUpdatedRatioDist: %#v, Src: %v\n", unitsUpdatedRatioDist, unitsUpdatedRatioDistSeed)
 
 	for trial := 0; trial < *numTrials; trial++ {
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
-		floatDimension := dimensionDist.Rand()
-		dimension := int(floatDimension)
-
-		numTargetStates := int(floatDimension * targetStatesRatioDist.Rand())
-		if numTargetStates < 0 {
-			numTargetStates = 0
-		} else if numTargetStates > dimension {
-			numTargetStates = dimension
-		}
-
-		unitsUpdated := int(floatDimension * unitsUpdatedRatioDist.Rand())
+		unitsUpdated := int(DIMENSION * unitsUpdatedRatioDist.Rand())
 		if unitsUpdated < 1 {
 			unitsUpdated = 1
-		} else if unitsUpdated > dimension {
-			unitsUpdated = dimension
+		} else if unitsUpdated > DIMENSION {
+			unitsUpdated = DIMENSION
 		}
 
-		InfoLogger.Printf("Dimension: %v\n", dimension)
-		InfoLogger.Printf("Num Target States: %v\n", numTargetStates)
 		InfoLogger.Printf("Units Updated: %v\n", unitsUpdated)
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
-			SetNetworkDimension(dimension).
+			SetNetworkDimension(DIMENSION).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
 			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
@@ -111,11 +89,11 @@ func main() {
 		stateGenerator := states.NewStateGeneratorBuilder().
 			SetRandMin(-1).
 			SetRandMax(1).
-			SetGeneratorDimension(dimension).
+			SetGeneratorDimension(DIMENSION).
 			SetGeneratorDomain(DOMAIN).
 			Build()
 
-		targetStates := stateGenerator.CreateStateCollection(numTargetStates)
+		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES_RATIO * DIMENSION)
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
