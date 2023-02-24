@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/profile"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 
@@ -51,6 +52,8 @@ const MAX_UNITS_UPDATED_RATIO = 1.0
 
 // Main method for entry point
 func main() {
+	defer profile.Start(profile.ProfilePath("./profiles")).Stop()
+
 	collector := datacollector.NewDataCollector().
 		AddStateRelaxedHandler(*stateLevelDataPath).
 		AddOnTrialEndHandler(*trialLevelDataPath)
