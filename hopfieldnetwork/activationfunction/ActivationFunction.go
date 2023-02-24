@@ -16,8 +16,11 @@ import (
 type ActivationFunction func(*mat.VecDense)
 
 func binaryDomainMappingFunction(vector *mat.VecDense) {
+	if vector.AtVec(0) < 0 {
+		vector.ScaleVec(-1.0, vector)
+	}
 	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) <= 0.0 {
+		if vector.AtVec(n) < 0.0 {
 			vector.SetVec(n, 0.0)
 		} else {
 			vector.SetVec(n, 1.0)
@@ -26,8 +29,11 @@ func binaryDomainMappingFunction(vector *mat.VecDense) {
 }
 
 func bipolarDomainMappingFunction(vector *mat.VecDense) {
+	if vector.AtVec(0) < 0 {
+		vector.ScaleVec(-1.0, vector)
+	}
 	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) <= 0.0 {
+		if vector.AtVec(n) < 0.0 {
 			vector.SetVec(n, -1.0)
 		} else {
 			vector.SetVec(n, 1.0)
