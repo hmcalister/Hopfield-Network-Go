@@ -48,10 +48,9 @@ func init() {
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
 const DIMENSION = 100
-const TARGET_STATES_RATIO = 0.1
-
-const MIN_UNITS_UPDATED_RATIO = 0.0
-const MAX_UNITS_UPDATED_RATIO = 1.0
+const TARGET_STATES_RATIO_MIN = 0.0
+const TARGET_STATES_RATIO_MAX = 0.5
+const UNITS_UPDATED = 5
 
 // Main method for entry point
 func main() {
@@ -67,9 +66,9 @@ func main() {
 	signal.Notify(keyboardInterrupt, os.Interrupt)
 
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-	unitsUpdatedRatioDistSeed := srcGenerator.Uint64()
-	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO, Src: rand.NewSource(unitsUpdatedRatioDistSeed)}
-	InfoLogger.Printf("unitsUpdatedRatioDist: %#v, Src: %v\n", unitsUpdatedRatioDist, unitsUpdatedRatioDistSeed)
+	targetStateRatioDistSeed := srcGenerator.Uint64()
+	targetStateRatioDist := distuv.Uniform{Min: TARGET_STATES_RATIO_MIN, Max: TARGET_STATES_RATIO_MAX, Src: rand.NewSource(targetStateRatioDistSeed)}
+	InfoLogger.Printf("targetStateRatioDist: %#v, Src: %v\n", targetStateRatioDist, targetStateRatioDistSeed)
 
 TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
@@ -81,24 +80,22 @@ TrialLoop:
 		}
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
-		unitsUpdated := int(DIMENSION * unitsUpdatedRatioDist.Rand())
-		if unitsUpdated < 1 {
-			unitsUpdated = 1
-		} else if unitsUpdated > DIMENSION {
-			unitsUpdated = DIMENSION
+		numTargetStates := int(DIMENSION * targetStateRatioDist.Rand())
+		if numTargetStates < 1 {
+			numTargetStates = 1
 		}
 
-		InfoLogger.Printf("Units Updated: %v\n", unitsUpdated)
+		InfoLogger.Printf("Target States: %v\n", numTargetStates)
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
-			SetEpochs(1).
+			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
+			SetEpochs(100).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
-			SetUnitsUpdatedPerStep(unitsUpdated).
+			SetUnitsUpdatedPerStep(UNITS_UPDATED).
 			SetDataCollector(collector).
 			Build()
 
@@ -109,7 +106,7 @@ TrialLoop:
 			SetGeneratorDomain(DOMAIN).
 			Build()
 
-		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES_RATIO * DIMENSION)
+		targetStates := stateGenerator.CreateStateCollection(numTargetStates)
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
@@ -118,19 +115,12 @@ TrialLoop:
 		trialNumStable := 0
 		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
-			currentTestState := testStates[stateIndex]
+			// currentTestState := testStates[stateIndex]
 			event := datacollector.StateRelaxedData{
-				TrialIndex:             trial,
-				StateIndex:             stateIndex,
-				Stable:                 result.Stable,
-				NumSteps:               result.NumSteps,
-				FinalState:             currentTestState.RawVector().Data,
-				FinalStateEnergyVector: network.AllUnitEnergies(currentTestState),
-				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(
-					network.GetLearnedStates(),
-					currentTestState,
-					1.0,
-				),
+				TrialIndex: trial,
+				StateIndex: stateIndex,
+				Stable:     result.Stable,
+				NumSteps:   result.NumSteps,
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
@@ -145,7 +135,7 @@ TrialLoop:
 		}
 		trialResult := datacollector.OnTrialEndData{
 			TrialIndex:                 trial,
-			UnitsUpdated:               unitsUpdated,
+			NumTargetStates:            numTargetStates,
 			NumberStableStates:         trialNumStable,
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}

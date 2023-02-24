@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 FIGSIZE = (10,8)
-trialDataColumns = ["TrialIndex", "UnitsUpdated", "NumberStableStates"]
+trialDataColumns = ["TrialIndex", "NumTargetStates", "NumberStableStates"]
 trialData = pd.read_parquet("../data/trialData.pq", columns=trialDataColumns)
 stateDataColumns = ['TrialIndex', 'StateIndex', 'Stable', 'NumSteps', "DistancesToLearned"]
 stateData = pd.read_parquet("../data/stateData.pq", columns=stateDataColumns)
@@ -30,10 +30,12 @@ numStepsDf["Counts"] = numSteps.values
 # -------------------------------------------------------------------------------------------------
 # Stable States vs Unstable States Count
 
-stableCount = stateData["Stable"].value_counts()
+stableCounts = list(stateData["Stable"].value_counts().values)
+if len(stableCounts) < 2:
+    stableCounts.append(0)
 stableDf = pd.DataFrame()
 stableDf["Stable"] = ["Stable", "Unstable"]
-stableDf["Counts"] = stableCount.values
+stableDf["Counts"] = stableCounts
 
 
 fig = plt.figure(figsize=FIGSIZE)
@@ -43,21 +45,21 @@ plt.title("Count of Stable and Unstable States")
 plt.show()
 
 # -------------------------------------------------------------------------------------------------
-stabilityRatioByUnitsUpdated = trialData.copy()
-stabilityRatioByUnitsUpdated["StabilityRatio"] = stabilityRatioByUnitsUpdated["NumberStableStates"]/1000
-stabilityRatioByUnitsUpdated = stabilityRatioByUnitsUpdated.groupby("UnitsUpdated").aggregate({"StabilityRatio": [np.mean, np.std, "count"]})
-stabilityRatioByUnitsUpdated = stabilityRatioByUnitsUpdated.reset_index()
-stabilityRatioByUnitsUpdated[("StabilityRatio","err")] = \
-    1.96 * stabilityRatioByUnitsUpdated["StabilityRatio"]["std"]/np.sqrt(stabilityRatioByUnitsUpdated["StabilityRatio"]["count"])
+stabilityRatioByNumTargetStates = trialData.copy()
+stabilityRatioByNumTargetStates["StabilityRatio"] = stabilityRatioByNumTargetStates["NumberStableStates"]/1000
+stabilityRatioByNumTargetStates = stabilityRatioByNumTargetStates.groupby("NumTargetStates").aggregate({"StabilityRatio": [np.mean, np.std, "count"]})
+stabilityRatioByNumTargetStates = stabilityRatioByNumTargetStates.reset_index()
+stabilityRatioByNumTargetStates[("StabilityRatio","err")] = \
+    1.96 * stabilityRatioByNumTargetStates["StabilityRatio"]["std"]/np.sqrt(stabilityRatioByNumTargetStates["StabilityRatio"]["count"])
 fig = plt.figure(figsize=FIGSIZE)
-plt.errorbar(x=stabilityRatioByUnitsUpdated["UnitsUpdated"], 
-    y=stabilityRatioByUnitsUpdated["StabilityRatio"]["mean"], 
-    yerr=stabilityRatioByUnitsUpdated["StabilityRatio"]["err"], 
+plt.errorbar(x=stabilityRatioByNumTargetStates["NumTargetStates"], 
+    y=stabilityRatioByNumTargetStates["StabilityRatio"]["mean"], 
+    yerr=stabilityRatioByNumTargetStates["StabilityRatio"]["err"], 
     marker="o",
     ecolor=(0,0,0,0.3),
     capsize=3)
-plt.title("Stability Ratio\nby Number of Units Updated")
-plt.xlabel("Number of Units Updated (Per Network Step)")
+plt.title("Stability Ratio\nby Number of Target States")
+plt.xlabel("Number of Target States")
 plt.ylabel("Stability Ratio")
 plt.show()
 
@@ -75,26 +77,25 @@ plt.show()
 
 
 # -------------------------------------------------------------------------------------------------
-# Mean Minimum Distance to Learned Attractor Distribution (grouped by UnitsUpdated)
+# Mean Minimum Distance to Learned Attractor Distribution (grouped by NumTargetStates)
 
-minDistsByUnitsUpdated = stableStateData.copy()
-minDistsByUnitsUpdated = minDistsByUnitsUpdated.loc[minDistsByUnitsUpdated["MinimumDistanceToLearned"] > 0]
-minDistsByUnitsUpdated = stableStateData.groupby("UnitsUpdated").aggregate({"MinimumDistanceToLearned": [np.mean, np.std, "count"]})
-minDistsByUnitsUpdated = minDistsByUnitsUpdated.reset_index()
-minDistsByUnitsUpdated[("MinimumDistanceToLearned","err")] = \
-    1.96 * minDistsByUnitsUpdated["MinimumDistanceToLearned"]["std"]/np.sqrt(minDistsByUnitsUpdated["MinimumDistanceToLearned"]["count"])
+minDistsByNumTargetStates = stableStateData.copy()
+minDistsByNumTargetStates = minDistsByNumTargetStates.loc[minDistsByNumTargetStates["MinimumDistanceToLearned"] > 0]
+minDistsByNumTargetStates = stableStateData.groupby("NumTargetStates").aggregate({"MinimumDistanceToLearned": [np.mean, np.std, "count"]})
+minDistsByNumTargetStates = minDistsByNumTargetStates.reset_index()
+minDistsByNumTargetStates[("MinimumDistanceToLearned","err")] = \
+    1.96 * minDistsByNumTargetStates["MinimumDistanceToLearned"]["std"]/np.sqrt(minDistsByNumTargetStates["MinimumDistanceToLearned"]["count"])
 fig = plt.figure(figsize=FIGSIZE)
-plt.errorbar(x=minDistsByUnitsUpdated["UnitsUpdated"], 
-    y=minDistsByUnitsUpdated["MinimumDistanceToLearned"]["mean"], 
-    yerr=minDistsByUnitsUpdated["MinimumDistanceToLearned"]["err"], 
+plt.errorbar(x=minDistsByNumTargetStates["NumTargetStates"], 
+    y=minDistsByNumTargetStates["MinimumDistanceToLearned"]["mean"], 
+    yerr=minDistsByNumTargetStates["MinimumDistanceToLearned"]["err"], 
     marker="o",
     ecolor=(0,0,0,0.3),
     capsize=3)
-plt.title("Mean Minimum Distance to Nearest Learned Attractor\nby Number of Units Updated")
-plt.xlabel("Number of Units Updated (Per Network Step)")
+plt.title("Mean Minimum Distance to Nearest Learned Attractor\nby Number of Target States")
+plt.xlabel("Number of Target States")
 plt.ylabel("Mean Minimum Distance to Nearest Learned Attractor")
 plt.show()
-
 
 # -------------------------------------------------------------------------------------------------
 # Number of steps to reach stable state (all trials)
@@ -107,21 +108,21 @@ plt.tight_layout()
 plt.show()
 
 # -------------------------------------------------------------------------------------------------
-# Number of steps to reach stable state (by NumUnitsUpdated)
+# Number of steps to reach stable state (by NumNumTargetStates)
 
-numStepsByUnitsUpdated = stableStateData.copy()
-numStepsByUnitsUpdated = stableStateData.groupby("UnitsUpdated").aggregate({"NumSteps": [np.mean, np.std, "count"]})
-numStepsByUnitsUpdated = numStepsByUnitsUpdated.reset_index()
-numStepsByUnitsUpdated[("NumSteps","err")] = \
-    1.96 * numStepsByUnitsUpdated["NumSteps"]["std"]/np.sqrt(numStepsByUnitsUpdated["NumSteps"]["count"])
+numStepsByNumTargetStates = stableStateData.copy()
+numStepsByNumTargetStates = stableStateData.groupby("NumTargetStates").aggregate({"NumSteps": [np.mean, np.std, "count"]})
+numStepsByNumTargetStates = numStepsByNumTargetStates.reset_index()
+numStepsByNumTargetStates[("NumSteps","err")] = \
+    1.96 * numStepsByNumTargetStates["NumSteps"]["std"]/np.sqrt(numStepsByNumTargetStates["NumSteps"]["count"])
 fig = plt.figure(figsize=FIGSIZE)
-plt.errorbar(x=numStepsByUnitsUpdated["UnitsUpdated"], 
-    y=numStepsByUnitsUpdated["NumSteps"]["mean"], 
-    yerr=numStepsByUnitsUpdated["NumSteps"]["err"], 
+plt.errorbar(x=numStepsByNumTargetStates["NumTargetStates"], 
+    y=numStepsByNumTargetStates["NumSteps"]["mean"], 
+    yerr=numStepsByNumTargetStates["NumSteps"]["err"], 
     marker="o",
     ecolor=(0,0,0,0.7),
     capsize=3)
-plt.title("Mean Number of Steps Taken to Relax State\nby Number of Units Updated")
-plt.xlabel("Number of Units Updated (Per Network Step)")
+plt.title("Mean Number of Steps Taken to Relax State\nby Number of Target States")
+plt.xlabel("Number of Target States")
 plt.ylabel("Mean Number of Steps Taken to Relax State")
 plt.show()
