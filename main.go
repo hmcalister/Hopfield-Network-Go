@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"io"
 	"log"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/pkg/profile"
@@ -40,7 +42,8 @@ func init() {
 		panic("Could not open log file!")
 	}
 
-	InfoLogger = log.New(logFile, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	multiWriter := io.MultiWriter(os.Stdout, logFile)
+	InfoLogger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
@@ -60,12 +63,22 @@ func main() {
 	defer collector.WriteStop()
 	go collector.CollectData()
 
+	keyboardInterrupt := make(chan os.Signal, 1)
+	signal.Notify(keyboardInterrupt, os.Interrupt)
+
 	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
 	unitsUpdatedRatioDistSeed := srcGenerator.Uint64()
 	unitsUpdatedRatioDist := distuv.Uniform{Min: MIN_UNITS_UPDATED_RATIO, Max: MAX_UNITS_UPDATED_RATIO, Src: rand.NewSource(unitsUpdatedRatioDistSeed)}
 	InfoLogger.Printf("unitsUpdatedRatioDist: %#v, Src: %v\n", unitsUpdatedRatioDist, unitsUpdatedRatioDistSeed)
 
+TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
+		select {
+		case <-keyboardInterrupt:
+			InfoLogger.Printf("RECEIVED KEYBOARD INTERRUPT")
+			break TrialLoop
+		default:
+		}
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
 		unitsUpdated := int(DIMENSION * unitsUpdatedRatioDist.Rand())
