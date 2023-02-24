@@ -30,12 +30,10 @@ numStepsDf["Counts"] = numSteps.values
 # -------------------------------------------------------------------------------------------------
 # Stable States vs Unstable States Count
 
-stableCounts = list(stateData["Stable"].value_counts().values)
-if len(stableCounts) < 2:
-    stableCounts.append(0)
+stableCounts = stateData["Stable"].value_counts()
 stableDf = pd.DataFrame()
-stableDf["Stable"] = ["Stable", "Unstable"]
-stableDf["Counts"] = stableCounts
+stableDf["Stable"] = stableCounts.keys()
+stableDf["Counts"] = stableCounts.values
 
 
 fig = plt.figure(figsize=FIGSIZE)

@@ -14,11 +14,11 @@ import "github.com/xitongsys/parquet-go/writer"
 //
 // DistancesToAllLearned is an array of distances to all learned states.
 type StateRelaxedData struct {
-	TrialIndex               int     `parquet:"name=TrialIndex, type=INT32"`
-	StateIndex               int     `parquet:"name=StateIndex, type=INT32"`
-	Stable                   bool    `parquet:"name=Stable, type=BOOLEAN"`
-	NumSteps                 int     `parquet:"name=NumSteps, type=INT32"`
-	MinimumDistanceToLearned float64 `parquet:"name=MinimumDistanceToLearned, type=DOUBLE, repetitiontype=REPEATED"`
+	TrialIndex         int       `parquet:"name=TrialIndex, type=INT32"`
+	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
+	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
+	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
+	DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
 // Add a state relaxed event handler.
