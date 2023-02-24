@@ -54,7 +54,7 @@ const UNITS_UPDATED = 5
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ProfilePath("./profiles")).Stop()
+	defer profile.Start(profile.ProfilePath("./profiles"), profile.CPUProfile).Stop()
 
 	collector := datacollector.NewDataCollector().
 		AddStateRelaxedHandler(*stateLevelDataPath).
@@ -115,12 +115,16 @@ TrialLoop:
 		trialNumStable := 0
 		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
-			// currentTestState := testStates[stateIndex]
+			currentTestState := testStates[stateIndex]
 			event := datacollector.StateRelaxedData{
 				TrialIndex: trial,
 				StateIndex: stateIndex,
 				Stable:     result.Stable,
 				NumSteps:   result.NumSteps,
+				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(
+					network.GetLearnedStates(),
+					currentTestState,
+					1.0),
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
