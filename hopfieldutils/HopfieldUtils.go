@@ -51,9 +51,21 @@ func IsInSlice[T comparable](slice []T, elem T) bool {
 func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense, norm float64) []float64 {
 	tempVec := mat.NewVecDense(vector.Len(), nil)
 	distances := make([]float64, len(slice))
+	var d1 float64
+	var d2 float64
 	for index, item := range slice {
 		tempVec.SubVec(item, vector)
-		distances[index] = tempVec.Norm(norm)
+		d1 = tempVec.Norm(norm)
+
+		tempVec.ScaleVec(-1.0, item)
+		tempVec.SubVec(tempVec, vector)
+		d2 = tempVec.Norm(norm)
+
+		if d1 < d2 {
+			distances[index] = d1
+		} else {
+			distances[index] = d2
+		}
 	}
 	return distances
 }
