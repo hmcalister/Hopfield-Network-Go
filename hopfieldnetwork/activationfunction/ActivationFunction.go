@@ -16,7 +16,6 @@ import (
 type ActivationFunction func(*mat.VecDense)
 
 func binaryDomainMappingFunction(vector *mat.VecDense) {
-
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < 0.0 {
 			vector.SetVec(n, 0.0)
