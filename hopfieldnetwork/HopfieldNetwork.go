@@ -252,10 +252,10 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
 		newState.MulVec(network.matrix, state)
-		network.activationFunction(newState)
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
+		network.activationFunction(state)
 	}
 }
 
@@ -279,10 +279,10 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
 			newState.MulVec(network.matrix, state)
-			network.activationFunction(newState)
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
+			network.activationFunction(state)
 		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
@@ -335,10 +335,10 @@ StateRecvLoop:
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
 				newState.MulVec(network.matrix, state)
-				network.activationFunction(newState)
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
+				network.activationFunction(state)
 			}
 
 			if network.StateIsStable(state) {
