@@ -20,8 +20,8 @@ func (handler *dataHandler) getEventID() int {
 	return handler.eventID
 }
 
-func (handler *dataHandler) writeStop() {
-	handler.dataWriter.WriteStop()
+func (handler *dataHandler) writeStop() error {
+	return handler.dataWriter.WriteStop()
 }
 
 // Create a new parquet writer to a given file path, using a given struct.
