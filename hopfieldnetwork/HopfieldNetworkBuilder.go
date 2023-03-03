@@ -22,6 +22,7 @@ type HopfieldNetworkBuilder struct {
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
+	updateCoefficient              float64
 	dataCollector                  *datacollector.DataCollector
 }
 
@@ -39,6 +40,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		unitsUpdatedPerStep:            1,
+		updateCoefficient:              1.0,
 		dataCollector:                  datacollector.NewDataCollector(),
 	}
 }
@@ -150,6 +152,18 @@ func (networkBuilder *HopfieldNetworkBuilder) SetUnitsUpdatedPerStep(unitsUpdate
 	return networkBuilder
 }
 
+// Set the update coefficient of the network. This value is used to determine how much of the update
+// should be added to the previous state when updating a state. An update coefficient of 1.0 means
+// the entire update is applied in full, while a coefficient of 0.0 means no update occurs.
+//
+// Default to 1. Must be in the range (0.0, 1.0]
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetUpdateCoefficient(updateCoefficient float64) *HopfieldNetworkBuilder {
+	networkBuilder.updateCoefficient = updateCoefficient
+	return networkBuilder
+}
+
 // Set the DataCollector to be used in the network.
 //
 // Note this method returns the builder pointer so chained calls can be used.
@@ -174,6 +188,10 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 
 	if networkBuilder.unitsUpdatedPerStep < 0 || networkBuilder.unitsUpdatedPerStep > networkBuilder.dimension {
 		panic("HopfieldNetworkBuilder encountered an error during build! unitsUpdatedPerStep must be a positive integer that is smaller than the network dimension!")
+	}
+
+	if networkBuilder.updateCoefficient <= 0.0 || networkBuilder.updateCoefficient > 1.0 {
+		panic("HopfieldNetworkBuilder encountered an error during build! updateCoefficient must be in the range (0.0, 1.0]!")
 	}
 
 	randSrc := rand.NewSource((uint64(time.Now().UnixNano())))
@@ -211,6 +229,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
+		updateCoefficient:              networkBuilder.updateCoefficient,
 		dataCollector:                  networkBuilder.dataCollector,
 	}
 

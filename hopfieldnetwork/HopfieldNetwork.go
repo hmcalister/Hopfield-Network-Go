@@ -31,6 +31,7 @@ type HopfieldNetwork struct {
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
+	updateCoefficient              float64
 	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
@@ -56,6 +57,9 @@ func (network *HopfieldNetwork) cleanMatrix() {
 			}
 		}
 	}
+
+	weightNorm := network.matrix.Norm(2)
+	network.matrix.Scale(1/weightNorm, network.matrix)
 }
 
 // Create an return an array of integers that contains every unit index once.
@@ -253,7 +257,9 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	for _, chunk := range chunkedIndices {
 		newState.MulVec(network.matrix, state)
 		for _, unitIndex := range chunk {
-			state.SetVec(unitIndex, newState.AtVec(unitIndex))
+			initialVal := state.AtVec(unitIndex)
+			finalVal := newState.AtVec(unitIndex)
+			state.SetVec(unitIndex, initialVal+network.updateCoefficient*(finalVal-initialVal))
 		}
 		network.activationFunction(state)
 	}
@@ -280,7 +286,9 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		for _, chunk := range chunkedIndices {
 			newState.MulVec(network.matrix, state)
 			for _, unitIndex := range chunk {
-				state.SetVec(unitIndex, newState.AtVec(unitIndex))
+				initialVal := state.AtVec(unitIndex)
+				finalVal := newState.AtVec(unitIndex)
+				state.SetVec(unitIndex, initialVal+network.updateCoefficient*(finalVal-initialVal))
 			}
 			network.activationFunction(state)
 		}
@@ -336,7 +344,9 @@ StateRecvLoop:
 			for _, chunk := range chunkedIndices {
 				newState.MulVec(network.matrix, state)
 				for _, unitIndex := range chunk {
-					state.SetVec(unitIndex, newState.AtVec(unitIndex))
+					initialVal := state.AtVec(unitIndex)
+					finalVal := newState.AtVec(unitIndex)
+					state.SetVec(unitIndex, initialVal+network.updateCoefficient*(finalVal-initialVal))
 				}
 				network.activationFunction(state)
 			}
