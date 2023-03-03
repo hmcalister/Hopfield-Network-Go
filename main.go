@@ -6,11 +6,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/pkg/profile"
-	"golang.org/x/exp/rand"
-	"gonum.org/v1/gonum/stat/distuv"
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
@@ -18,6 +15,11 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/states"
 	"hmcalister/hopfield/hopfieldutils"
 )
+
+const DOMAIN networkdomain.NetworkDomain = networkdomain.ContinuousCube
+const DIMENSION = 100
+const TARGET_STATES = 10
+const UNITS_UPDATED = 1
 
 var (
 	numTrials          *int
@@ -46,15 +48,9 @@ func init() {
 	InfoLogger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
-const DIMENSION = 100
-const TARGET_STATES_RATIO_MIN = 0.0
-const TARGET_STATES_RATIO_MAX = 0.5
-const UNITS_UPDATED = 5
-
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ProfilePath("./profiles"), profile.CPUProfile).Stop()
+	defer profile.Start(profile.ProfilePath("./profiles"), profile.CPUProfile, profile.NoShutdownHook).Stop()
 
 	collector := datacollector.NewDataCollector().
 		AddStateRelaxedHandler(*stateLevelDataPath).
@@ -64,11 +60,6 @@ func main() {
 
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)
-
-	srcGenerator := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-	targetStateRatioDistSeed := srcGenerator.Uint64()
-	targetStateRatioDist := distuv.Uniform{Min: TARGET_STATES_RATIO_MIN, Max: TARGET_STATES_RATIO_MAX, Src: rand.NewSource(targetStateRatioDistSeed)}
-	InfoLogger.Printf("targetStateRatioDist: %#v, Src: %v\n", targetStateRatioDist, targetStateRatioDistSeed)
 
 TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
@@ -80,22 +71,16 @@ TrialLoop:
 		}
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
 
-		numTargetStates := int(DIMENSION * targetStateRatioDist.Rand())
-		if numTargetStates < 1 {
-			numTargetStates = 1
-		}
-
-		InfoLogger.Printf("Target States: %v\n", numTargetStates)
-
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
-			SetEpochs(100).
+			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
+			SetEpochs(1).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
+			SetUpdateCoefficient(0.5).
 			SetDataCollector(collector).
 			Build()
 
@@ -106,7 +91,7 @@ TrialLoop:
 			SetGeneratorDomain(DOMAIN).
 			Build()
 
-		targetStates := stateGenerator.CreateStateCollection(numTargetStates)
+		targetStates := stateGenerator.CreateLearnedStateCollection(TARGET_STATES)
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
@@ -139,7 +124,7 @@ TrialLoop:
 		}
 		trialResult := datacollector.OnTrialEndData{
 			TrialIndex:                 trial,
-			NumTargetStates:            numTargetStates,
+			NumTargetStates:            TARGET_STATES,
 			NumberStableStates:         trialNumStable,
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}
@@ -147,7 +132,13 @@ TrialLoop:
 			Index: datacollector.DataCollectionEvent_OnTrialEnd,
 			Data:  trialResult,
 		}
+		InfoLogger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
 	}
 
-	collector.WriteStop()
+	writeStopError := collector.WriteStop()
+	if writeStopError != nil {
+		InfoLogger.Fatalf("ERROR: DataWriter finished with error %#v!\n", writeStopError)
+	}
+	InfoLogger.Println("DATA WRITTEN")
+	InfoLogger.Println("TRIAL COMPLETE")
 }
