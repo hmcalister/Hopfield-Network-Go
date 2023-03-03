@@ -45,13 +45,8 @@ const (
 //
 // The learning rule from the family specified, implemented for the selected network domain
 func getLearningRule(learningRule LearningRuleEnum, domain networkdomain.NetworkDomain) LearningRule {
-	domainSpecificHebbian := map[networkdomain.NetworkDomain]LearningRule{
-		networkdomain.BinaryDomain:  binaryHebbian,
-		networkdomain.BipolarDomain: bipolarHebbian,
-	}[domain]
-
 	learningRuleMaps := map[LearningRuleEnum]LearningRule{
-		HebbianLearningRule: domainSpecificHebbian,
+		HebbianLearningRule: hebbian,
 		DeltaLearningRule:   delta,
 	}
 
@@ -70,20 +65,20 @@ func getLearningRule(learningRule LearningRuleEnum, domain networkdomain.Network
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func binaryHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
-	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
-	updatedMatrix.Zero()
-	for _, state := range states {
-		for i := 0; i < network.GetDimension(); i++ {
-			for j := 0; j < network.GetDimension(); j++ {
-				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
-				val += updatedMatrix.At(i, j)
-				updatedMatrix.Set(i, j, val)
-			}
-		}
-	}
-	return updatedMatrix
-}
+// func binaryHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+// 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
+// 	updatedMatrix.Zero()
+// 	for _, state := range states {
+// 		for i := 0; i < network.GetDimension(); i++ {
+// 			for j := 0; j < network.GetDimension(); j++ {
+// 				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
+// 				val += updatedMatrix.At(i, j)
+// 				updatedMatrix.Set(i, j, val)
+// 			}
+// 		}
+// 	}
+// 	return updatedMatrix
+// }
 
 // Compute the Hebbian weight update for a bipolar domain network.
 //
@@ -95,7 +90,7 @@ func binaryHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense 
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func bipolarHebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
 	for _, state := range states {
