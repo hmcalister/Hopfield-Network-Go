@@ -15,16 +15,6 @@ import (
 // implies an ActivationFunction will change the vector directly - not return a new vector!
 type ActivationFunction func(*mat.VecDense)
 
-func binaryDomainMappingFunction(vector *mat.VecDense) {
-	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) < 0.0 {
-			vector.SetVec(n, 0.0)
-		} else {
-			vector.SetVec(n, 1.0)
-		}
-	}
-}
-
 func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < 0.0 {
@@ -35,12 +25,85 @@ func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	}
 }
 
-func identityMappingFunction(vector *mat.VecDense) {
+func unitSphereMappingFunction(vector *mat.VecDense) {
+	norm := vector.Norm(2.0)
+	vector.ScaleVec(1/norm, vector)
+}
+
+func continuousCubeMappingFunction(vector *mat.VecDense) {
+	for n := 0; n < vector.Len(); n++ {
+		if vector.AtVec(n) < 0.0 {
+			vector.SetVec(n, -1.0)
+		}
+		if vector.AtVec(n) > 1.0 {
+			vector.SetVec(n, 1.0)
+		}
+	}
+}
+
+var domainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
+	networkdomain.BipolarDomain:  bipolarDomainMappingFunction,
+	networkdomain.UnitSphere:     unitSphereMappingFunction,
+	networkdomain.ContinuousCube: continuousCubeMappingFunction,
+}
+
+// Given a domain, get the activation function the network will use during relaxing.
+//
+// # Arguments
+//
+// * `domain`: The network domain.
+//
+// # Returns
+//
+// The activation function to use during relaxing a state.
+func GetNetworkActivationFunction(domain networkdomain.NetworkDomain) ActivationFunction {
+	return domainToActivationFunctionMap[domain]
+}
+
+// Given a domain, get the activation function used to create new states.
+//
+// # Arguments
+//
+// * `domain`: The network domain.
+//
+// # Returns
+//
+// The activation function to create a new state.
+func GetGeneralStateMapper(domain networkdomain.NetworkDomain) ActivationFunction {
+	domainToGeneralStateMapper := map[networkdomain.NetworkDomain]ActivationFunction{
+		networkdomain.ContinuousCube: continuousCubeMappingFunction,
+	}
+	activationFn, ok := domainToGeneralStateMapper[domain]
+
+	if ok {
+		return activationFn
+	} else {
+		// If the network domain is not specified here, use the general activation instead
+		return domainToActivationFunctionMap[domain]
+	}
 
 }
 
-var DomainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
-	networkdomain.BinaryDomain:     binaryDomainMappingFunction,
-	networkdomain.BipolarDomain:    bipolarDomainMappingFunction,
-	networkdomain.ContinuousDomain: identityMappingFunction,
+// Given a domain, get the activation function used to create learned states.
+//
+// # Arguments
+//
+// * `domain`: The network domain.
+//
+// # Returns
+//
+// The activation function to create a new state.
+func GetLearnedStateMapper(domain networkdomain.NetworkDomain) ActivationFunction {
+	domainToGeneralStateMapper := map[networkdomain.NetworkDomain]ActivationFunction{
+		networkdomain.ContinuousCube: bipolarDomainMappingFunction,
+	}
+	activationFn, ok := domainToGeneralStateMapper[domain]
+
+	if ok {
+		return activationFn
+	} else {
+		// If the network domain is not specified here, use the general activation instead
+		return GetGeneralStateMapper(domain)
+	}
+
 }
