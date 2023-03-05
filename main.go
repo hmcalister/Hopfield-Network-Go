@@ -16,9 +16,9 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const DOMAIN networkdomain.NetworkDomain = networkdomain.ContinuousCube
-const DIMENSION = 100
-const TARGET_STATES = 10
+const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
+const DIMENSION = 64
+const TARGET_STATES = 5
 const UNITS_UPDATED = 1
 
 var (
@@ -75,12 +75,11 @@ TrialLoop:
 			SetNetworkDimension(DIMENSION).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
-			SetEpochs(1).
-			SetMaximumRelaxationIterations(100).
+			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
+			SetEpochs(100).
+			SetMaximumRelaxationIterations(250).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
-			SetUpdateCoefficient(0.5).
 			SetDataCollector(collector).
 			Build()
 
@@ -91,7 +90,7 @@ TrialLoop:
 			SetGeneratorDomain(DOMAIN).
 			Build()
 
-		targetStates := stateGenerator.CreateLearnedStateCollection(TARGET_STATES)
+		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES)
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
