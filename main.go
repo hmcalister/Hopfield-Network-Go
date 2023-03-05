@@ -16,7 +16,7 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const DOMAIN networkdomain.NetworkDomain = networkdomain.ContinuousCube
+const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
 const DIMENSION = 100
 const TARGET_STATES = 10
 const UNITS_UPDATED = 1
@@ -75,12 +75,12 @@ TrialLoop:
 			SetNetworkDimension(DIMENSION).
 			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
-			SetEpochs(1).
+			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
+			SetEpochs(100).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
-			SetUpdateCoefficient(0.5).
+			SetUpdateCoefficient(1.0).
 			SetDataCollector(collector).
 			Build()
 
