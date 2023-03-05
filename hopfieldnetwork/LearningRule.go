@@ -92,13 +92,19 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
 
-	relaxedState := mat.NewVecDense(network.dimension, nil)
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	stateContribution := mat.NewDense(network.dimension, network.dimension, nil)
 
-	for _, state := range states {
-		relaxedState.CopyVec(state)
-		network.RelaxState(relaxedState)
+	relaxedStates := make([]*mat.VecDense, len(states))
+	for stateIndex := range states {
+		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
+	}
+
+	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, 8)
+
+	for stateIndex := range states {
+		state := states[stateIndex]
+		relaxedState := relaxationResults[stateIndex].ResultState
 
 		relaxationDifference.Zero()
 		relaxationDifference.SubVec(state, relaxedState)
