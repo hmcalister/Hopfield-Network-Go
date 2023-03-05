@@ -11,15 +11,6 @@ const (
 	// Default domain - a sentinel to allow errors if building is attempted.
 	UnspecifiedDomain NetworkDomain = iota
 
-	// States can only have values in the set {0,1}.
-	// BinaryDomain NetworkDomain = iota
-
 	// States can only have values in the set {-1,1}.
 	BipolarDomain NetworkDomain = iota
-
-	// States must take on values from the unit sphere
-	UnitSphere NetworkDomain = iota
-
-	// States take on values within the unit cube
-	ContinuousCube NetworkDomain = iota
 )
