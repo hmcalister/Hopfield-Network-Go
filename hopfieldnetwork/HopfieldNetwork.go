@@ -237,8 +237,9 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 // ------------------------------------------------------------------------------------------------
 
 type RelaxationResult struct {
-	Stable   bool
-	NumSteps int
+	ResultState *mat.VecDense
+	Stable      bool
+	NumSteps    int
 }
 
 // Update a state one step in a randomly permuted ordering of units.
@@ -298,8 +299,9 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		// the network parameter set from the builder
 		if network.StateIsStable(state) {
 			result := RelaxationResult{
-				Stable:   true,
-				NumSteps: stepIndex,
+				ResultState: state,
+				Stable:      true,
+				NumSteps:    stepIndex,
 			}
 			return &result
 		}
@@ -308,8 +310,9 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
 	result := RelaxationResult{
-		Stable:   false,
-		NumSteps: network.maximumRelaxationIterations,
+		ResultState: state,
+		Stable:      false,
+		NumSteps:    network.maximumRelaxationIterations,
 	}
 	return &result
 }
@@ -353,8 +356,9 @@ StateRecvLoop:
 
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
-					Stable:   true,
-					NumSteps: stepIndex,
+					ResultState: state,
+					Stable:      true,
+					NumSteps:    stepIndex,
 				}
 
 				resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
@@ -368,8 +372,9 @@ StateRecvLoop:
 
 		// If we reach this then we did not relax correctly
 		result := RelaxationResult{
-			Stable:   false,
-			NumSteps: network.maximumRelaxationIterations,
+			ResultState: state,
+			Stable:      false,
+			NumSteps:    network.maximumRelaxationIterations,
 		}
 
 		resultChannel <- &hopfieldutils.IndexedWrapper[RelaxationResult]{
