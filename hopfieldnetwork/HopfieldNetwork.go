@@ -57,9 +57,6 @@ func (network *HopfieldNetwork) cleanMatrix() {
 			}
 		}
 	}
-
-	weightNorm := network.matrix.Norm(2)
-	network.matrix.Scale(1/weightNorm, network.matrix)
 }
 
 // Create an return an array of integers that contains every unit index once.
