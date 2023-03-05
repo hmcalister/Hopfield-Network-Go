@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 
 	"github.com/pkg/profile"
 
@@ -18,7 +19,7 @@ import (
 
 const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
 const DIMENSION = 100
-const TARGET_STATES = 10
+const TARGET_STATES = 4
 const UNITS_UPDATED = 1
 
 var (
@@ -50,7 +51,7 @@ func init() {
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ProfilePath("./profiles"), profile.CPUProfile, profile.NoShutdownHook).Stop()
+	defer profile.Start(profile.ProfilePath("./profiles"), profile.ClockProfile, profile.NoShutdownHook).Stop()
 
 	collector := datacollector.NewDataCollector().
 		AddStateRelaxedHandler(*stateLevelDataPath).
@@ -70,6 +71,7 @@ TrialLoop:
 		default:
 		}
 		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
+		InfoLogger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
@@ -91,7 +93,7 @@ TrialLoop:
 			SetGeneratorDomain(DOMAIN).
 			Build()
 
-		targetStates := stateGenerator.CreateLearnedStateCollection(TARGET_STATES)
+		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES)
 		network.LearnStates(targetStates)
 
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)

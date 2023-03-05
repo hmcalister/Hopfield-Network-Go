@@ -137,13 +137,11 @@ func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 		Src: rand.NewSource(seed),
 	}
 
-	activationFunction := activationfunction.GetGeneralStateMapper(builder.domain)
-	learnedActivationFunction := activationfunction.GetLearnedStateMapper(builder.domain)
+	activationFunction := activationfunction.GetDomainActivationFunction(builder.domain)
 
 	return &StateGenerator{
-		rng:                       rand_dist,
-		dimension:                 builder.dimension,
-		activationFunction:        activationFunction,
-		learnedActivationFunction: learnedActivationFunction,
+		rng:                rand_dist,
+		dimension:          builder.dimension,
+		activationFunction: activationFunction,
 	}
 }

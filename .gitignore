@@ -2,3 +2,5 @@
 data/
 profiles/
 logs/
+scripts/
+hopfield

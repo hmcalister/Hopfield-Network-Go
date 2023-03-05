@@ -10,13 +10,11 @@ func _() {
 	var x [1]struct{}
 	_ = x[UnspecifiedDomain-0]
 	_ = x[BipolarDomain-1]
-	_ = x[UnitSphere-2]
-	_ = x[ContinuousCube-3]
 }
 
-const _NetworkDomain_name = "UnspecifiedDomainBipolarDomainUnitSphereContinuousCube"
+const _NetworkDomain_name = "UnspecifiedDomainBipolarDomain"
 
-var _NetworkDomain_index = [...]uint8{0, 17, 30, 40, 54}
+var _NetworkDomain_index = [...]uint8{0, 17, 30}
 
 func (i NetworkDomain) String() string {
 	if i < 0 || i >= NetworkDomain(len(_NetworkDomain_index)-1) {
