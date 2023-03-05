@@ -82,6 +82,7 @@ TrialLoop:
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
+			SetUpdateCoefficient(1.0).
 			SetDataCollector(collector).
 			Build()
 
