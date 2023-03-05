@@ -73,32 +73,3 @@ func (gen *StateGenerator) CreateStateCollection(numStates int) []*mat.VecDense 
 	}
 	return states
 }
-
-// Creates a set of new states to be learned by a network.
-//
-// Note this function does NOT require new memory to be allocated - it is allocated in the method.
-//
-// # Arguments
-//
-// * `numStates` - The number of states to generate.
-//
-// # Returns
-//
-// A slice of new states.
-func (gen *StateGenerator) CreateLearnedStateCollection(numStates int) []*mat.VecDense {
-	states := make([]*mat.VecDense, numStates)
-
-	var backingMem []float64
-	for i := range states {
-		backingMem = gen.AllocStateMemory()
-
-		for i := 0; i < gen.dimension; i++ {
-			backingMem[i] = gen.rng.Rand()
-		}
-
-		state := mat.NewVecDense(gen.dimension, backingMem)
-		gen.learnedActivationFunction(state)
-		states[i] = state
-	}
-	return states
-}
