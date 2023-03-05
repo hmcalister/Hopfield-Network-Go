@@ -9,14 +9,12 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[UnspecifiedDomain-0]
-	_ = x[BinaryDomain-1]
-	_ = x[BipolarDomain-2]
-	_ = x[ContinuousDomain-3]
+	_ = x[BipolarDomain-1]
 }
 
-const _NetworkDomain_name = "UnspecifiedDomainBinaryDomainBipolarDomainContinuousDomain"
+const _NetworkDomain_name = "UnspecifiedDomainBipolarDomain"
 
-var _NetworkDomain_index = [...]uint8{0, 17, 29, 42, 58}
+var _NetworkDomain_index = [...]uint8{0, 17, 30}
 
 func (i NetworkDomain) String() string {
 	if i < 0 || i >= NetworkDomain(len(_NetworkDomain_index)-1) {

@@ -137,7 +137,7 @@ func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 		Src: rand.NewSource(seed),
 	}
 
-	activationFunction := activationfunction.DomainToActivationFunctionMap[builder.domain]
+	activationFunction := activationfunction.GetDomainActivationFunction(builder.domain)
 
 	return &StateGenerator{
 		rng:                rand_dist,

@@ -15,16 +15,6 @@ import (
 // implies an ActivationFunction will change the vector directly - not return a new vector!
 type ActivationFunction func(*mat.VecDense)
 
-func binaryDomainMappingFunction(vector *mat.VecDense) {
-	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) < 0.0 {
-			vector.SetVec(n, 0.0)
-		} else {
-			vector.SetVec(n, 1.0)
-		}
-	}
-}
-
 func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < 0.0 {
@@ -35,12 +25,19 @@ func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	}
 }
 
-func identityMappingFunction(vector *mat.VecDense) {
-
+var domainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
+	networkdomain.BipolarDomain: bipolarDomainMappingFunction,
 }
 
-var DomainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
-	networkdomain.BinaryDomain:     binaryDomainMappingFunction,
-	networkdomain.BipolarDomain:    bipolarDomainMappingFunction,
-	networkdomain.ContinuousDomain: identityMappingFunction,
+// Given a domain, get the activation function to map an arbitrary vector onto that domain.
+//
+// # Arguments
+//
+// * `domain`: The network domain.
+//
+// # Returns
+//
+// The activation function to map a vector to that domain.
+func GetDomainActivationFunction(domain networkdomain.NetworkDomain) ActivationFunction {
+	return domainToActivationFunctionMap[domain]
 }

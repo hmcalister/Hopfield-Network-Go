@@ -196,7 +196,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
-	activationFunction := activationfunction.DomainToActivationFunctionMap[networkBuilder.domain]
+	activationFunction := activationfunction.GetDomainActivationFunction(networkBuilder.domain)
 
 	return &HopfieldNetwork{
 		matrix:                         matrix,

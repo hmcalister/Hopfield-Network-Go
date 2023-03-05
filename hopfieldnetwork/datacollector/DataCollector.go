@@ -65,8 +65,11 @@ func NewDataCollector() *DataCollector {
 	}
 }
 
-func (collector *DataCollector) WriteStop() {
+func (collector *DataCollector) WriteStop() error {
 	for _, handler := range collector.handlers {
-		handler.writeStop()
+		if err := handler.writeStop(); err != nil {
+			return err
+		}
 	}
+	return nil
 }

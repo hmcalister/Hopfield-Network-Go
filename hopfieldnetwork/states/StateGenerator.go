@@ -12,9 +12,10 @@ import (
 //
 // Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
-	rng                distuv.Uniform
-	dimension          int
-	activationFunction activationfunction.ActivationFunction
+	rng                       distuv.Uniform
+	dimension                 int
+	activationFunction        activationfunction.ActivationFunction
+	learnedActivationFunction activationfunction.ActivationFunction
 }
 
 // Creates and returns a fresh array that can store a state.
