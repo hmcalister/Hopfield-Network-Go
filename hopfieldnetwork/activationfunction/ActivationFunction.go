@@ -25,6 +25,17 @@ func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	}
 }
 
+func continuousBipolarDomainMappingFunction(vector *mat.VecDense) {
+	for n := 0; n < vector.Len(); n++ {
+		if vector.AtVec(n) < -1.0 {
+			vector.SetVec(n, -1.0)
+		}
+		if vector.AtVec(n) > 1.0 {
+			vector.SetVec(n, 1.0)
+		}
+	}
+}
+
 var domainToActivationFunctionMap = map[networkdomain.NetworkDomain]ActivationFunction{
 	networkdomain.BipolarDomain: bipolarDomainMappingFunction,
 }
