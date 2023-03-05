@@ -17,21 +17,8 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-// ------------------------------------------------------------------------------------------------
-// DATA COLLECTION EVENT ENUM
-// ------------------------------------------------------------------------------------------------
-
-const (
-	DataCollectionEvent_OnStateRelax = iota
-	DataCollectionEvent_OnTrialEnd   = iota
-)
-
-// ------------------------------------------------------------------------------------------------
-// DATA COLLECTOR STRUCT AND BASE METHODS
-// ------------------------------------------------------------------------------------------------
-
 type DataCollector struct {
-	handlers     []*dataHandler
+	handlers     []*eventHandler
 	EventChannel chan hopfieldutils.IndexedWrapper[interface{}]
 }
 
@@ -60,9 +47,27 @@ func (collector *DataCollector) CollectData() {
 // This will make that callback trigger a collection event.
 func NewDataCollector() *DataCollector {
 	return &DataCollector{
-		handlers:     make([]*dataHandler, 0),
+		handlers:     make([]*eventHandler, 0),
 		EventChannel: make(chan hopfieldutils.IndexedWrapper[interface{}], 100),
 	}
+}
+
+// Registers a new data event, noting the data file to write to, the
+// struct to write, and what eventID to listen for.
+//
+// # Arguments
+//
+// * `eventID`: The event ID to listen for.
+// * `dataFile`: The path to the data file to write to
+// * `dataStruct`: The struct template to use for writing
+func (collector *DataCollector) RegisterEventHandler(eventID int, dataFile string, dataStruct struct{}) {
+	collector.handlers = append(collector.handlers,
+		&eventHandler{
+			eventID:    eventID,
+			dataWriter: newParquetWriter(dataFile, dataStruct),
+			dataStruct: dataStruct,
+		},
+	)
 }
 
 func (collector *DataCollector) WriteStop() {

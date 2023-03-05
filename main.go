@@ -28,6 +28,26 @@ var (
 	InfoLogger         *log.Logger
 )
 
+const (
+	DATAEVENT_STATERELAXED int = iota
+	DATAEVENT_TRIALEND     int = iota
+)
+
+type StateRelaxedData struct {
+	TrialIndex         int       `parquet:"name=TrialIndex, type=INT32"`
+	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
+	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
+	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
+	DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
+}
+
+type OnTrialEndData struct {
+	TrialIndex                 int     `parquet:"name=TrialIndex, type=INT32"`
+	NumTargetStates            int     `parquet:"name=NumTargetStates, type=INT32"`
+	NumberStableStates         int     `parquet:"name=NumberStableStates, type=INT32"`
+	StableStatesMeanStepsTaken float64 `parquet:"name=StableStatesMeanStepsTaken, type=DOUBLE"`
+}
+
 func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
@@ -57,8 +77,8 @@ func main() {
 	defer profile.Start(profile.ProfilePath("./profiles"), profile.CPUProfile).Stop()
 
 	collector := datacollector.NewDataCollector().
-		AddStateRelaxedHandler(*stateLevelDataPath).
-		AddOnTrialEndHandler(*trialLevelDataPath)
+		RegisterEventHandler(DATAEVENT_STATERELAXED, *stateLevelDataPath, StateRelaxedData).
+		RegisterEventHandler(DATAEVENT_TRIALEND, *trialLevelDataPath, OnTrialEndData)
 	defer collector.WriteStop()
 	go collector.CollectData()
 

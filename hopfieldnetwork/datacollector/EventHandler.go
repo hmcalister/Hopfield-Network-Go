@@ -1,26 +1,29 @@
 package datacollector
 
 import (
+	"reflect"
+
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/writer"
 )
 
-// Define the handleEvent function to be a template across all handlers
-type handleEventFn func(*writer.ParquetWriter, interface{})
-
-// A dataHandler specifies what events it listens to, and what to do when that event occurs
-type dataHandler struct {
-	eventID     int
-	dataWriter  *writer.ParquetWriter
-	handleEvent handleEventFn
+// A eventHandler specifies what events it listens to, and what to do when that event occurs
+type eventHandler struct {
+	eventID    int
+	dataWriter *writer.ParquetWriter
+	dataStruct reflect.Type
 }
 
-func (handler *dataHandler) getEventID() int {
+func (handler *eventHandler) handleEvent(writer *writer.ParquetWriter, event interface{}) {
+	writer.Write(event)
+}
+
+func (handler *eventHandler) getEventID() int {
 	return handler.eventID
 }
 
-func (handler *dataHandler) writeStop() {
+func (handler *eventHandler) writeStop() {
 	handler.dataWriter.WriteStop()
 }
 
