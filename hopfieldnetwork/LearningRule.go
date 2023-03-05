@@ -6,6 +6,8 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+const DELTA_THREADS = 8
+
 // Define a learning rule as a function taking a network along with a collection of states.
 //
 // A matrix is returned that is learned to stabilize the given states.
@@ -100,7 +102,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 	}
 
-	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, 8)
+	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, DELTA_THREADS)
 
 	for stateIndex := range states {
 		state := states[stateIndex]
