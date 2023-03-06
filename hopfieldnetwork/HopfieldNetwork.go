@@ -6,7 +6,6 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldutils"
 
 	"golang.org/x/exp/rand"
@@ -25,7 +24,6 @@ type HopfieldNetwork struct {
 	dimension                      int
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
-	domain                         networkdomain.NetworkDomain
 	learningRule                   LearningRule
 	epochs                         int
 	maximumRelaxationUnstableUnits int
@@ -109,9 +107,8 @@ func (network *HopfieldNetwork) GetLearnedStates() []*mat.VecDense {
 
 // Implement Stringer for nicer formatting
 func (network *HopfieldNetwork) String() string {
-	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n\tDomain: %s\n",
-		network.dimension,
-		network.domain.String())
+	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n",
+		network.dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
