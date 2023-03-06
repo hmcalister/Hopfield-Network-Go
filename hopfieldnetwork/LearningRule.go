@@ -1,8 +1,6 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
-
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -36,17 +34,16 @@ const (
 	DeltaLearningRule   LearningRuleEnum = iota
 )
 
-// Map an option from the LearningRule enum to the specific learning rule based on network domain
+// Map an option from the LearningRule enum to the specific learning rule
 //
 // # Arguments
 //
 // * `learningRule`: The learning rule selected
-// * `domain`: The domain of the network.
 //
 // # Returns
 //
-// The learning rule from the family specified, implemented for the selected network domain
-func getLearningRule(learningRule LearningRuleEnum, domain networkdomain.NetworkDomain) LearningRule {
+// The learning rule from the family specified
+func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 	learningRuleMaps := map[LearningRuleEnum]LearningRule{
 		HebbianLearningRule: hebbian,
 		DeltaLearningRule:   delta,
