@@ -1,8 +1,6 @@
 package states
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -20,15 +18,12 @@ import (
 // If seed is 0 build time then a random seed is selected. This is useful for having different threads use different seeds.
 //
 // Dimension defines the length of the vector to be generated.
-//
-// Domain defines what values can exist within the generated vector.
 type StateGeneratorBuilder struct {
 	randMin       float64
 	randMax       float64
 	seed          uint64
 	seedGenerator *rand.Rand
 	dimension     int
-	domain        networkdomain.NetworkDomain
 }
 
 func NewStateGeneratorBuilder() *StateGeneratorBuilder {
@@ -40,7 +35,6 @@ func NewStateGeneratorBuilder() *StateGeneratorBuilder {
 		seed:          0,
 		seedGenerator: seedGen,
 		dimension:     0,
-		domain:        networkdomain.UnspecifiedDomain,
 	}
 }
 
@@ -84,17 +78,6 @@ func (builder *StateGeneratorBuilder) SetGeneratorDimension(dimension int) *Stat
 	return builder
 }
 
-// Set the domain of the StateGenerator. This will in turn set the activation function to be used
-// to ensure states end up as valid.
-//
-// Domain must be a valid networkDomain from the [hmcalister/hopfield/hopfieldnetwork/networkdomain] subpackage.
-//
-// Note a reference to the builder is returned to allow for chaining.
-func (builder *StateGeneratorBuilder) SetGeneratorDomain(domain networkdomain.NetworkDomain) *StateGeneratorBuilder {
-	builder.domain = domain
-	return builder
-}
-
 // Perform final checks on the builder - to be run right before constructing the StateGenerator struct.
 //
 // Note this function panics if builder is invalid - perhaps instead an error could be bubbled up? This is probably okay though.
@@ -106,10 +89,6 @@ func (builder *StateGeneratorBuilder) checkValid() {
 	if builder.dimension <= 0 {
 		panic("StateGeneratorBuilder encountered an error during build! Dimension must be strictly positive!")
 	}
-
-	if builder.domain == networkdomain.UnspecifiedDomain {
-		panic("StateGeneratorBuilder encountered an error during build! Domain must be a valid network domain!")
-	}
 }
 
 // Builds the StateGenerator.
@@ -119,8 +98,6 @@ func (builder *StateGeneratorBuilder) checkValid() {
 // RngDistribution must be a valid distribution from the [gonum.org/v1/gonum/stat/distuv] package.
 //
 // Dimension must be a strictly positive integer and match the Hopfield Network dimension.
-//
-// Domain must be a valid networkDomain from the [hmcalister/hopfield/hopfieldnetwork/networkdomain] subpackage.
 func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 	builder.checkValid()
 
@@ -137,11 +114,8 @@ func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 		Src: rand.NewSource(seed),
 	}
 
-	activationFunction := activationfunction.GetDomainActivationFunction(builder.domain)
-
 	return &StateGenerator{
-		rng:                rand_dist,
-		dimension:          builder.dimension,
-		activationFunction: activationFunction,
+		rng:       rand_dist,
+		dimension: builder.dimension,
 	}
 }

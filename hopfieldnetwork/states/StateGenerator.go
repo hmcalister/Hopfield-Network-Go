@@ -12,10 +12,8 @@ import (
 //
 // Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
-	rng                       distuv.Uniform
-	dimension                 int
-	activationFunction        activationfunction.ActivationFunction
-	learnedActivationFunction activationfunction.ActivationFunction
+	rng       distuv.Uniform
+	dimension int
 }
 
 // Creates and returns a fresh array that can store a state.
@@ -48,7 +46,7 @@ func (gen *StateGenerator) NextState(dataArray []float64) *mat.VecDense {
 	}
 
 	state := mat.NewVecDense(gen.dimension, dataArray)
-	gen.activationFunction(state)
+	activationfunction.ActivationFunction(state)
 	return state
 }
 

@@ -6,7 +6,6 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldutils"
 
 	"golang.org/x/exp/rand"
@@ -25,13 +24,11 @@ type HopfieldNetwork struct {
 	dimension                      int
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
-	domain                         networkdomain.NetworkDomain
 	learningRule                   LearningRule
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
-	activationFunction             activationfunction.ActivationFunction
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
 	dataCollector                  *datacollector.DataCollector
@@ -109,9 +106,8 @@ func (network *HopfieldNetwork) GetLearnedStates() []*mat.VecDense {
 
 // Implement Stringer for nicer formatting
 func (network *HopfieldNetwork) String() string {
-	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n\tDomain: %s\n",
-		network.dimension,
-		network.domain.String())
+	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n",
+		network.dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -256,7 +252,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
-		network.activationFunction(state)
+		activationfunction.ActivationFunction(state)
 	}
 }
 
@@ -283,7 +279,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
-			network.activationFunction(state)
+			activationfunction.ActivationFunction(state)
 		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
@@ -341,7 +337,7 @@ StateRecvLoop:
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
-				network.activationFunction(state)
+				activationfunction.ActivationFunction(state)
 			}
 
 			if network.StateIsStable(state) {

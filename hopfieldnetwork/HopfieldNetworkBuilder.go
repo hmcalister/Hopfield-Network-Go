@@ -1,9 +1,7 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -16,7 +14,6 @@ type HopfieldNetworkBuilder struct {
 	dimension                      int
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
-	domain                         networkdomain.NetworkDomain
 	learningRule                   LearningRule
 	epochs                         int
 	maximumRelaxationUnstableUnits int
@@ -35,7 +32,6 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		dimension:                      0,
 		forceSymmetric:                 true,
 		forceZeroDiagonal:              true,
-		domain:                         networkdomain.UnspecifiedDomain,
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		unitsUpdatedPerStep:            1,
@@ -80,32 +76,13 @@ func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalF
 	return networkBuilder
 }
 
-// Set the domain of the HopfieldNetwork - i.e. what numbers are allowed to exist in states.
-//
-// Valid options are taken from the NetworkDomain enum (BinaryDomain, BipolarDomain, ContinuousDomain).
-// Note that UnspecifiedDomain is the default and throws and error if building is attempted.
-//
-// Note this method returns the builder pointer so chained calls can be used.
-//
-// Must be specified before Build can be called.
-func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDomain(domain networkdomain.NetworkDomain) *HopfieldNetworkBuilder {
-	networkBuilder.domain = domain
-	return networkBuilder
-}
-
 // Set the learning rule of this network based on the LearningRuleEnum selected.
-//
-// Note this call requires the network domain to be set. If the network domain is not set, a panic occurs.
 //
 // Note this method returns the builder pointer so chained calls can be used.
 //
 // Must be specified before Build can be called.
 func (networkBuilder *HopfieldNetworkBuilder) SetNetworkLearningRule(learningRule LearningRuleEnum) *HopfieldNetworkBuilder {
-	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
-		panic("HopfieldNetworkBuilder encountered an error! Domain must be explicitly set to select a learning rule!")
-	}
-
-	networkBuilder.learningRule = getLearningRule(learningRule, networkBuilder.domain)
+	networkBuilder.learningRule = getLearningRule(learningRule)
 	return networkBuilder
 }
 
@@ -164,10 +141,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		panic("HopfieldNetworkBuilder encountered an error during build! Dimension must be explicitly set to a positive integer!")
 	}
 
-	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
-		panic("HopfieldNetworkBuilder encountered an error during build! Domain must be explicitly set to a valid network domain!")
-	}
-
 	if networkBuilder.epochs <= 0 {
 		panic("HopfieldNetworkBuilder encountered an error during build! Epochs must be a positive integer!")
 	}
@@ -196,17 +169,13 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
-	activationFunction := activationfunction.GetDomainActivationFunction(networkBuilder.domain)
-
 	return &HopfieldNetwork{
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
-		domain:                         networkBuilder.domain,
 		learningRule:                   networkBuilder.learningRule,
 		epochs:                         networkBuilder.epochs,
-		activationFunction:             activationFunction,
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,

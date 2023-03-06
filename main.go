@@ -12,12 +12,10 @@ import (
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
-	"hmcalister/hopfield/hopfieldnetwork/networkdomain"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const DOMAIN networkdomain.NetworkDomain = networkdomain.BipolarDomain
 const DIMENSION = 100
 const TARGET_STATES = 10
 const UNITS_UPDATED = 1
@@ -75,7 +73,6 @@ TrialLoop:
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
-			SetNetworkDomain(DOMAIN).
 			SetRandMatrixInit(false).
 			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
 			SetEpochs(100).
@@ -89,7 +86,6 @@ TrialLoop:
 			SetRandMin(-1).
 			SetRandMax(1).
 			SetGeneratorDimension(DIMENSION).
-			SetGeneratorDomain(DOMAIN).
 			Build()
 
 		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES)
