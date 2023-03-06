@@ -78,17 +78,11 @@ func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalF
 
 // Set the learning rule of this network based on the LearningRuleEnum selected.
 //
-// Note this call requires the network domain to be set. If the network domain is not set, a panic occurs.
-//
 // Note this method returns the builder pointer so chained calls can be used.
 //
 // Must be specified before Build can be called.
 func (networkBuilder *HopfieldNetworkBuilder) SetNetworkLearningRule(learningRule LearningRuleEnum) *HopfieldNetworkBuilder {
-	if networkBuilder.domain == networkdomain.UnspecifiedDomain {
-		panic("HopfieldNetworkBuilder encountered an error! Domain must be explicitly set to select a learning rule!")
-	}
-
-	networkBuilder.learningRule = getLearningRule(learningRule, networkBuilder.domain)
+	networkBuilder.learningRule = getLearningRule(learningRule)
 	return networkBuilder
 }
 
@@ -175,8 +169,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
-	activationFunction := activationfunction.GetDomainActivationFunction(networkBuilder.domain)
-
 	return &HopfieldNetwork{
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
@@ -184,7 +176,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		learningRule:                   networkBuilder.learningRule,
 		epochs:                         networkBuilder.epochs,
-		activationFunction:             activationFunction,
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
