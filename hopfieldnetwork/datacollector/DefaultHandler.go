@@ -3,6 +3,7 @@ package datacollector
 import (
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/source"
 	"github.com/xitongsys/parquet-go/writer"
 )
 
@@ -13,6 +14,7 @@ type handleEventFn func(*writer.ParquetWriter, interface{})
 type dataHandler struct {
 	eventID     int
 	dataWriter  *writer.ParquetWriter
+	fileHandle  source.ParquetFile
 	handleEvent handleEventFn
 }
 
@@ -21,7 +23,13 @@ func (handler *dataHandler) getEventID() int {
 }
 
 func (handler *dataHandler) writeStop() error {
-	return handler.dataWriter.WriteStop()
+	if err := handler.dataWriter.WriteStop(); err != nil {
+		return err
+	}
+	if err := handler.fileHandle.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create a new parquet writer to a given file path, using a given struct.
@@ -43,7 +51,7 @@ func (handler *dataHandler) writeStop() error {
 // # Returns
 //
 // A ParquetWriter to the data file in question.
-func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) *writer.ParquetWriter {
+func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) (source.ParquetFile, *writer.ParquetWriter) {
 	dataFileWriter, _ := local.NewLocalFileWriter(dataFilePath)
 	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 4)
 	parquetDataWriter.RowGroupSize = 128 * 1024 * 1024 //128MB
@@ -51,5 +59,5 @@ func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) *writer.
 	parquetDataWriter.CompressionType = parquet.CompressionCodec_SNAPPY
 	parquetDataWriter.Flush(true)
 
-	return parquetDataWriter
+	return dataFileWriter, parquetDataWriter
 }
