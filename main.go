@@ -18,7 +18,7 @@ import (
 
 const DIMENSION = 100
 const TARGET_STATES = 10
-const UNITS_UPDATED = 1
+const UNITS_UPDATED = 5
 
 var (
 	numTrials          *int
@@ -49,7 +49,7 @@ func init() {
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ProfilePath("./profiles"), profile.ClockProfile, profile.NoShutdownHook).Stop()
+	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles"), profile.NoShutdownHook).Stop()
 
 	collector := datacollector.NewDataCollector().
 		AddStateRelaxedHandler(*stateLevelDataPath).
@@ -74,8 +74,8 @@ TrialLoop:
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.DeltaLearningRule).
-			SetEpochs(100).
+			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
+			SetEpochs(1).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
@@ -97,16 +97,13 @@ TrialLoop:
 		trialNumStable := 0
 		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
-			currentTestState := testStates[stateIndex]
 			event := datacollector.StateRelaxedData{
-				TrialIndex: trial,
-				StateIndex: stateIndex,
-				Stable:     result.Stable,
-				NumSteps:   result.NumSteps,
-				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(
-					network.GetLearnedStates(),
-					currentTestState,
-					1.0),
+				TrialIndex:         trial,
+				StateIndex:         stateIndex,
+				Stable:             result.Stable,
+				NumSteps:           result.NumSteps,
+				DistancesToLearned: result.DistancesToLearned,
+				EnergyProfile:      result.EnergyProfile,
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
@@ -131,11 +128,11 @@ TrialLoop:
 		}
 		InfoLogger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
 	}
+	InfoLogger.Println("TRIAL COMPLETE")
 
 	writeStopError := collector.WriteStop()
 	if writeStopError != nil {
 		InfoLogger.Fatalf("ERROR: DataWriter finished with error %#v!\n", writeStopError)
 	}
 	InfoLogger.Println("DATA WRITTEN")
-	InfoLogger.Println("TRIAL COMPLETE")
 }
