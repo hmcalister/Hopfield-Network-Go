@@ -19,6 +19,7 @@ type StateRelaxedData struct {
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
 	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
 	DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
+	EnergyProfile      []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
 // Add a state relaxed event handler.
@@ -28,9 +29,11 @@ func (collector *DataCollector) AddStateRelaxedHandler(stateRelaxedDataFile stri
 }
 
 func newOnStateRelaxedCollector(dataFile string) *dataHandler {
+	fileHandle, dataWriter := newParquetWriter(dataFile, new(StateRelaxedData))
 	return &dataHandler{
 		eventID:     DataCollectionEvent_OnStateRelax,
-		dataWriter:  newParquetWriter(dataFile, new(StateRelaxedData)),
+		dataWriter:  dataWriter,
+		fileHandle:  fileHandle,
 		handleEvent: handleStateRelaxedEvent,
 	}
 }

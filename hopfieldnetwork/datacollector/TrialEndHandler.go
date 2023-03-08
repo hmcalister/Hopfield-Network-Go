@@ -16,9 +16,11 @@ func (collector *DataCollector) AddOnTrialEndHandler(stateRelaxedDataFile string
 }
 
 func newOnTrialEndHandler(dataFile string) *dataHandler {
+	fileHandle, dataWriter := newParquetWriter(dataFile, new(OnTrialEndData))
 	return &dataHandler{
 		eventID:     DataCollectionEvent_OnTrialEnd,
-		dataWriter:  newParquetWriter(dataFile, new(OnTrialEndData)),
+		dataWriter:  dataWriter,
+		fileHandle:  fileHandle,
 		handleEvent: handleTrialEndEvent,
 	}
 }
