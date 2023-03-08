@@ -23,7 +23,13 @@ func (handler *dataHandler) getEventID() int {
 }
 
 func (handler *dataHandler) writeStop() error {
-	return handler.dataWriter.WriteStop()
+	if err := handler.dataWriter.WriteStop(); err != nil {
+		return err
+	}
+	if err := handler.fileHandle.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Create a new parquet writer to a given file path, using a given struct.
