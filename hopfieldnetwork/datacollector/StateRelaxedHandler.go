@@ -1,6 +1,8 @@
 package datacollector
 
-import "github.com/xitongsys/parquet-go/writer"
+import (
+	"github.com/xitongsys/parquet-go/writer"
+)
 
 // Representation of the result of a relaxation of a state.
 //
