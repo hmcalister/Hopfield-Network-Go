@@ -61,7 +61,7 @@ func (collector *DataCollector) CollectData() {
 func NewDataCollector() *DataCollector {
 	return &DataCollector{
 		handlers:     make([]*dataHandler, 0),
-		EventChannel: make(chan hopfieldutils.IndexedWrapper[interface{}], 100),
+		EventChannel: make(chan hopfieldutils.IndexedWrapper[interface{}]),
 	}
 }
 
