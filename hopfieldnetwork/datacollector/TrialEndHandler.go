@@ -4,8 +4,9 @@ import "github.com/xitongsys/parquet-go/writer"
 
 type OnTrialEndData struct {
 	TrialIndex                 int     `parquet:"name=TrialIndex, type=INT32"`
+	NumTestStates              int     `parquet:"name=NumTestStates, type=INT32"`
 	NumTargetStates            int     `parquet:"name=NumTargetStates, type=INT32"`
-	NumberStableStates         int     `parquet:"name=NumberStableStates, type=INT32"`
+	NumStableStates            int     `parquet:"name=NumStableStates, type=INT32"`
 	StableStatesMeanStepsTaken float64 `parquet:"name=StableStatesMeanStepsTaken, type=DOUBLE"`
 }
 

@@ -17,7 +17,8 @@ import (
 )
 
 const DIMENSION = 100
-const TARGET_STATES = 10
+const TARGET_STATES = 100
+const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
 const UNITS_UPDATED = 5
 
 var (
@@ -74,8 +75,8 @@ TrialLoop:
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(hopfieldnetwork.HebbianLearningRule).
-			SetEpochs(1).
+			SetNetworkLearningRule(LEARNING_RULE).
+			SetEpochs(100).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
@@ -118,8 +119,9 @@ TrialLoop:
 		}
 		trialResult := datacollector.OnTrialEndData{
 			TrialIndex:                 trial,
+			NumTestStates:              *numTestStates,
 			NumTargetStates:            TARGET_STATES,
-			NumberStableStates:         trialNumStable,
+			NumStableStates:            trialNumStable,
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}
 		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
