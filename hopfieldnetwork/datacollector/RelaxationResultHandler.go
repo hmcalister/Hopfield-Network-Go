@@ -24,13 +24,7 @@ type RelaxationResultData struct {
 	EnergyProfile      []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
-// Add a state relaxed event handler.
-func (collector *DataCollector) AddRelaxationResultHandler(relaxationResult string) *DataCollector {
-	collector.handlers = append(collector.handlers, newRelaxationResultHandler(relaxationResult))
-	return collector
-}
-
-func newRelaxationResultHandler(dataFile string) *dataHandler {
+func NewRelaxationResultHandler(dataFile string) *dataHandler {
 	fileHandle, dataWriter := newParquetWriter(dataFile, new(RelaxationResultData))
 	return &dataHandler{
 		eventID:     DataCollectionEvent_RelaxationResult,

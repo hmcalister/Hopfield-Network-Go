@@ -65,6 +65,12 @@ func NewDataCollector() *DataCollector {
 	}
 }
 
+// Add a state relaxed event handler.
+func (collector *DataCollector) AddHandler(dataHandler *dataHandler) *DataCollector {
+	collector.handlers = append(collector.handlers, dataHandler)
+	return collector
+}
+
 func (collector *DataCollector) WriteStop() error {
 	for _, handler := range collector.handlers {
 		if err := handler.writeStop(); err != nil {
