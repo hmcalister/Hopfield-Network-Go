@@ -22,19 +22,19 @@ const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
 const UNITS_UPDATED = 5
 
 var (
-	numTrials          *int
-	numTestStates      *int
-	numThreads         *int
-	stateLevelDataPath *string
-	trialLevelDataPath *string
-	InfoLogger         *log.Logger
+	numTrials                *int
+	numTestStates            *int
+	numThreads               *int
+	relaxationResultDataPath *string
+	trialDataPath            *string
+	InfoLogger               *log.Logger
 )
 
 func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	stateLevelDataPath = flag.String("stateDataFile", "data/stateData.pq", "The file to write test data about states to. Data is in a parquet format.")
-	trialLevelDataPath = flag.String("trialDataFile", "data/trialData.pq", "The file to write test data about trials to. Data is in a parquet format.")
+	relaxationResultDataPath = flag.String("relaxationResultDataFile", "data/relaxationResult.pq", "The file to write relaxation result data to. Data is in a parquet format.")
+	trialDataPath = flag.String("trialDataFile", "data/trialData.pq", "The file to write test data about trials to. Data is in a parquet format.")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -53,8 +53,8 @@ func main() {
 	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles"), profile.NoShutdownHook).Stop()
 
 	collector := datacollector.NewDataCollector().
-		AddStateRelaxedHandler(*stateLevelDataPath).
-		AddOnTrialEndHandler(*trialLevelDataPath)
+		AddRelaxationResultHandler(*relaxationResultDataPath).
+		AddTrialEndHandler(*trialDataPath)
 	defer collector.WriteStop()
 	go collector.CollectData()
 
@@ -98,7 +98,7 @@ TrialLoop:
 		trialNumStable := 0
 		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
-			event := datacollector.StateRelaxedData{
+			event := datacollector.RelaxationResultData{
 				TrialIndex:         trial,
 				StateIndex:         stateIndex,
 				Stable:             result.Stable,
@@ -108,7 +108,7 @@ TrialLoop:
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-				Index: datacollector.DataCollectionEvent_OnStateRelax,
+				Index: datacollector.DataCollectionEvent_RelaxationResult,
 				Data:  event,
 			}
 
@@ -117,7 +117,7 @@ TrialLoop:
 				trialStableStepsTaken += result.NumSteps
 			}
 		}
-		trialResult := datacollector.OnTrialEndData{
+		trialResult := datacollector.TrialEndData{
 			TrialIndex:                 trial,
 			NumTestStates:              *numTestStates,
 			NumTargetStates:            TARGET_STATES,
@@ -125,7 +125,7 @@ TrialLoop:
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}
 		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-			Index: datacollector.DataCollectionEvent_OnTrialEnd,
+			Index: datacollector.DataCollectionEvent_TrialEnd,
 			Data:  trialResult,
 		}
 		InfoLogger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)

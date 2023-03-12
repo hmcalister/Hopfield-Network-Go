@@ -2,7 +2,7 @@ package datacollector
 
 import "github.com/xitongsys/parquet-go/writer"
 
-type OnTrialEndData struct {
+type TrialEndData struct {
 	TrialIndex                 int     `parquet:"name=TrialIndex, type=INT32"`
 	NumTestStates              int     `parquet:"name=NumTestStates, type=INT32"`
 	NumTargetStates            int     `parquet:"name=NumTargetStates, type=INT32"`
@@ -11,15 +11,15 @@ type OnTrialEndData struct {
 }
 
 // Add a trial end event handler.
-func (collector *DataCollector) AddOnTrialEndHandler(stateRelaxedDataFile string) *DataCollector {
-	collector.handlers = append(collector.handlers, newOnTrialEndHandler(stateRelaxedDataFile))
+func (collector *DataCollector) AddTrialEndHandler(stateRelaxedDataFile string) *DataCollector {
+	collector.handlers = append(collector.handlers, newTrialEndHandler(stateRelaxedDataFile))
 	return collector
 }
 
-func newOnTrialEndHandler(dataFile string) *dataHandler {
-	fileHandle, dataWriter := newParquetWriter(dataFile, new(OnTrialEndData))
+func newTrialEndHandler(dataFile string) *dataHandler {
+	fileHandle, dataWriter := newParquetWriter(dataFile, new(TrialEndData))
 	return &dataHandler{
-		eventID:     DataCollectionEvent_OnTrialEnd,
+		eventID:     DataCollectionEvent_TrialEnd,
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
 		handleEvent: handleTrialEndEvent,
@@ -27,6 +27,6 @@ func newOnTrialEndHandler(dataFile string) *dataHandler {
 }
 
 func handleTrialEndEvent(writer *writer.ParquetWriter, event interface{}) {
-	result := event.(OnTrialEndData)
+	result := event.(TrialEndData)
 	writer.Write(result)
 }

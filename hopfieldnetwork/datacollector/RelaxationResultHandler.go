@@ -15,7 +15,7 @@ import (
 // NumSteps is an int representing the number of steps taken when relaxation finished.
 //
 // DistancesToAllLearned is an array of distances to all learned states.
-type StateRelaxedData struct {
+type RelaxationResultData struct {
 	TrialIndex         int       `parquet:"name=TrialIndex, type=INT32"`
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
@@ -25,22 +25,22 @@ type StateRelaxedData struct {
 }
 
 // Add a state relaxed event handler.
-func (collector *DataCollector) AddStateRelaxedHandler(stateRelaxedDataFile string) *DataCollector {
-	collector.handlers = append(collector.handlers, newOnStateRelaxedCollector(stateRelaxedDataFile))
+func (collector *DataCollector) AddRelaxationResultHandler(relaxationResult string) *DataCollector {
+	collector.handlers = append(collector.handlers, newRelaxationResultHandler(relaxationResult))
 	return collector
 }
 
-func newOnStateRelaxedCollector(dataFile string) *dataHandler {
-	fileHandle, dataWriter := newParquetWriter(dataFile, new(StateRelaxedData))
+func newRelaxationResultHandler(dataFile string) *dataHandler {
+	fileHandle, dataWriter := newParquetWriter(dataFile, new(RelaxationResultData))
 	return &dataHandler{
-		eventID:     DataCollectionEvent_OnStateRelax,
+		eventID:     DataCollectionEvent_RelaxationResult,
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
-		handleEvent: handleStateRelaxedEvent,
+		handleEvent: handleRelaxationResultEvent,
 	}
 }
 
-func handleStateRelaxedEvent(writer *writer.ParquetWriter, event interface{}) {
-	result := event.(StateRelaxedData)
+func handleRelaxationResultEvent(writer *writer.ParquetWriter, event interface{}) {
+	result := event.(RelaxationResultData)
 	writer.Write(result)
 }
