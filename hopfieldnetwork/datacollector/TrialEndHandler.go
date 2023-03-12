@@ -10,13 +10,7 @@ type TrialEndData struct {
 	StableStatesMeanStepsTaken float64 `parquet:"name=StableStatesMeanStepsTaken, type=DOUBLE"`
 }
 
-// Add a trial end event handler.
-func (collector *DataCollector) AddTrialEndHandler(stateRelaxedDataFile string) *DataCollector {
-	collector.handlers = append(collector.handlers, newTrialEndHandler(stateRelaxedDataFile))
-	return collector
-}
-
-func newTrialEndHandler(dataFile string) *dataHandler {
+func NewTrialEndHandler(dataFile string) *dataHandler {
 	fileHandle, dataWriter := newParquetWriter(dataFile, new(TrialEndData))
 	return &dataHandler{
 		eventID:     DataCollectionEvent_TrialEnd,

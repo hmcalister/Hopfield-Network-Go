@@ -26,7 +26,7 @@ var (
 	numTestStates            *int
 	numThreads               *int
 	relaxationResultDataPath *string
-	trialDataPath            *string
+	trialEndDataPath         *string
 	InfoLogger               *log.Logger
 )
 
@@ -34,7 +34,7 @@ func init() {
 	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	relaxationResultDataPath = flag.String("relaxationResultDataFile", "data/relaxationResult.pq", "The file to write relaxation result data to. Data is in a parquet format.")
-	trialDataPath = flag.String("trialDataFile", "data/trialData.pq", "The file to write test data about trials to. Data is in a parquet format.")
+	trialEndDataPath = flag.String("trialEndDataFile", "data/trialEndData.pq", "The file to write trial end data to. Data is in a parquet format.")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -51,15 +51,14 @@ func init() {
 // Main method for entry point
 func main() {
 	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles"), profile.NoShutdownHook).Stop()
-
-	collector := datacollector.NewDataCollector().
-		AddRelaxationResultHandler(*relaxationResultDataPath).
-		AddTrialEndHandler(*trialDataPath)
-	defer collector.WriteStop()
-	go collector.CollectData()
-
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)
+
+	collector := datacollector.NewDataCollector().
+		AddHandler(datacollector.NewRelaxationResultHandler(*relaxationResultDataPath)).
+		AddHandler(datacollector.NewTrialEndHandler(*trialEndDataPath))
+	defer collector.WriteStop()
+	go collector.CollectData()
 
 TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
