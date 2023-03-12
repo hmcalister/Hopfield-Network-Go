@@ -54,7 +54,7 @@ func main() {
 
 	collector := datacollector.NewDataCollector().
 		AddRelaxationResultHandler(*relaxationResultDataPath).
-		AddOnTrialEndHandler(*trialDataPath)
+		AddTrialEndHandler(*trialDataPath)
 	defer collector.WriteStop()
 	go collector.CollectData()
 
@@ -117,7 +117,7 @@ TrialLoop:
 				trialStableStepsTaken += result.NumSteps
 			}
 		}
-		trialResult := datacollector.OnTrialEndData{
+		trialResult := datacollector.TrialEndData{
 			TrialIndex:                 trial,
 			NumTestStates:              *numTestStates,
 			NumTargetStates:            TARGET_STATES,
