@@ -22,8 +22,9 @@ import (
 // ------------------------------------------------------------------------------------------------
 
 const (
-	DataCollectionEvent_RelaxationResult = iota
-	DataCollectionEvent_TrialEnd         = iota
+	DataCollectionEvent_RelaxationResult  = iota
+	DataCollectionEvent_RelaxationHistory = iota
+	DataCollectionEvent_TrialEnd          = iota
 )
 
 // ------------------------------------------------------------------------------------------------
