@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"log"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -20,6 +21,7 @@ type HopfieldNetworkBuilder struct {
 	maximumRelaxationIterations    int
 	unitsUpdatedPerStep            int
 	dataCollector                  *datacollector.DataCollector
+	logger                         *log.Logger
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -36,6 +38,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		maximumRelaxationIterations:    100,
 		unitsUpdatedPerStep:            1,
 		dataCollector:                  datacollector.NewDataCollector(),
+		logger:                         log.Default(),
 	}
 }
 
@@ -135,6 +138,14 @@ func (networkBuilder *HopfieldNetworkBuilder) SetDataCollector(dataCollector *da
 	return networkBuilder
 }
 
+// Set the Logger to be used in the network.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetLogger(logger *log.Logger) *HopfieldNetworkBuilder {
+	networkBuilder.logger = logger
+	return networkBuilder
+}
+
 // Build and return a new HopfieldNetwork using the parameters specified with builder methods.
 func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	if networkBuilder.dimension <= 0 {
@@ -181,6 +192,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 		dataCollector:                  networkBuilder.dataCollector,
+		logger:                         networkBuilder.logger,
 	}
 
 }
