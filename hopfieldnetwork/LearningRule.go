@@ -103,7 +103,8 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 	for stateIndex := range states {
 		state := states[stateIndex]
-		relaxedState := relaxationResults[stateIndex].ResultState
+		stateHistory := relaxationResults[stateIndex].StateHistory
+		relaxedState := stateHistory[len(stateHistory)-1]
 
 		relaxationDifference.Zero()
 		relaxationDifference.SubVec(state, relaxedState)
