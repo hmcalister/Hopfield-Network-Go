@@ -18,8 +18,9 @@ import (
 )
 
 const DIMENSION = 100
-const TARGET_STATES = 100
+const TARGET_STATES = 20
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
+const EPOCHS = 100
 const UNITS_UPDATED = 1
 
 var (
@@ -36,6 +37,7 @@ func init() {
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
 
@@ -43,15 +45,22 @@ func init() {
 	if err != nil {
 		panic("Could not open log file!")
 	}
-	multiWriter := io.MultiWriter(os.Stdout, logFile)
+
+	var multiWriter io.Writer
+	if *verbose {
+		multiWriter = io.MultiWriter(os.Stdout, logFile)
+	} else {
+		multiWriter = io.MultiWriter(logFile)
+
+	}
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
-	log.Printf("Removing data directory %#v\n", *dataDirectory)
+	logger.Printf("Removing data directory %#v\n", *dataDirectory)
 	os.RemoveAll(*dataDirectory)
-	log.Printf("Creating data directory %#v\n", *dataDirectory)
+	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
-	log.Printf("Creating data collector")
+	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewTrialEndHandler(path.Join(*dataDirectory, "trialEnd.pq"))).
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
@@ -69,6 +78,8 @@ func main() {
 
 TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
+		logger.SetPrefix("INFO: ")
+
 		select {
 		case <-keyboardInterrupt:
 			logger.Printf("RECEIVED KEYBOARD INTERRUPT")
@@ -82,11 +93,12 @@ TrialLoop:
 			SetNetworkDimension(DIMENSION).
 			SetRandMatrixInit(false).
 			SetNetworkLearningRule(LEARNING_RULE).
-			SetEpochs(100).
+			SetEpochs(EPOCHS).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
 			SetDataCollector(collector).
+			SetLogger(logger).
 			Build()
 
 		stateGenerator := states.NewStateGeneratorBuilder().
@@ -95,15 +107,19 @@ TrialLoop:
 			SetGeneratorDimension(DIMENSION).
 			Build()
 
+		logger.SetPrefix("Network Learning: ")
 		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES)
 		network.LearnStates(targetStates)
 
+		logger.SetPrefix("Network Testing: ")
 		testStates := stateGenerator.CreateStateCollection(*numTestStates)
 		relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
 
+		logger.SetPrefix("Data Processing: ")
 		trialNumStable := 0
 		trialStableStepsTaken := 0
 		for stateIndex, result := range relaxationResults {
+			logger.Printf("Processing State %v\n", stateIndex)
 			event := datacollector.RelaxationResultData{
 				TrialIndex:         trial,
 				StateIndex:         stateIndex,

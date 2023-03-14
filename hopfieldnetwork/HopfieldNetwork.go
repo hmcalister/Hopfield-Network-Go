@@ -7,6 +7,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfield/hopfieldutils"
+	"log"
 
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
@@ -32,6 +33,7 @@ type HopfieldNetwork struct {
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
 	dataCollector                  *datacollector.DataCollector
+	logger                         *log.Logger
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -277,6 +279,8 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
 	for stepIndex := 1; stepIndex < network.maximumRelaxationIterations; stepIndex++ {
+		network.logger.Printf("RelaxState stepIndex: %v\n", stepIndex)
+
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
@@ -336,10 +340,9 @@ func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *h
 	// We name this loop so we can continue directly if the state is already stable.
 StateRecvLoop:
 	for wrappedState := range stateChannel {
+		state = wrappedState.Data
 		stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 		energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
-
-		state = wrappedState.Data
 		stateHistory[0] = mat.VecDenseCopyOf(state)
 		energyHistory[0] = network.AllUnitEnergies(state)
 
@@ -416,6 +419,7 @@ func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, nu
 
 	// var nextState hopfieldutils.IndexedWrapper[*mat.VecDense]
 	for stateIndex := 0; stateIndex < len(states); stateIndex++ {
+		network.logger.Printf("Relaxing State %v/%v\n", stateIndex, len(states))
 		nextState := hopfieldutils.IndexedWrapper[*mat.VecDense]{Index: stateIndex, Data: states[stateIndex]}
 		stateChannel <- &nextState
 	}
