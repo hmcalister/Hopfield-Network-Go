@@ -37,6 +37,7 @@ func init() {
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
 
@@ -44,7 +45,14 @@ func init() {
 	if err != nil {
 		panic("Could not open log file!")
 	}
-	multiWriter := io.MultiWriter(os.Stdout, logFile)
+
+	var multiWriter io.Writer
+	if *verbose {
+		multiWriter = io.MultiWriter(os.Stdout, logFile)
+	} else {
+		multiWriter = io.MultiWriter(logFile)
+
+	}
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	logger.Printf("Removing data directory %#v\n", *dataDirectory)
