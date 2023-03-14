@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path"
 	"runtime"
 
 	"github.com/pkg/profile"
@@ -19,22 +20,21 @@ import (
 const DIMENSION = 100
 const TARGET_STATES = 100
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
-const UNITS_UPDATED = 5
+const UNITS_UPDATED = 1
 
 var (
-	numTrials                *int
-	numTestStates            *int
-	numThreads               *int
-	relaxationResultDataPath *string
-	trialEndDataPath         *string
-	InfoLogger               *log.Logger
+	numTrials     *int
+	numTestStates *int
+	numThreads    *int
+	dataDirectory *string
+	collector     *datacollector.DataCollector
+	logger        *log.Logger
 )
 
 func init() {
-	numTrials = flag.Int("trials", 1000, "The number of trials to undertake.")
+	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	relaxationResultDataPath = flag.String("relaxationResultDataFile", "data/relaxationResult.pq", "The file to write relaxation result data to. Data is in a parquet format.")
-	trialEndDataPath = flag.String("trialEndDataFile", "data/trialEndData.pq", "The file to write trial end data to. Data is in a parquet format.")
+	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -43,33 +43,40 @@ func init() {
 	if err != nil {
 		panic("Could not open log file!")
 	}
-
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
-	InfoLogger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	log.Printf("Removing data directory %#v\n", *dataDirectory)
+	os.RemoveAll(*dataDirectory)
+	log.Printf("Creating data directory %#v\n", *dataDirectory)
+	os.MkdirAll(*dataDirectory, 0700)
+
+	log.Printf("Creating data collector")
+	collector = datacollector.NewDataCollector().
+		AddHandler(datacollector.NewTrialEndHandler(path.Join(*dataDirectory, "trialEnd.pq"))).
+		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
+		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq")))
 }
 
 // Main method for entry point
 func main() {
 	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles"), profile.NoShutdownHook).Stop()
+	// defer collector.WriteStop()
+	go collector.CollectData()
+
 	keyboardInterrupt := make(chan os.Signal, 1)
 	signal.Notify(keyboardInterrupt, os.Interrupt)
-
-	collector := datacollector.NewDataCollector().
-		AddHandler(datacollector.NewRelaxationResultHandler(*relaxationResultDataPath)).
-		AddHandler(datacollector.NewTrialEndHandler(*trialEndDataPath))
-	defer collector.WriteStop()
-	go collector.CollectData()
 
 TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
 		select {
 		case <-keyboardInterrupt:
-			InfoLogger.Printf("RECEIVED KEYBOARD INTERRUPT")
+			logger.Printf("RECEIVED KEYBOARD INTERRUPT")
 			break TrialLoop
 		default:
 		}
-		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
-		InfoLogger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
+		logger.Printf("----- TRIAL: %09d -----", trial)
+		logger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
@@ -101,9 +108,9 @@ TrialLoop:
 				TrialIndex:         trial,
 				StateIndex:         stateIndex,
 				Stable:             result.Stable,
-				NumSteps:           result.NumSteps,
+				NumSteps:           len(result.StateHistory),
 				DistancesToLearned: result.DistancesToLearned,
-				EnergyProfile:      result.EnergyProfile,
+				EnergyProfile:      result.EnergyHistory[len(result.EnergyHistory)-1],
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
@@ -111,9 +118,24 @@ TrialLoop:
 				Data:  event,
 			}
 
+			for historyIndex, stateHistoryItem := range result.StateHistory {
+				historyEvent := datacollector.RelaxationHistoryData{
+					TrialIndex:    trial,
+					StateIndex:    stateIndex,
+					HistoryIndex:  historyIndex,
+					State:         stateHistoryItem.RawVector().Data,
+					EnergyProfile: result.EnergyHistory[historyIndex],
+				}
+
+				collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+					Index: datacollector.DataCollectionEvent_RelaxationHistory,
+					Data:  historyEvent,
+				}
+			}
+
 			if result.Stable {
 				trialNumStable += 1
-				trialStableStepsTaken += result.NumSteps
+				trialStableStepsTaken += len(result.StateHistory)
 			}
 		}
 		trialResult := datacollector.TrialEndData{
@@ -127,13 +149,10 @@ TrialLoop:
 			Index: datacollector.DataCollectionEvent_TrialEnd,
 			Data:  trialResult,
 		}
-		InfoLogger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
-	}
-	InfoLogger.Println("TRIAL COMPLETE")
+		logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
+	} //end Trial Loop
 
-	writeStopError := collector.WriteStop()
-	if writeStopError != nil {
-		InfoLogger.Fatalf("ERROR: DataWriter finished with error %#v!\n", writeStopError)
+	if err := collector.WriteStop(); err != nil {
+		logger.Fatalf("ERR: %#v\n", err)
 	}
-	InfoLogger.Println("DATA WRITTEN")
 }
