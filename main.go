@@ -17,8 +17,8 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const DIMENSION = 10
-const TARGET_STATES = 10
+const DIMENSION = 100
+const TARGET_STATES = 100
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
 const UNITS_UPDATED = 1
 
@@ -28,13 +28,13 @@ var (
 	numThreads    *int
 	dataDirectory *string
 	collector     *datacollector.DataCollector
-	InfoLogger    *log.Logger
+	logger        *log.Logger
 )
 
 func init() {
 	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	dataDirectory = flag.String("dataDir", "data/data", "The directory to store data files in. Warning: Removes contents of directory!")
+	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
@@ -44,7 +44,7 @@ func init() {
 		panic("Could not open log file!")
 	}
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
-	InfoLogger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	log.Printf("Removing data directory %#v\n", *dataDirectory)
 	os.RemoveAll(*dataDirectory)
@@ -71,12 +71,12 @@ TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
 		select {
 		case <-keyboardInterrupt:
-			InfoLogger.Printf("RECEIVED KEYBOARD INTERRUPT")
+			logger.Printf("RECEIVED KEYBOARD INTERRUPT")
 			break TrialLoop
 		default:
 		}
-		InfoLogger.Printf("----- TRIAL: %09d -----", trial)
-		InfoLogger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
+		logger.Printf("----- TRIAL: %09d -----", trial)
+		logger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
 
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(DIMENSION).
@@ -108,7 +108,7 @@ TrialLoop:
 				TrialIndex:         trial,
 				StateIndex:         stateIndex,
 				Stable:             result.Stable,
-				NumSteps:           result.NumSteps,
+				NumSteps:           len(result.StateHistory),
 				DistancesToLearned: result.DistancesToLearned,
 				EnergyProfile:      result.EnergyHistory[len(result.EnergyHistory)-1],
 			}
@@ -123,7 +123,7 @@ TrialLoop:
 					TrialIndex:    trial,
 					StateIndex:    stateIndex,
 					HistoryIndex:  historyIndex,
-					State:         stateHistoryItem,
+					State:         stateHistoryItem.RawVector().Data,
 					EnergyProfile: result.EnergyHistory[historyIndex],
 				}
 
@@ -135,7 +135,7 @@ TrialLoop:
 
 			if result.Stable {
 				trialNumStable += 1
-				trialStableStepsTaken += result.NumSteps
+				trialStableStepsTaken += len(result.StateHistory)
 			}
 		}
 		trialResult := datacollector.TrialEndData{
@@ -149,8 +149,10 @@ TrialLoop:
 			Index: datacollector.DataCollectionEvent_TrialEnd,
 			Data:  trialResult,
 		}
-		InfoLogger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
+		logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
+	} //end Trial Loop
+
+	if err := collector.WriteStop(); err != nil {
+		logger.Fatalf("ERR: %#v\n", err)
 	}
-	InfoLogger.Println("TRIAL COMPLETE")
-	collector.WriteStop()
 }
