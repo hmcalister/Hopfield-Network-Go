@@ -17,36 +17,26 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
-
 var (
-	numTrials        *int
-	numThreads       *int
-	networkDimension *int
-	learningRule     hopfieldnetwork.LearningRuleEnum
-	numTargetStates  *int
-	numTestStates    *int
-	numEpochs        *int
-	unitsUpdated     *int
-	dataDirectory    *string
-	collector        *datacollector.DataCollector
-	logger           *log.Logger
+	numTrials        = flag.Int("trials", 1, "The number of trials to undertake.")
+	numThreads       = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
+	learningRuleInt  = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs        = flag.Int("epochs", 100, "The number of epochs to train for.")
+	numTargetStates  = flag.Int("targetStates", 1, "The number of learned states.")
+	numTestStates    = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
+	unitsUpdated     = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
+	dataDirectory    = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath      = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	verbose          = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+
+	learningRule hopfieldnetwork.LearningRuleEnum
+	collector    *datacollector.DataCollector
+	logger       *log.Logger
 )
 
 func init() {
-	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
-	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
-	learningRuleInt := flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numTargetStates = flag.Int("targetStates", 1, "The number of learned states.")
-	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	numEpochs = flag.Int("epochs", 100, "The number of epochs to train for.")
-	unitsUpdated = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
-	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
-	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
-
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 
 	os.MkdirAll("logs", 0700)
