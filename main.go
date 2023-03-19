@@ -29,6 +29,7 @@ var (
 	dataDirectory    = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	logFilePath      = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	verbose          = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	learningNoiseRatio = flag.Float64("learningNoiseRatio", 0.0, "The amount of noise to apply to target states during learning.")
 
 	learningRule hopfieldnetwork.LearningRuleEnum
 	collector    *datacollector.DataCollector
@@ -51,7 +52,6 @@ func init() {
 		multiWriter = io.MultiWriter(os.Stdout, logFile)
 	} else {
 		multiWriter = io.MultiWriter(logFile)
-
 	}
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -96,6 +96,7 @@ TrialLoop:
 			SetEpochs(*numEpochs).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
+			SetLearningNoiseRatio(*learningNoiseRatio).
 			SetUnitsUpdatedPerStep(*unitsUpdated).
 			SetDataCollector(collector).
 			SetLogger(logger).

@@ -29,6 +29,7 @@ type HopfieldNetwork struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	learningNoiseRatio             float64
 	unitsUpdatedPerStep            int
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
