@@ -158,7 +158,7 @@ TrialLoop:
 		trialResult := datacollector.TrialEndData{
 			TrialIndex:                 trial,
 			NumTestStates:              *numTestStates,
-			NumTargetStates:            TARGET_STATES,
+			NumTargetStates:            *numTargetStates,
 			NumStableStates:            trialNumStable,
 			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
 		}
