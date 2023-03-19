@@ -17,7 +17,6 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
-const TARGET_STATES = 20
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
 const EPOCHS = 100
 const UNITS_UPDATED = 1
@@ -30,11 +29,13 @@ var (
 	collector     *datacollector.DataCollector
 	logger        *log.Logger
 	networkDimension *int
+	numTargetStates  *int
 )
 
 func init() {
 	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
 	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
+	numTargetStates = flag.Int("targetStates", 1, "The number of learned states.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
@@ -109,7 +110,7 @@ TrialLoop:
 			Build()
 
 		logger.SetPrefix("Network Learning: ")
-		targetStates := stateGenerator.CreateStateCollection(TARGET_STATES)
+		targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
 		network.LearnStates(targetStates)
 
 		logger.SetPrefix("Network Testing: ")
