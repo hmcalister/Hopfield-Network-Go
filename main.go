@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"os/signal"
 	"path"
 	"runtime"
 
@@ -18,18 +17,18 @@ import (
 )
 
 var (
-	numTrials        = flag.Int("trials", 1, "The number of trials to undertake.")
-	numThreads       = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
-	learningRuleInt  = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numEpochs        = flag.Int("epochs", 100, "The number of epochs to train for.")
-	numTargetStates  = flag.Int("targetStates", 1, "The number of learned states.")
-	numTestStates    = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	unitsUpdated     = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
-	dataDirectory    = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath      = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose          = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	numTrials          = flag.Int("trials", 1, "The number of trials to undertake.")
+	numThreads         = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	networkDimension   = flag.Int("dimension", 100, "The network dimension to simulate.")
+	learningRuleInt    = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs          = flag.Int("epochs", 100, "The number of epochs to train for.")
+	numTargetStates    = flag.Int("targetStates", 1, "The number of learned states.")
+	numTestStates      = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	learningNoiseRatio = flag.Float64("learningNoiseRatio", 0.0, "The amount of noise to apply to target states during learning.")
+	unitsUpdated       = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
+	dataDirectory      = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath        = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	verbose            = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
 	learningRule hopfieldnetwork.LearningRuleEnum
 	collector    *datacollector.DataCollector
@@ -69,23 +68,12 @@ func init() {
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles"), profile.NoShutdownHook).Stop()
+	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
 	// defer collector.WriteStop()
 	go collector.CollectData()
 
-	keyboardInterrupt := make(chan os.Signal, 1)
-	signal.Notify(keyboardInterrupt, os.Interrupt)
-
-TrialLoop:
 	for trial := 0; trial < *numTrials; trial++ {
 		logger.SetPrefix("INFO: ")
-
-		select {
-		case <-keyboardInterrupt:
-			logger.Printf("RECEIVED KEYBOARD INTERRUPT")
-			break TrialLoop
-		default:
-		}
 		logger.Printf("----- TRIAL: %09d -----", trial)
 		logger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
 
