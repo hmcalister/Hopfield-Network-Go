@@ -27,6 +27,7 @@ var (
 	collector     *datacollector.DataCollector
 	logger        *log.Logger
 	networkDimension *int
+	learningRule     hopfieldnetwork.LearningRuleEnum
 	numTargetStates  *int
 	numEpochs        *int
 	unitsUpdated     *int
@@ -35,6 +36,7 @@ var (
 func init() {
 	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
 	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
+	learningRuleInt := flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
 	numTargetStates = flag.Int("targetStates", 1, "The number of learned states.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	numEpochs = flag.Int("epochs", 100, "The number of epochs to train for.")
@@ -44,6 +46,8 @@ func init() {
 	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
+
+	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 
 	logFile, err := os.Create(*logFilePath)
 	if err != nil {
@@ -96,7 +100,7 @@ TrialLoop:
 		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 			SetNetworkDimension(*networkDimension).
 			SetRandMatrixInit(false).
-			SetNetworkLearningRule(LEARNING_RULE).
+			SetNetworkLearningRule(learningRule).
 			SetEpochs(*numEpochs).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
