@@ -19,6 +19,7 @@ type HopfieldNetworkBuilder struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	learningNoiseRatio             float64
 	unitsUpdatedPerStep            int
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
@@ -119,6 +120,16 @@ func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationIterations(max
 	return networkBuilder
 }
 
+// Set the learning noise ratio. This is the number of elements that are inverted in each state before relaxation.
+//
+// Defaults to 0.0. Must be in the range [0.0, 1.0] but should be a small value (e.g. <0.25)
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetLearningNoiseRatio(learningNoiseRatio float64) *HopfieldNetworkBuilder {
+	networkBuilder.learningNoiseRatio = learningNoiseRatio
+	return networkBuilder
+}
+
 // Set the number of units that are update by each step / each matrix multiplication.
 //
 // Default to 1. This is the typical Hopfield behavior and is assured to be stable given enough time.
@@ -156,6 +167,10 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		panic("HopfieldNetworkBuilder encountered an error during build! Epochs must be a positive integer!")
 	}
 
+	if networkBuilder.learningNoiseRatio < 0.0 || networkBuilder.learningNoiseRatio > 1.0 {
+		panic("HopfieldNetworkBuilder encountered an error during build! learningNoiseRatio must be in range [0.0, 1.0]!")
+	}
+
 	if networkBuilder.unitsUpdatedPerStep < 0 || networkBuilder.unitsUpdatedPerStep > networkBuilder.dimension {
 		panic("HopfieldNetworkBuilder encountered an error during build! unitsUpdatedPerStep must be a positive integer that is smaller than the network dimension!")
 	}
@@ -190,6 +205,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
+		learningNoiseRatio:             networkBuilder.learningNoiseRatio,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 		dataCollector:                  networkBuilder.dataCollector,
 		logger:                         networkBuilder.logger,
