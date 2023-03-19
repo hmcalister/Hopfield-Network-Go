@@ -7,7 +7,7 @@ require gonum.org/v1/gonum v0.12.0
 require (
 	github.com/pkg/profile v1.7.0
 	github.com/xitongsys/parquet-go-source v0.0.0-20221025031416-9877e685ef65
-	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0
 )
 
 require (
