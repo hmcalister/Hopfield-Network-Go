@@ -1,6 +1,8 @@
 package hopfieldnetwork
 
 import (
+	"hmcalister/hopfield/hopfieldutils"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -97,6 +99,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
+		hopfieldutils.InvertSliceElements(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseRatio)
 	}
 
 	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, private_DELTA_THREADS)
