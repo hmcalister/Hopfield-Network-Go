@@ -105,7 +105,7 @@ TrialLoop:
 		stateGenerator := states.NewStateGeneratorBuilder().
 			SetRandMin(-1).
 			SetRandMax(1).
-			SetGeneratorDimension(DIMENSION).
+			SetGeneratorDimension(*networkDimension).
 			Build()
 
 		logger.SetPrefix("Network Learning: ")
