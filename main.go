@@ -18,7 +18,6 @@ import (
 )
 
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
-const EPOCHS = 100
 const UNITS_UPDATED = 1
 
 var (
@@ -30,6 +29,7 @@ var (
 	logger        *log.Logger
 	networkDimension *int
 	numTargetStates  *int
+	numEpochs        *int
 )
 
 func init() {
@@ -37,6 +37,7 @@ func init() {
 	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
 	numTargetStates = flag.Int("targetStates", 1, "The number of learned states.")
 	numTestStates = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
+	numEpochs = flag.Int("epochs", 100, "The number of epochs to train for.")
 	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
@@ -95,7 +96,7 @@ TrialLoop:
 			SetNetworkDimension(*networkDimension).
 			SetRandMatrixInit(false).
 			SetNetworkLearningRule(LEARNING_RULE).
-			SetEpochs(EPOCHS).
+			SetEpochs(*numEpochs).
 			SetMaximumRelaxationIterations(100).
 			SetMaximumRelaxationUnstableUnits(0).
 			SetUnitsUpdatedPerStep(UNITS_UPDATED).
