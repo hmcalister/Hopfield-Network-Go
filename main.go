@@ -20,18 +20,17 @@ import (
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
 
 var (
-	numTrials     *int
-	numTestStates *int
-	numThreads    *int
-	dataDirectory *string
-	collector     *datacollector.DataCollector
-	logger        *log.Logger
+	numTrials        *int
 	numThreads       *int
 	networkDimension *int
 	learningRule     hopfieldnetwork.LearningRuleEnum
 	numTargetStates  *int
+	numTestStates    *int
 	numEpochs        *int
 	unitsUpdated     *int
+	dataDirectory    *string
+	collector        *datacollector.DataCollector
+	logger           *log.Logger
 )
 
 func init() {
@@ -50,6 +49,8 @@ func init() {
 
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 
+	os.MkdirAll("logs", 0700)
+	os.MkdirAll("profiles", 0700)
 	logFile, err := os.Create(*logFilePath)
 	if err != nil {
 		panic("Could not open log file!")
