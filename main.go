@@ -26,6 +26,7 @@ var (
 	dataDirectory *string
 	collector     *datacollector.DataCollector
 	logger        *log.Logger
+	numThreads       *int
 	networkDimension *int
 	learningRule     hopfieldnetwork.LearningRuleEnum
 	numTargetStates  *int
@@ -35,6 +36,7 @@ var (
 
 func init() {
 	numTrials = flag.Int("trials", 1, "The number of trials to undertake.")
+	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	networkDimension = flag.Int("dimension", 1, "The network dimension to simulate.")
 	learningRuleInt := flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
 	numTargetStates = flag.Int("targetStates", 1, "The number of learned states.")
@@ -42,7 +44,6 @@ func init() {
 	numEpochs = flag.Int("epochs", 100, "The number of epochs to train for.")
 	unitsUpdated = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	numThreads = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	verbose := flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 	var logFilePath = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	flag.Parse()
