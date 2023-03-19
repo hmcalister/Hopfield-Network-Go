@@ -18,7 +18,6 @@ import (
 )
 
 const LEARNING_RULE = hopfieldnetwork.DeltaLearningRule
-const UNITS_UPDATED = 1
 
 var (
 	numTrials     *int
