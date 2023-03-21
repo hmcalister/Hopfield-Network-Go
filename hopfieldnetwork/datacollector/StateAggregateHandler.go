@@ -2,25 +2,24 @@ package datacollector
 
 import "github.com/xitongsys/parquet-go/writer"
 
-type TrialEndData struct {
-	TrialIndex                 int     `parquet:"name=TrialIndex, type=INT32"`
+type StateAggregateData struct {
 	NumTestStates              int     `parquet:"name=NumTestStates, type=INT32"`
 	NumTargetStates            int     `parquet:"name=NumTargetStates, type=INT32"`
 	NumStableStates            int     `parquet:"name=NumStableStates, type=INT32"`
 	StableStatesMeanStepsTaken float64 `parquet:"name=StableStatesMeanStepsTaken, type=DOUBLE"`
 }
 
-func NewTrialEndHandler(dataFile string) *dataHandler {
-	fileHandle, dataWriter := newParquetWriter(dataFile, new(TrialEndData))
+func NewStateAggregateHandler(dataFile string) *dataHandler {
+	fileHandle, dataWriter := newParquetWriter(dataFile, new(StateAggregateData))
 	return &dataHandler{
-		eventID:     DataCollectionEvent_TrialEnd,
+		eventID:     DataCollectionEvent_StateAggregate,
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
-		handleEvent: handleTrialEndEvent,
+		handleEvent: handleStateAggregateEvent,
 	}
 }
 
-func handleTrialEndEvent(writer *writer.ParquetWriter, event interface{}) {
-	result := event.(TrialEndData)
+func handleStateAggregateEvent(writer *writer.ParquetWriter, event interface{}) {
+	result := event.(StateAggregateData)
 	writer.Write(result)
 }
