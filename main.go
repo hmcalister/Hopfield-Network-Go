@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"runtime"
 
 	"github.com/pkg/profile"
 
@@ -17,7 +16,6 @@ import (
 )
 
 var (
-	numTrials          = flag.Int("trials", 1, "The number of trials to undertake.")
 	numThreads         = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	networkDimension   = flag.Int("dimension", 100, "The network dimension to simulate.")
 	learningRuleInt    = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
@@ -65,7 +63,6 @@ func init() {
 		Epochs:             *numEpochs,
 		LearningNoiseRatio: *learningNoiseRatio,
 		UnitsUpdated:       *unitsUpdated,
-		Trials:             *numTrials,
 		Threads:            *numThreads,
 		TargetStates:       *numTargetStates,
 		TestStates:         *numTestStates,
@@ -74,7 +71,7 @@ func init() {
 
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
-		AddHandler(datacollector.NewTrialEndHandler(path.Join(*dataDirectory, "trialEnd.pq"))).
+		AddHandler(datacollector.NewStateAggregateHandler(path.Join(*dataDirectory, "stateAggregate.pq"))).
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
 		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq")))
 }
@@ -85,90 +82,81 @@ func main() {
 	// defer collector.WriteStop()
 	go collector.CollectData()
 
-	for trial := 0; trial < *numTrials; trial++ {
-		logger.SetPrefix("INFO: ")
-		logger.Printf("----- TRIAL: %09d -----", trial)
-		logger.Printf("Goroutines: %d\n", runtime.NumGoroutine())
+	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
+		SetNetworkDimension(*networkDimension).
+		SetRandMatrixInit(false).
+		SetNetworkLearningRule(learningRule).
+		SetEpochs(*numEpochs).
+		SetMaximumRelaxationIterations(100).
+		SetMaximumRelaxationUnstableUnits(0).
+		SetLearningNoiseRatio(*learningNoiseRatio).
+		SetUnitsUpdatedPerStep(*unitsUpdated).
+		SetDataCollector(collector).
+		SetLogger(logger).
+		Build()
 
-		network := hopfieldnetwork.NewHopfieldNetworkBuilder().
-			SetNetworkDimension(*networkDimension).
-			SetRandMatrixInit(false).
-			SetNetworkLearningRule(learningRule).
-			SetEpochs(*numEpochs).
-			SetMaximumRelaxationIterations(100).
-			SetMaximumRelaxationUnstableUnits(0).
-			SetLearningNoiseRatio(*learningNoiseRatio).
-			SetUnitsUpdatedPerStep(*unitsUpdated).
-			SetDataCollector(collector).
-			SetLogger(logger).
-			Build()
+	stateGenerator := states.NewStateGeneratorBuilder().
+		SetRandMin(-1).
+		SetRandMax(1).
+		SetGeneratorDimension(*networkDimension).
+		Build()
 
-		stateGenerator := states.NewStateGeneratorBuilder().
-			SetRandMin(-1).
-			SetRandMax(1).
-			SetGeneratorDimension(*networkDimension).
-			Build()
+	logger.SetPrefix("Network Learning: ")
+	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
+	network.LearnStates(targetStates)
 
-		logger.SetPrefix("Network Learning: ")
-		targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
-		network.LearnStates(targetStates)
+	logger.SetPrefix("Network Testing: ")
+	testStates := stateGenerator.CreateStateCollection(*numTestStates)
+	relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
 
-		logger.SetPrefix("Network Testing: ")
-		testStates := stateGenerator.CreateStateCollection(*numTestStates)
-		relaxationResults := network.ConcurrentRelaxStates(testStates, *numThreads)
+	logger.SetPrefix("Data Processing: ")
+	trialNumStable := 0
+	trialStableStepsTaken := 0
+	for stateIndex, result := range relaxationResults {
+		logger.Printf("Processing State %v\n", stateIndex)
+		event := datacollector.RelaxationResultData{
+			StateIndex:         stateIndex,
+			Stable:             result.Stable,
+			NumSteps:           len(result.StateHistory),
+			DistancesToLearned: result.DistancesToLearned,
+			EnergyProfile:      result.EnergyHistory[len(result.EnergyHistory)-1],
+		}
 
-		logger.SetPrefix("Data Processing: ")
-		trialNumStable := 0
-		trialStableStepsTaken := 0
-		for stateIndex, result := range relaxationResults {
-			logger.Printf("Processing State %v\n", stateIndex)
-			event := datacollector.RelaxationResultData{
-				TrialIndex:         trial,
-				StateIndex:         stateIndex,
-				Stable:             result.Stable,
-				NumSteps:           len(result.StateHistory),
-				DistancesToLearned: result.DistancesToLearned,
-				EnergyProfile:      result.EnergyHistory[len(result.EnergyHistory)-1],
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_RelaxationResult,
+			Data:  event,
+		}
+
+		for historyIndex, stateHistoryItem := range result.StateHistory {
+			historyEvent := datacollector.RelaxationHistoryData{
+				StateIndex:    stateIndex,
+				HistoryIndex:  historyIndex,
+				State:         stateHistoryItem.RawVector().Data,
+				EnergyProfile: result.EnergyHistory[historyIndex],
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-				Index: datacollector.DataCollectionEvent_RelaxationResult,
-				Data:  event,
-			}
-
-			for historyIndex, stateHistoryItem := range result.StateHistory {
-				historyEvent := datacollector.RelaxationHistoryData{
-					TrialIndex:    trial,
-					StateIndex:    stateIndex,
-					HistoryIndex:  historyIndex,
-					State:         stateHistoryItem.RawVector().Data,
-					EnergyProfile: result.EnergyHistory[historyIndex],
-				}
-
-				collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-					Index: datacollector.DataCollectionEvent_RelaxationHistory,
-					Data:  historyEvent,
-				}
-			}
-
-			if result.Stable {
-				trialNumStable += 1
-				trialStableStepsTaken += len(result.StateHistory)
+				Index: datacollector.DataCollectionEvent_RelaxationHistory,
+				Data:  historyEvent,
 			}
 		}
-		trialResult := datacollector.TrialEndData{
-			TrialIndex:                 trial,
-			NumTestStates:              *numTestStates,
-			NumTargetStates:            *numTargetStates,
-			NumStableStates:            trialNumStable,
-			StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
+
+		if result.Stable {
+			trialNumStable += 1
+			trialStableStepsTaken += len(result.StateHistory)
 		}
-		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-			Index: datacollector.DataCollectionEvent_TrialEnd,
-			Data:  trialResult,
-		}
-		logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
-	} //end Trial Loop
+	}
+	trialResult := datacollector.StateAggregateData{
+		NumTestStates:              *numTestStates,
+		NumTargetStates:            *numTargetStates,
+		NumStableStates:            trialNumStable,
+		StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
+	}
+	collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+		Index: datacollector.DataCollectionEvent_StateAggregate,
+		Data:  trialResult,
+	}
+	logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
 
 	if err := collector.WriteStop(); err != nil {
 		logger.Fatalf("ERR: %#v\n", err)
