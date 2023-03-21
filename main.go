@@ -59,6 +59,19 @@ func init() {
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
+	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
+		NetworkDimension:   *networkDimension,
+		LearningRule:       learningRule.String(),
+		Epochs:             *numEpochs,
+		LearningNoiseRatio: *learningNoiseRatio,
+		UnitsUpdated:       *unitsUpdated,
+		Trials:             *numTrials,
+		Threads:            *numThreads,
+		TargetStates:       *numTargetStates,
+		TestStates:         *numTestStates,
+	}
+	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
+
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewTrialEndHandler(path.Join(*dataDirectory, "trialEnd.pq"))).
