@@ -16,7 +16,6 @@ import (
 //
 // DistancesToAllLearned is an array of distances to all learned states.
 type RelaxationResultData struct {
-	TrialIndex         int       `parquet:"name=TrialIndex, type=INT32"`
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
 	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
