@@ -3,7 +3,6 @@ package datacollector
 import "github.com/xitongsys/parquet-go/writer"
 
 type RelaxationHistoryData struct {
-	TrialIndex    int       `parquet:"name=TrialIndex, type=INT32"`
 	StateIndex    int       `parquet:"name=StateIndex, type=INT32"`
 	HistoryIndex  int       `parquet:"name=HistoryIndex, type=INT32"`
 	State         []float64 `parquet:"name=State, type=DOUBLE, repetitiontype=REPEATED"`

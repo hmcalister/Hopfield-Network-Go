@@ -17,7 +17,6 @@ type HopfieldNetworkSummaryData struct {
 	Epochs             int     `parquet:"name=Epochs, type=INT32"`
 	LearningNoiseRatio float64 `parquet:"name=LearningNoiseRatio, type=DOUBLE"`
 	UnitsUpdated       int     `parquet:"name=UnitsUpdated, type=INT32"`
-	Trials             int     `parquet:"name=Trials, type=INT32"`
 	Threads            int     `parquet:"name=Threads, type=INT32"`
 	TargetStates       int     `parquet:"name=TargetStates, type=INT32"`
 	TestStates         int     `parquet:"name=TestStates, type=INT32"`
