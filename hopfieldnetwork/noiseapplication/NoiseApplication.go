@@ -28,6 +28,15 @@ const (
 	GaussianApplication   NoiseApplicationEnum = iota
 )
 
+// Get a noise application function given an integer input
+func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseApplicationMethod {
+	noiseApplicationFunctions := map[NoiseApplicationEnum]NoiseApplicationMethod{
+		None:                  noNoiseApplication,
+	}
+
+	return noiseApplicationFunctions[noiseApplication]
+}
+
 // Applies no noise, effectively a NOP
 func noNoiseApplication(randomGenerator *rand.Rand, vec *mat.VecDense, noiseScale float64) {}
 
