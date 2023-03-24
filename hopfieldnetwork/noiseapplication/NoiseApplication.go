@@ -28,3 +28,6 @@ const (
 	GaussianApplication   NoiseApplicationEnum = iota
 )
 
+// Applies no noise, effectively a NOP
+func noNoiseApplication(randomGenerator *rand.Rand, vec *mat.VecDense, noiseScale float64) {}
+
