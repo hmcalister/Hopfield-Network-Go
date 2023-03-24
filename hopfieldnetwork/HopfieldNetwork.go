@@ -6,6 +6,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
+	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldutils"
 	"log"
 
@@ -26,10 +27,11 @@ type HopfieldNetwork struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	learningRule                   LearningRule
+	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
-	learningNoiseRatio             float64
+	learningNoiseScale             float64
 	unitsUpdatedPerStep            int
 	randomGenerator                *rand.Rand
 	learnedStates                  []*mat.VecDense
