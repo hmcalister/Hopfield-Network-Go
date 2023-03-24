@@ -1,7 +1,7 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldutils"
+	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -15,6 +15,7 @@ const private_DELTA_THREADS = 8
 // # Arguments
 //
 // * `Network`: A Hopfield Network that will be learned. This argument is required for some learning rules.
+//
 // * `States`: A slice of states to try and learn.
 //
 // # Returns
@@ -59,6 +60,7 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 // # Arguments
 //
 // * `Network`: A Hopfield Network that will be learned. This argument is required for some learning rules.
+//
 // * `States`: A slice of states to try and learn.
 //
 // # Returns
@@ -99,7 +101,8 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
-		hopfieldutils.InvertSliceElements(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseRatio)
+		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
+		activationfunction.ActivationFunction(relaxedStates[stateIndex])
 	}
 
 	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, private_DELTA_THREADS)

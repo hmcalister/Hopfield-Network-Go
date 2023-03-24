@@ -11,31 +11,35 @@ import (
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 	"hmcalister/hopfield/hopfieldutils"
 )
 
 var (
-	numThreads         = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	networkDimension   = flag.Int("dimension", 100, "The network dimension to simulate.")
-	learningRuleInt    = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numEpochs          = flag.Int("epochs", 100, "The number of epochs to train for.")
-	numTargetStates    = flag.Int("targetStates", 1, "The number of learned states.")
-	numTestStates      = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
-	learningNoiseRatio = flag.Float64("learningNoiseRatio", 0.0, "The amount of noise to apply to target states during learning.")
-	unitsUpdated       = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
-	dataDirectory      = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath        = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose            = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	numThreads             = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
+	learningRuleInt        = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs              = flag.Int("epochs", 100, "The number of epochs to train for.")
+	numTargetStates        = flag.Int("targetStates", 1, "The number of learned states.")
+	numTestStates          = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
+	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScaleFlag.\n0: No Noise\n1: Exact Ratio Inversion\n2: Random Uniform Ratio Inversion\n3: Gaussian Application")
+	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
+	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
+	dataDirectory          = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath            = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	verbose                = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
-	learningRule hopfieldnetwork.LearningRuleEnum
-	collector    *datacollector.DataCollector
-	logger       *log.Logger
+	learningRule        hopfieldnetwork.LearningRuleEnum
+	learningNoiseMethod noiseapplication.NoiseApplicationEnum
+	collector           *datacollector.DataCollector
+	logger              *log.Logger
 )
 
 func init() {
 	flag.Parse()
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
+	learningNoiseMethod = noiseapplication.NoiseApplicationEnum(*learningNoiseMethodInt)
 
 	os.MkdirAll("logs", 0700)
 	os.MkdirAll("profiles", 0700)
@@ -58,14 +62,15 @@ func init() {
 	os.MkdirAll(*dataDirectory, 0700)
 
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
-		NetworkDimension:   *networkDimension,
-		LearningRule:       learningRule.String(),
-		Epochs:             *numEpochs,
-		LearningNoiseRatio: *learningNoiseRatio,
-		UnitsUpdated:       *unitsUpdated,
-		Threads:            *numThreads,
-		TargetStates:       *numTargetStates,
-		TestStates:         *numTestStates,
+		NetworkDimension:    *networkDimension,
+		LearningRule:        learningRule.String(),
+		Epochs:              *numEpochs,
+		LearningNoiseMethod: learningNoiseMethod.String(),
+		LearningNoiseRatio:  *learningNoiseScale,
+		UnitsUpdated:        *unitsUpdated,
+		Threads:             *numThreads,
+		TargetStates:        *numTargetStates,
+		TestStates:          *numTestStates,
 	}
 	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
 
@@ -89,7 +94,8 @@ func main() {
 		SetEpochs(*numEpochs).
 		SetMaximumRelaxationIterations(100).
 		SetMaximumRelaxationUnstableUnits(0).
-		SetLearningNoiseRatio(*learningNoiseRatio).
+		SetLearningNoiseMethod(learningNoiseMethod).
+		SetLearningNoiseRatio(*learningNoiseScale).
 		SetUnitsUpdatedPerStep(*unitsUpdated).
 		SetDataCollector(collector).
 		SetLogger(logger).
