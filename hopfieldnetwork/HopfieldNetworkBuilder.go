@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"log"
 	"time"
 
@@ -19,7 +20,8 @@ type HopfieldNetworkBuilder struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
-	learningNoiseRatio             float64
+	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
+	learningNoiseScale             float64
 	unitsUpdatedPerStep            int
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
@@ -120,13 +122,21 @@ func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationIterations(max
 	return networkBuilder
 }
 
+// Set the learning noise method for the network. Method is determined by the enum selected. See the function `noiseapplication.GetNoiseApplicationMethod` for details
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetLearningNoiseMethod(learningNoiseMethod noiseapplication.NoiseApplicationEnum) *HopfieldNetworkBuilder {
+	networkBuilder.learningNoiseMethod = noiseapplication.GetNoiseApplicationMethod(learningNoiseMethod)
+	return networkBuilder
+}
+
 // Set the learning noise ratio. This is the number of elements that are inverted in each state before relaxation.
 //
 // Defaults to 0.0. Must be in the range [0.0, 1.0] but should be a small value (e.g. <0.25)
 //
 // Note this method returns the builder pointer so chained calls can be used.
 func (networkBuilder *HopfieldNetworkBuilder) SetLearningNoiseRatio(learningNoiseRatio float64) *HopfieldNetworkBuilder {
-	networkBuilder.learningNoiseRatio = learningNoiseRatio
+	networkBuilder.learningNoiseScale = learningNoiseRatio
 	return networkBuilder
 }
 
@@ -167,7 +177,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		panic("HopfieldNetworkBuilder encountered an error during build! Epochs must be a positive integer!")
 	}
 
-	if networkBuilder.learningNoiseRatio < 0.0 || networkBuilder.learningNoiseRatio > 1.0 {
+	if networkBuilder.learningNoiseScale < 0.0 || networkBuilder.learningNoiseScale > 1.0 {
 		panic("HopfieldNetworkBuilder encountered an error during build! learningNoiseRatio must be in range [0.0, 1.0]!")
 	}
 
@@ -205,7 +215,8 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
-		learningNoiseRatio:             networkBuilder.learningNoiseRatio,
+		learningNoiseMethod:            networkBuilder.learningNoiseMethod,
+		learningNoiseScale:             networkBuilder.learningNoiseScale,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 		dataCollector:                  networkBuilder.dataCollector,
 		logger:                         networkBuilder.logger,
