@@ -22,19 +22,19 @@ type NoiseApplicationMethod func(*rand.Rand, *mat.VecDense, float64)
 type NoiseApplicationEnum int
 
 const (
-	None                  NoiseApplicationEnum = iota
-	ExactRatioInversion   NoiseApplicationEnum = iota
-	UniformRatioInversion NoiseApplicationEnum = iota
-	GaussianApplication   NoiseApplicationEnum = iota
+	None                      NoiseApplicationEnum = iota
+	MaximalInversion          NoiseApplicationEnum = iota
+	RandomSubMaximalInversion NoiseApplicationEnum = iota
+	GaussianApplication       NoiseApplicationEnum = iota
 )
 
 // Get a noise application function given an integer input
 func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseApplicationMethod {
 	noiseApplicationFunctions := map[NoiseApplicationEnum]NoiseApplicationMethod{
-		None:                  noNoiseApplication,
-		ExactRatioInversion:   exactRatioInvertSliceElements,
-		UniformRatioInversion: uniformRandomRatioInvertSliceElements,
-		GaussianApplication:   gaussianNoise,
+		None:                      noNoiseApplication,
+		MaximalInversion:          maximalRatioInvertSliceElements,
+		RandomSubMaximalInversion: randomSubMaximalRandomRatioInvertSliceElements,
+		GaussianApplication:       gaussianNoise,
 	}
 
 	return noiseApplicationFunctions[noiseApplication]
@@ -54,7 +54,7 @@ func noNoiseApplication(randomGenerator *rand.Rand, vec *mat.VecDense, noiseScal
 // * `slice`: The slice to invert elements of
 //
 // * `inversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
-func exactRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, inversionRatio float64) {
+func maximalRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, inversionRatio float64) {
 	numInversions := int(float64(vec.Len()) * inversionRatio)
 	sliceIndices := make([]int, vec.Len()-1)
 	for i := range sliceIndices {
@@ -77,9 +77,9 @@ func exactRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense
 // * `slice`: The slice to invert elements of
 //
 // * `maximumInversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
-func uniformRandomRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, maximumInversionRatio float64) {
+func randomSubMaximalRandomRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, maximumInversionRatio float64) {
 	selectedInversionRatio := math.Mod(randomGenerator.Float64(), maximumInversionRatio)
-	exactRatioInvertSliceElements(randomGenerator, vec, selectedInversionRatio)
+	maximalRatioInvertSliceElements(randomGenerator, vec, selectedInversionRatio)
 }
 
 // Noise a given vector by applying gaussian noise to the entire vector, then applying the activation function

@@ -9,14 +9,14 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[None-0]
-	_ = x[ExactRatioInversion-1]
-	_ = x[UniformRatioInversion-2]
+	_ = x[MaximalInversion-1]
+	_ = x[RandomSubMaximalInversion-2]
 	_ = x[GaussianApplication-3]
 }
 
-const _NoiseApplicationEnum_name = "NoneExactRatioInversionUniformRatioInversionGaussianApplication"
+const _NoiseApplicationEnum_name = "NoneMaximalInversionRandomSubMaximalInversionGaussianApplication"
 
-var _NoiseApplicationEnum_index = [...]uint8{0, 4, 23, 44, 63}
+var _NoiseApplicationEnum_index = [...]uint8{0, 4, 20, 45, 64}
 
 func (i NoiseApplicationEnum) String() string {
 	if i < 0 || i >= NoiseApplicationEnum(len(_NoiseApplicationEnum_index)-1) {
