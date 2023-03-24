@@ -34,6 +34,7 @@ func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseAppli
 		None:                  noNoiseApplication,
 		ExactRatioInversion:   exactRatioInvertSliceElements,
 		UniformRatioInversion: uniformRandomRatioInvertSliceElements,
+		GaussianApplication:   gaussianNoise,
 	}
 
 	return noiseApplicationFunctions[noiseApplication]
@@ -81,3 +82,17 @@ func uniformRandomRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.
 	exactRatioInvertSliceElements(randomGenerator, vec, selectedInversionRatio)
 }
 
+// Noise a given vector by applying gaussian noise to the entire vector, then applying the activation function
+//
+// # Arguments
+//
+// * `randomGenerator`: A random number generator to use for selecting elements.
+//
+// * `slice`: The slice to invert elements of
+//
+// * `standardDeviation`: The standard deviation of the gaussian noise to apply
+func gaussianNoise(randomGenerator *rand.Rand, vec *mat.VecDense, standardDeviation float64) {
+	for i := 0; i < vec.Len(); i++ {
+		vec.RawVector().Data[i] += randomGenerator.NormFloat64() * standardDeviation
+	}
+}
