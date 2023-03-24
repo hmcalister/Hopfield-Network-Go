@@ -32,6 +32,7 @@ const (
 func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseApplicationMethod {
 	noiseApplicationFunctions := map[NoiseApplicationEnum]NoiseApplicationMethod{
 		None:                  noNoiseApplication,
+		ExactRatioInversion:   exactRatioInvertSliceElements,
 	}
 
 	return noiseApplicationFunctions[noiseApplication]
@@ -39,4 +40,28 @@ func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseAppli
 
 // Applies no noise, effectively a NOP
 func noNoiseApplication(randomGenerator *rand.Rand, vec *mat.VecDense, noiseScale float64) {}
+
+// Invert random indices of a vector. Inversion occurs by multiplying values by -1
+//
+// Alters the original slice in place.
+//
+// # Arguments
+//
+// * `randomGenerator`: A random number generator to use for selecting elements.
+//
+// * `slice`: The slice to invert elements of
+//
+// * `inversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
+func exactRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, inversionRatio float64) {
+	numInversions := int(float64(vec.Len()) * inversionRatio)
+	sliceIndices := make([]int, vec.Len()-1)
+	for i := range sliceIndices {
+		sliceIndices[i] = i
+	}
+	hopfieldutils.ShuffleList(randomGenerator, sliceIndices)
+
+	for i := 0; i < numInversions; i++ {
+		vec.SetVec(sliceIndices[i], -1*vec.AtVec(sliceIndices[i]))
+	}
+}
 
