@@ -66,7 +66,7 @@ func init() {
 		LearningRule:        learningRule.String(),
 		Epochs:              *numEpochs,
 		LearningNoiseMethod: learningNoiseMethod.String(),
-		LearningNoiseRatio:  *learningNoiseScale,
+		LearningNoiseScale:  *learningNoiseScale,
 		UnitsUpdated:        *unitsUpdated,
 		Threads:             *numThreads,
 		TargetStates:        *numTargetStates,
