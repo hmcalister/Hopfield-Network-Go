@@ -33,6 +33,7 @@ func GetNoiseApplicationMethod(noiseApplication NoiseApplicationEnum) NoiseAppli
 	noiseApplicationFunctions := map[NoiseApplicationEnum]NoiseApplicationMethod{
 		None:                  noNoiseApplication,
 		ExactRatioInversion:   exactRatioInvertSliceElements,
+		UniformRatioInversion: uniformRandomRatioInvertSliceElements,
 	}
 
 	return noiseApplicationFunctions[noiseApplication]
@@ -63,5 +64,20 @@ func exactRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense
 	for i := 0; i < numInversions; i++ {
 		vec.SetVec(sliceIndices[i], -1*vec.AtVec(sliceIndices[i]))
 	}
+}
+
+// Invert a random number of  elements of a vector - up to and including n. The number of elements inverted
+// is determined uniformly from 0 to n.
+//
+// # Arguments
+//
+// * `randomGenerator`: A random number generator to use for selecting elements.
+//
+// * `slice`: The slice to invert elements of
+//
+// * `maximumInversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
+func uniformRandomRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, maximumInversionRatio float64) {
+	selectedInversionRatio := math.Mod(randomGenerator.Float64(), maximumInversionRatio)
+	exactRatioInvertSliceElements(randomGenerator, vec, selectedInversionRatio)
 }
 
