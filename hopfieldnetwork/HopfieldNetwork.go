@@ -281,7 +281,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	copy(energyHistory[0], network.AllUnitEnergies(state))
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
-	for stepIndex := 1; stepIndex < network.maximumRelaxationIterations; stepIndex++ {
+	for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
 		network.logger.Printf("RelaxState stepIndex: %v\n", stepIndex)
 
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
@@ -349,7 +349,7 @@ StateRecvLoop:
 		stateHistory[0] = mat.VecDenseCopyOf(state)
 		energyHistory[0] = network.AllUnitEnergies(state)
 
-		for stepIndex := 1; stepIndex < network.maximumRelaxationIterations; stepIndex++ {
+		for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
