@@ -25,6 +25,7 @@ var (
 	numTestStates          = flag.Int("testStates", 1000, "The number of test states to use for each trial.")
 	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScale Flag.\n0: No Noise\n1: Maximal Inversion\n2:  Random SubMaximal Inversion\n3: Gaussian Application")
 	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
+	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
 	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 	dataDirectory          = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
 	logFilePath            = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
@@ -62,15 +63,16 @@ func init() {
 	os.MkdirAll(*dataDirectory, 0700)
 
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
-		NetworkDimension:    *networkDimension,
-		LearningRule:        learningRule.String(),
-		Epochs:              *numEpochs,
-		LearningNoiseMethod: learningNoiseMethod.String(),
-		LearningNoiseScale:  *learningNoiseScale,
-		UnitsUpdated:        *unitsUpdated,
-		Threads:             *numThreads,
-		TargetStates:        *numTargetStates,
-		TestStates:          *numTestStates,
+		NetworkDimension:       *networkDimension,
+		LearningRule:           learningRule.String(),
+		Epochs:                 *numEpochs,
+		LearningNoiseMethod:    learningNoiseMethod.String(),
+		LearningNoiseScale:     *learningNoiseScale,
+		UnitsUpdated:           *unitsUpdated,
+		AsymmetricWeightMatrix: *asymmetricWeightMatrix,
+		Threads:                *numThreads,
+		TargetStates:           *numTargetStates,
+		TestStates:             *numTestStates,
 	}
 	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
 
@@ -89,7 +91,8 @@ func main() {
 
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 		SetNetworkDimension(*networkDimension).
-		SetRandMatrixInit(false).
+		SetRandMatrixInit(*asymmetricWeightMatrix).
+		SetForceSymmetric(*asymmetricWeightMatrix).
 		SetNetworkLearningRule(learningRule).
 		SetEpochs(*numEpochs).
 		SetMaximumRelaxationIterations(100).
