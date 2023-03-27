@@ -22,9 +22,10 @@ import (
 // ------------------------------------------------------------------------------------------------
 
 const (
-	DataCollectionEvent_RelaxationResult  = iota
-	DataCollectionEvent_RelaxationHistory = iota
-	DataCollectionEvent_StateAggregate    = iota
+	DataCollectionEvent_RelaxationResult         = iota
+	DataCollectionEvent_RelaxationHistory        = iota
+	DataCollectionEvent_StateAggregate           = iota
+	DataCollectionEvent_TargetStateEnergyProfile = iota
 )
 
 // ------------------------------------------------------------------------------------------------
