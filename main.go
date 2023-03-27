@@ -80,7 +80,8 @@ func init() {
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewStateAggregateHandler(path.Join(*dataDirectory, "stateAggregate.pq"))).
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
-		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq")))
+		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
+		AddHandler(datacollector.NewTargetStateEnergyProfileHandler(path.Join(*dataDirectory, "targetStateEnergyProfiles.pq")))
 }
 
 // Main method for entry point
@@ -113,6 +114,20 @@ func main() {
 	logger.SetPrefix("Network Learning: ")
 	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
 	network.LearnStates(targetStates)
+
+	for stateIndex := range targetStates {
+		logger.Printf("Analyzing Target State %v\n", stateIndex)
+		state := targetStates[stateIndex]
+		targetStateData := datacollector.TargetStateEnergyProfileData{
+			TargetStateIndex: stateIndex,
+			IsStable:         network.StateIsStable(state),
+			EnergyProfile:    network.AllUnitEnergies(state),
+		}
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_TargetStateEnergyProfile,
+			Data:  targetStateData,
+		}
+	}
 
 	logger.SetPrefix("Network Testing: ")
 	testStates := stateGenerator.CreateStateCollection(*numTestStates)
