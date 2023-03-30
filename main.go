@@ -81,7 +81,7 @@ func init() {
 		AddHandler(datacollector.NewStateAggregateHandler(path.Join(*dataDirectory, "stateAggregate.pq"))).
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
 		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
-		AddHandler(datacollector.NewTargetStateEnergyProfileHandler(path.Join(*dataDirectory, "targetStateEnergyProfiles.pq")))
+		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq")))
 }
 
 // Main method for entry point
@@ -118,13 +118,13 @@ func main() {
 	for stateIndex := range targetStates {
 		logger.Printf("Analyzing Target State %v\n", stateIndex)
 		state := targetStates[stateIndex]
-		targetStateData := datacollector.TargetStateEnergyProfileData{
+		targetStateData := datacollector.TargetStateProbeData{
 			TargetStateIndex: stateIndex,
 			IsStable:         network.StateIsStable(state),
 			EnergyProfile:    network.AllUnitEnergies(state),
 		}
 		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-			Index: datacollector.DataCollectionEvent_TargetStateEnergyProfile,
+			Index: datacollector.DataCollectionEvent_TargetStateProbe,
 			Data:  targetStateData,
 		}
 	}
