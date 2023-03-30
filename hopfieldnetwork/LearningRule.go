@@ -101,7 +101,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
-		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
+		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale*mat.Max(network.matrix))
 		activationfunction.ActivationFunction(relaxedStates[stateIndex])
 	}
 
