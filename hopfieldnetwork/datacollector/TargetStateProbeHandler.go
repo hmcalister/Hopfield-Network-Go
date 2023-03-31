@@ -2,6 +2,9 @@ package datacollector
 
 import "github.com/xitongsys/parquet-go/writer"
 
+// TargetStateIndex is the index of the target state being probed
+// IsStable is a flag indicating if this target state is stable in the network
+// EnergyProfile is the energy profile of the target state in the network
 type TargetStateProbeData struct {
 	TargetStateIndex int       `parquet:"name=TargetStateIndex, type=INT32"`
 	IsStable         bool      `parquet:"name=IsStable, type=BOOLEAN"`
