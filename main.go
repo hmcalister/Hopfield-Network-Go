@@ -114,6 +114,9 @@ func main() {
 	logger.SetPrefix("Network Learning: ")
 	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
 	network.LearnStates(targetStates)
+	if err := hopfieldutils.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, "networkMatrix")); err != nil {
+		log.Printf("Error '%v' while saving Hopfield weights", err)
+	}
 
 	for stateIndex := range targetStates {
 		logger.Printf("Analyzing Target State %v\n", stateIndex)
