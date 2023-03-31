@@ -78,7 +78,6 @@ func init() {
 
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
-		AddHandler(datacollector.NewStateAggregateHandler(path.Join(*dataDirectory, "stateAggregate.pq"))).
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
 		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
 		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq")))
@@ -172,16 +171,6 @@ func main() {
 			trialNumStable += 1
 			trialStableStepsTaken += len(result.StateHistory)
 		}
-	}
-	trialResult := datacollector.StateAggregateData{
-		NumTestStates:              *numTestStates,
-		NumTargetStates:            *numTargetStates,
-		NumStableStates:            trialNumStable,
-		StableStatesMeanStepsTaken: float64(trialStableStepsTaken) / float64(trialNumStable),
-	}
-	collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-		Index: datacollector.DataCollectionEvent_StateAggregate,
-		Data:  trialResult,
 	}
 	logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numTestStates)
 
