@@ -92,21 +92,27 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
 
+	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	stateContribution := mat.NewDense(network.dimension, network.dimension, nil)
 
+	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
-		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale*mat.Max(network.matrix))
+		// We also apply some noise to the state to aide in learning
+		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
 		activationfunction.ActivationFunction(relaxedStates[stateIndex])
 	}
 
+	// This is the most important call - relax all the states!
 	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, private_DELTA_THREADS)
 
+	// Now states are relaxed we can compare them to the target states and use differences to determine weight updates
 	for stateIndex := range states {
 		state := states[stateIndex]
 		stateHistory := relaxationResults[stateIndex].StateHistory
