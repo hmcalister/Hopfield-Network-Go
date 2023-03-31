@@ -24,7 +24,6 @@ import (
 const (
 	DataCollectionEvent_RelaxationResult  = iota
 	DataCollectionEvent_RelaxationHistory = iota
-	DataCollectionEvent_StateAggregate    = iota
 	DataCollectionEvent_TargetStateProbe  = iota
 )
 
@@ -68,11 +67,22 @@ func NewDataCollector() *DataCollector {
 }
 
 // Add a state relaxed event handler.
+//
+// # Arguments
+//
+// *`dataHandler`: The handler to add to the collector
+//
+// # Returns
+//
+// A pointer to the DataCollector, to allow for chaining of AddHandler calls
 func (collector *DataCollector) AddHandler(dataHandler *dataHandler) *DataCollector {
 	collector.handlers = append(collector.handlers, dataHandler)
 	return collector
 }
 
+// Call WriteStop on all parquet writers in the handlers. This means data should be written nicely to disk.
+//
+// Consider calling `defer collector.WriteStop()`
 func (collector *DataCollector) WriteStop() error {
 	for _, handler := range collector.handlers {
 		if err := handler.writeStop(); err != nil {

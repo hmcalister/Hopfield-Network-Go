@@ -7,13 +7,9 @@ import (
 // Representation of the result of a relaxation of a state.
 //
 // State is the state vector that has been relaxed.
-//
 // UnitEnergies is a vector representing the energies of each unit.
-//
 // Stable is a bool representing if the state was stable when relaxation finished.
-//
 // NumSteps is an int representing the number of steps taken when relaxation finished.
-//
 // DistancesToAllLearned is an array of distances to all learned states.
 type RelaxationResultData struct {
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
