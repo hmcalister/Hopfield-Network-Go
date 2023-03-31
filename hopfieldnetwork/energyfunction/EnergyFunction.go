@@ -35,6 +35,7 @@ func StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
 	return energy
 }
 
+// Gets all the unit energies of a given vector with respect to a matrix.
 func AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) *mat.VecDense {
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
