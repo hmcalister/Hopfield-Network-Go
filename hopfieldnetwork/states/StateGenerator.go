@@ -35,7 +35,7 @@ func (gen *StateGenerator) AllocStateMemory() []float64 {
 //
 // # Arguments
 //
-// * `dataArray`: A slice of float64 with enough memory to store a VecDense. Should be created with AllocStateMemory.
+// dataArray: A slice of float64 with enough memory to store a VecDense. Should be created with AllocStateMemory.
 //
 // # Returns
 //
@@ -56,7 +56,7 @@ func (gen *StateGenerator) NextState(dataArray []float64) *mat.VecDense {
 //
 // # Arguments
 //
-// * `numStates` - The number of states to generate.
+// numStates: The number of states to generate.
 //
 // # Returns
 //
