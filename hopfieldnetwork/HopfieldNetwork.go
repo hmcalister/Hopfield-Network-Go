@@ -123,7 +123,7 @@ func (network *HopfieldNetwork) String() string {
 //
 // # Arguments
 //
-// * `state`: The vector to measure the energy of.
+// state *mat.VecDense: The vector to measure the energy of.
 //
 // # Returns
 //
@@ -137,21 +137,21 @@ func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
 //
 // # Arguments
 //
-// * `state`: The vector to measure the energy of.
-// * `unit_index`: The unit index into the vector to measure.
+// state *mat.VecDense: The vector to measure the energy of.
+// unitIndex int: The unit index into the vector to measure.
 //
 // # Returns
 //
 // A float64 representing the energy of the given unit within the state.
-func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unit_index int) float64 {
-	return energyfunction.UnitEnergy(network.matrix, state, unit_index)
+func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) float64 {
+	return energyfunction.UnitEnergy(network.matrix, state, unitIndex)
 }
 
 // Get the energy of a each unit within a state with respect to the network matrix.
 //
 // # Arguments
 //
-// * `state`: The vector to measure the energy of.
+// state *mat.VecDense: The vector to measure the energy of.
 //
 // # Returns
 //
@@ -168,7 +168,7 @@ func (network *HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
 //
 // # Arguments
 //
-// * `state`: A state to check the stability of
+// state *mat.VecDense: A state to check the stability of
 //
 // # Returns
 //
@@ -190,7 +190,7 @@ func (network *HopfieldNetwork) StateIsStable(state *mat.VecDense) bool {
 //
 // # Arguments
 //
-// * `States`: A list of states to check
+// states []*mat.VecDense: A list of states to check
 //
 // # Returns
 //
@@ -215,7 +215,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 //
 // # Arguments
 //
-// * `states`: A collection of states to learn
+// states []*mat.VecDense: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 	network.learnedStates = append(network.learnedStates, states...)
 	for _epoch := 0; _epoch < network.epochs; _epoch++ {
@@ -244,7 +244,7 @@ type RelaxationResult struct {
 //
 // # Arguments
 //
-// * `state`: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
+// state *mat.VecDense: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
 func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	unitIndices := network.getUnitIndices()
 	newState := mat.NewVecDense(network.dimension, nil)
@@ -266,7 +266,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 //
 // # Arguments
 //
-// * `state`: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
+// state *mat.VecDense: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
 //
 // # Returns
 //
@@ -328,8 +328,9 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 //
 // # Arguments
 //
-// * `stateChannel`: A channel to pass the next state to be updated to the goroutine. This channel should be created and passed before the goroutines are created.
-// * `resultChannel`: A channel to pass the result of the relaxation back to the master thread.
+// stateChannel: A channel to pass the next state to be updated to the goroutine. This channel should be created and passed before the goroutines are created.
+//
+// resultChannel: A channel to pass the result of the relaxation back to the master thread.
 func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *hopfieldutils.IndexedWrapper[*mat.VecDense], resultChannel chan *hopfieldutils.IndexedWrapper[RelaxationResult]) {
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
@@ -403,8 +404,9 @@ StateRecvLoop:
 //
 // # Arguments
 //
-// * `states`: A slice of states that are to be relaxed. The order of this slice corresponds to the order of the returned bools.
-// * `numThreads`: An integer determining how many threads to run. Please note the master thread does not run any calculations,
+// states []*mat.VecDense: A slice of states that are to be relaxed. The order of this slice corresponds to the order of the returned bools.
+//
+// numThreads int: An integer determining how many threads to run. Please note the master thread does not run any calculations,
 // as it only dispatches states and handles results. Please check how many threads your system supports.
 //
 // # Returns
