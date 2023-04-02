@@ -14,9 +14,9 @@ const private_DELTA_THREADS = 8
 //
 // # Arguments
 //
-// * `Network`: A Hopfield Network that will be learned. This argument is required for some learning rules.
+// Network *HopfieldNetwork: A Hopfield Network that will be learned. This argument is required for some learning rules.
 //
-// * `States`: A slice of states to try and learn.
+// States []*mat.VecDense: A slice of states to try and learn.
 //
 // # Returns
 //
@@ -41,7 +41,7 @@ const (
 //
 // # Arguments
 //
-// * `learningRule`: The learning rule selected
+// learningRule LearningRuleEnum: The learning rule selected
 //
 // # Returns
 //
@@ -59,9 +59,9 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 //
 // # Arguments
 //
-// * `Network`: A Hopfield Network that will be learned. This argument is required for some learning rules.
+// Network *HopfieldNetwork: A Hopfield Network that will be learned.
 //
-// * `States`: A slice of states to try and learn.
+// States []*mat.VecDense: A slice of states to try and learn.
 //
 // # Returns
 //
@@ -85,8 +85,9 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 //
 // # Arguments
 //
-// * `Network`: A Hopfield Network that will be learned. This argument is required for some learning rules.
-// * `States`: A slice of states to try and learn.
+// Network *HopfieldNetwork: A Hopfield Network that will be learned.
+//
+// States []*mat.VecDense: A slice of states to try and learn.
 //
 // # Returns
 //
