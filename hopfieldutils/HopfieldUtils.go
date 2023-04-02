@@ -18,9 +18,9 @@ func ShuffleList[T comparable](randomGenerator *rand.Rand, list []T) {
 //
 // # Arguments
 //
-// * `slice`: The slice to check over
+// slice: The slice to check over
 //
-// * `elem`: The element to check for
+// elem: The element to check for
 //
 // # Returns
 //
@@ -39,11 +39,11 @@ func IsInSlice[T comparable](slice []T, elem T) bool {
 //
 // # Arguments
 //
-// * `slice`: The slice to check over
+// slice: The slice to check over
 //
-// * `vector`: The element to check the distance to
+// vector: The element to check the distance to
 //
-// * `norm`: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
+// norm: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
 //
 // # Return
 //
@@ -74,11 +74,11 @@ func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense, no
 //
 // # Arguments
 //
-// * `slice`: The slice to check over
+// slice: The slice to check over
 //
-// * `vector`: The element to check the distance to
+// vector: The element to check the distance to
 //
-// * `norm`: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
+// norm: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
 //
 // # Return
 //
@@ -111,9 +111,9 @@ type IndexedWrapper[T any] struct {
 //
 // # Arguments
 //
-// * `slice`: The slice to chunk.
+// slice: The slice to chunk.
 //
-// * `chunkSize`: The number of items to fit into each chunk.
+// chunkSize: The number of items to fit into each chunk.
 //
 // # Returns
 //
