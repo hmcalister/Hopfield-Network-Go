@@ -8,24 +8,31 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// Define a function that applies noise to a given state.
+// Define a function that applies noise to a given state. Note the state is affected in place.
 //
 // # Arguments
 //
-// * `randomGenerator`: A random generator used to apply noise to the state
+// randomGenerator *rand.Rand: A random generator used to apply noise to the state
 //
-// * `state`: The state to apply noise to
+// state *mat.VecDense: The state to apply noise to
 //
-// * `noiseScale`: The amount/scale of noise to apply (if applicable).
+// noiseScale float64: The amount/scale of noise to apply (if applicable).
 type NoiseApplicationMethod func(*rand.Rand, *mat.VecDense, float64)
 
 type NoiseApplicationEnum int
 
 const (
-	None                      NoiseApplicationEnum = iota
-	MaximalInversion          NoiseApplicationEnum = iota
+	// Apply no noise. State is left unchanged.
+	None NoiseApplicationEnum = iota
+
+	// Multiply a number of elements of state (defined by noiseScale as a proportion of total elements) by -1
+	MaximalInversion NoiseApplicationEnum = iota
+
+	// Multiply a random number of elements of (uniform between 0 and noiseScale as proportion of total elements) by -1
 	RandomSubMaximalInversion NoiseApplicationEnum = iota
-	GaussianApplication       NoiseApplicationEnum = iota
+
+	// Add an amount of Gaussian noise to all elements in the state.
+	GaussianApplication NoiseApplicationEnum = iota
 )
 
 // Get a noise application function given an integer input
@@ -49,21 +56,21 @@ func noNoiseApplication(randomGenerator *rand.Rand, vec *mat.VecDense, noiseScal
 //
 // # Arguments
 //
-// * `randomGenerator`: A random number generator to use for selecting elements.
+// randomGenerator *rand.Rand: A random number generator to use for selecting elements.
 //
-// * `slice`: The slice to invert elements of
+// state *mat.VecDense: The state to invert elements of
 //
-// * `inversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
-func maximalRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, inversionRatio float64) {
-	numInversions := int(float64(vec.Len()) * inversionRatio)
-	sliceIndices := make([]int, vec.Len()-1)
+// inversionRatio float64: The amount of elements to invert, expressed as a ratio of the length of `state`
+func maximalRatioInvertSliceElements(randomGenerator *rand.Rand, state *mat.VecDense, inversionRatio float64) {
+	numInversions := int(float64(state.Len()) * inversionRatio)
+	sliceIndices := make([]int, state.Len()-1)
 	for i := range sliceIndices {
 		sliceIndices[i] = i
 	}
 	hopfieldutils.ShuffleList(randomGenerator, sliceIndices)
 
 	for i := 0; i < numInversions; i++ {
-		vec.SetVec(sliceIndices[i], -1*vec.AtVec(sliceIndices[i]))
+		state.SetVec(sliceIndices[i], -1*state.AtVec(sliceIndices[i]))
 	}
 }
 
@@ -72,27 +79,27 @@ func maximalRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDen
 //
 // # Arguments
 //
-// * `randomGenerator`: A random number generator to use for selecting elements.
+// randomGenerator *rand.Rand: A random number generator to use for selecting elements.
 //
-// * `slice`: The slice to invert elements of
+// state *mat.VecDense: The state to invert elements of
 //
-// * `maximumInversionRatio`: The amount of elements to invert, expressed as a ratio of the length of `slice`
-func randomSubMaximalRandomRatioInvertSliceElements(randomGenerator *rand.Rand, vec *mat.VecDense, maximumInversionRatio float64) {
+// maximumInversionRatio float64: The amount of elements to invert, expressed as a ratio of the length of `state`
+func randomSubMaximalRandomRatioInvertSliceElements(randomGenerator *rand.Rand, state *mat.VecDense, maximumInversionRatio float64) {
 	selectedInversionRatio := math.Mod(randomGenerator.Float64(), maximumInversionRatio)
-	maximalRatioInvertSliceElements(randomGenerator, vec, selectedInversionRatio)
+	maximalRatioInvertSliceElements(randomGenerator, state, selectedInversionRatio)
 }
 
 // Noise a given vector by applying gaussian noise to the entire vector, then applying the activation function
 //
 // # Arguments
 //
-// * `randomGenerator`: A random number generator to use for selecting elements.
+// randomGenerator *rand.Rand: A random number generator to use for selecting elements.
 //
-// * `slice`: The slice to invert elements of
+// state *mat.VecDense: The state to apply noise to
 //
-// * `standardDeviation`: The standard deviation of the gaussian noise to apply
-func gaussianNoise(randomGenerator *rand.Rand, vec *mat.VecDense, standardDeviation float64) {
-	for i := 0; i < vec.Len(); i++ {
-		vec.RawVector().Data[i] += randomGenerator.NormFloat64() * standardDeviation
+// standardDeviation float64: The standard deviation of the gaussian noise to apply
+func gaussianNoise(randomGenerator *rand.Rand, state *mat.VecDense, standardDeviation float64) {
+	for i := 0; i < state.Len(); i++ {
+		state.RawVector().Data[i] += randomGenerator.NormFloat64() * standardDeviation
 	}
 }
