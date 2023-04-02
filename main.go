@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/hmcalister/gonum-matrix-io/pkg/gonumio"
 	"github.com/pkg/profile"
 
 	"hmcalister/hopfield/hopfieldnetwork"
@@ -113,7 +114,7 @@ func main() {
 	logger.SetPrefix("Network Learning: ")
 	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
 	network.LearnStates(targetStates)
-	if err := hopfieldutils.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, "networkMatrix")); err != nil {
+	if err := gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, "networkMatrix")); err != nil {
 		log.Printf("Error '%v' while saving Hopfield weights", err)
 	}
 
