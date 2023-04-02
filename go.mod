@@ -13,6 +13,7 @@ require (
 require (
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
+	github.com/hmcalister/gonum-matrix-io v0.0.0-20230402220546-e7e3828cda2a // indirect
 )
 
 require (
