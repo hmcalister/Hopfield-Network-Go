@@ -1,18 +1,5 @@
 package datacollector
 
-//
-// Adding to the data collector:
-//
-// To add to the data collector, first identify what data you want to collect.
-// If the data is a direct measurement (e.g. a RelaxationResult), easy!
-// If it is something more derived (e.g. the number of stable states per trial) then add a variable to the var block below.
-//
-// Add a callback function to the callback section, add a channel to the data collector, initialize the channel in the new method
-// in the StartCollecting method have the new channel call the callback function...
-//
-// This needs to be refactored...
-//
-
 import (
 	"hmcalister/hopfield/hopfieldutils"
 )
@@ -36,6 +23,8 @@ type DataCollector struct {
 	EventChannel chan hopfieldutils.IndexedWrapper[interface{}]
 }
 
+// Start data collection by spinning up a goroutine that forever looks at EventChannel,
+// taking any incoming events and sending them to the listening handlers.
 func (collector *DataCollector) CollectData() {
 	if len(collector.handlers) == 0 {
 		for {
@@ -70,7 +59,7 @@ func NewDataCollector() *DataCollector {
 //
 // # Arguments
 //
-// *`dataHandler`: The handler to add to the collector
+// dataHandler *dataHandler: The handler to add to the collector
 //
 // # Returns
 //

@@ -43,10 +43,10 @@ func (handler *dataHandler) writeStop() error {
 //
 // # Arguments
 //
-// * `dataFilePath`: The path to the data file required
+// dataFilePath string: The path to the data file required
 //
-// * `dataStruct`: A valid struct for writing in the parquet format. Should be called with
-// new(struct) as argument.
+// dataStruct (generic struct): A valid struct for writing in the parquet format.
+// Should be called with `new(dataStruct)` as argument.
 //
 // # Returns
 //
