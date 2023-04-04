@@ -10,7 +10,7 @@ package datacollector
 // AsymmetricWeightMatrix is a boolean flag indicating if the network is allowed to take asymmetric values
 // Threads is the number of threads the network used to relax states
 // TargetStates is the number of states used for learning
-// TestStates is the number of states used for probing
+// ProbeStates is the number of states used for probing
 type HopfieldNetworkSummaryData struct {
 	NetworkDimension       int     `parquet:"name=NetworkDimension, type=INT32"`
 	LearningRule           string  `parquet:"name=LearningRule, type=BYTE_ARRAY"`
@@ -21,7 +21,7 @@ type HopfieldNetworkSummaryData struct {
 	AsymmetricWeightMatrix bool    `parquet:"name=AsymmetricWeightMatrix, type=BOOLEAN"`
 	Threads                int     `parquet:"name=Threads, type=INT32"`
 	TargetStates           int     `parquet:"name=TargetStates, type=INT32"`
-	TestStates             int     `parquet:"name=TestStates, type=INT32"`
+	ProbeStates            int     `parquet:"name=ProbeStates, type=INT32"`
 }
 
 // Write the HopfieldNetworkSummary struct to the specified data file, in a parquet format
