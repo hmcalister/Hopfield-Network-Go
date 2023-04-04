@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/hmcalister/gonum-matrix-io/pkg/gonumio"
 	"github.com/pkg/profile"
 
 	"hmcalister/hopfield/hopfieldnetwork"
@@ -39,17 +38,23 @@ var (
 )
 
 func init() {
+	// Parse the command line flags and do any mapping from ints (flag variable) to enum (hopfieldnetwork variable)
 	flag.Parse()
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 	learningNoiseMethod = noiseapplication.NoiseApplicationEnum(*learningNoiseMethodInt)
 
+	// Make the directories needed to save data of trials to (if needed)
 	os.MkdirAll("logs", 0700)
 	os.MkdirAll("profiles", 0700)
+
+	// Tries to open logging file, panics if not possible (since we can't log anything otherwise!)
 	logFile, err := os.Create(*logFilePath)
 	if err != nil {
 		panic("Could not open log file!")
 	}
 
+	// Handle verbose flag
+	// If set, we make logs point to file *and* stdout
 	var multiWriter io.Writer
 	if *verbose {
 		multiWriter = io.MultiWriter(os.Stdout, logFile)
@@ -58,11 +63,13 @@ func init() {
 	}
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
+	// Remove old data directory and recreate
 	logger.Printf("Removing data directory %#v\n", *dataDirectory)
 	os.RemoveAll(*dataDirectory)
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
+	// Save to data directory a record of this trial
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
 		NetworkDimension:       *networkDimension,
 		LearningRule:           learningRule.String(),
@@ -77,6 +84,7 @@ func init() {
 	}
 	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
 
+	// Set up data collector to handle events during this trial
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
@@ -110,13 +118,13 @@ func main() {
 		SetGeneratorDimension(*networkDimension).
 		Build()
 
+	// LEARNING PHASE -----------------------------------------------------------------------------
 	logger.SetPrefix("Network Learning: ")
+	// Make some states and learn them
 	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
 	network.LearnStates(targetStates)
-	if err := gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, "networkMatrix")); err != nil {
-		log.Printf("Error '%v' while saving Hopfield weights", err)
-	}
 
+	// Analyze specifically the learned states and save those results too
 	for stateIndex := range targetStates {
 		logger.Printf("Analyzing Target State %v\n", stateIndex)
 		state := targetStates[stateIndex]
@@ -131,13 +139,14 @@ func main() {
 		}
 	}
 
+	// PROBING PHASE ------------------------------------------------------------------------------
 	logger.SetPrefix("Network Probing: ")
+	// Create and relax a set of probe states
 	probeStates := stateGenerator.CreateStateCollection(*numProbeStates)
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
 
+	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
-	trialNumStable := 0
-	trialStableStepsTaken := 0
 	for stateIndex, result := range relaxationResults {
 		logger.Printf("Processing State %v\n", stateIndex)
 		event := datacollector.RelaxationResultData{
@@ -166,13 +175,7 @@ func main() {
 				Data:  historyEvent,
 			}
 		}
-
-		if result.Stable {
-			trialNumStable += 1
-			trialStableStepsTaken += len(result.StateHistory)
-		}
 	}
-	logger.Printf("Stable States: %05d/%05d\n", trialNumStable, *numProbeStates)
 
 	if err := collector.WriteStop(); err != nil {
 		logger.Fatalf("ERR: %#v\n", err)
