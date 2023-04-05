@@ -176,8 +176,18 @@ func main() {
 	// PROBING PHASE ------------------------------------------------------------------------------
 	logger.SetPrefix("Network Probing: ")
 	// Create and relax a set of probe states
-	probeStates := stateGenerator.CreateStateCollection(*numProbeStates)
+
+	var probeStates []*mat.VecDense
+	if *probeStatesBinaryFile == "" {
+		probeStates = stateGenerator.CreateStateCollection(*numProbeStates)
+	} else {
+		probeStates, err = gonumio.LoadVectorCollection(*probeStatesBinaryFile)
+		if err != nil {
+			log.Fatalf("ERROR: %v\nPROBE STATES LOADING FAILED", err)
+		}
+	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
+	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
