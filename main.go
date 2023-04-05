@@ -25,19 +25,22 @@ const (
 )
 
 var (
-	numThreads             = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
 	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
-	learningRuleInt        = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numEpochs              = flag.Int("epochs", 100, "The number of epochs to train for.")
+	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
+
+	learningRuleInt = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs       = flag.Int("epochs", 100, "The number of epochs to train for.")
+
 	numTargetStates        = flag.Int("targetStates", 1, "The number of learned states.")
 	numProbeStates         = flag.Int("probeStates", 1000, "The number of probe states to use for each trial.")
 	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScale Flag.\n0: No Noise\n1: Maximal Inversion\n2:  Random SubMaximal Inversion\n3: Gaussian Application")
 	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
-	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
-	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
-	dataDirectory          = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath            = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose                = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+
+	numThreads    = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath   = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	verbose       = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
