@@ -143,8 +143,20 @@ func main() {
 	// LEARNING PHASE -----------------------------------------------------------------------------
 	logger.SetPrefix("Network Learning: ")
 	// Make some states and learn them
-	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
+
+	var targetStates []*mat.VecDense
+	var err error
+	if *targetStatesBinaryFile == "" {
+		targetStates = stateGenerator.CreateStateCollection(*numTargetStates)
+	} else {
+		targetStates, err = gonumio.LoadVectorCollection(*targetStatesBinaryFile)
+		if err != nil {
+			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
+		}
+	}
+	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	network.LearnStates(targetStates)
+	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
 	for stateIndex := range targetStates {
