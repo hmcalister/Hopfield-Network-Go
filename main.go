@@ -18,6 +18,12 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
+const (
+	LEARNED_MATRIX_BINARY_SAVE_FILE = "matrix.bin"
+	TARGET_STATES_BINARY_SAVE_FILE  = "targetStates.bin"
+	PROBE_STATES_BINARY_SAVE_FILE   = "probeStates.bin"
+)
+
 var (
 	numThreads             = flag.Int("threads", 1, "The number of threads to use for relaxation.")
 	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
