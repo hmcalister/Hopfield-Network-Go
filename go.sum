@@ -315,8 +315,10 @@ github.com/hanwen/go-fuse/v2 v2.1.0/go.mod h1:oRyA5eK+pvJyv5otpO/DgccS8y/RvYMaO0
 github.com/hashicorp/go-uuid v0.0.0-20180228145832-27454136f036/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
-github.com/hmcalister/gonum-matrix-io v0.0.0-20230402220546-e7e3828cda2a h1:FzdDyQtPnLzvPYi3j3uALb6+IMzYHjH64EReCpdQ5nM=
-github.com/hmcalister/gonum-matrix-io v0.0.0-20230402220546-e7e3828cda2a/go.mod h1:PLxl8QdL6gnNfJzfzxHNFvAg7x92r/XW1ynkVjcwnLA=
+github.com/hmcalister/gonum-matrix-io v0.0.0-20230404021726-69e2a79c70f2 h1:RtGpOMkJD6ag5Srnlk5vB61uzc7b0g+4ZH1j60q6v4M=
+github.com/hmcalister/gonum-matrix-io v0.0.0-20230404021726-69e2a79c70f2/go.mod h1:PLxl8QdL6gnNfJzfzxHNFvAg7x92r/XW1ynkVjcwnLA=
+github.com/hmcalister/gonum-matrix-io v0.0.0-20230404235649-bdcb5bf7e036 h1:gGLbHnkQPAs3rq4+KgSwfta9JfHj3t20BwdjJDSkYCE=
+github.com/hmcalister/gonum-matrix-io v0.0.0-20230404235649-bdcb5bf7e036/go.mod h1:PLxl8QdL6gnNfJzfzxHNFvAg7x92r/XW1ynkVjcwnLA=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20210905161508-09a460cdf81d/go.mod h1:aYm2/VgdVmcIU8iMfdMvDMsRAQjcfZSKFby6HOFvi/w=
