@@ -75,8 +75,6 @@ func init() {
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Remove old data directory and recreate
-	logger.Printf("Removing data directory %#v\n", *dataDirectory)
-	os.RemoveAll(*dataDirectory)
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
