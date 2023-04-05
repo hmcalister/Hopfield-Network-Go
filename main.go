@@ -7,7 +7,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/hmcalister/gonum-matrix-io/pkg/gonumio"
 	"github.com/pkg/profile"
+	"gonum.org/v1/gonum/mat"
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
