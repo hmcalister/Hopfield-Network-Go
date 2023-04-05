@@ -33,7 +33,10 @@ var (
 	numEpochs       = flag.Int("epochs", 100, "The number of epochs to train for.")
 
 	numTargetStates        = flag.Int("targetStates", 1, "The number of learned states.")
+	targetStatesBinaryFile = flag.String("targetStatesFile", "", "Path to the binary file containing the vector collection to use as target states. If present, this method overrides random generation using numTargetStates.")
 	numProbeStates         = flag.Int("probeStates", 1000, "The number of probe states to use for each trial.")
+	probeStatesBinaryFile  = flag.String("probeStatesFile", "", "Path to the binary file containing the vector collection to use as probe states. If present, this method overrides random generation using numProbeStates.")
+
 	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScale Flag.\n0: No Noise\n1: Maximal Inversion\n2:  Random SubMaximal Inversion\n3: Gaussian Application")
 	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
 
