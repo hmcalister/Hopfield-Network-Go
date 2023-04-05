@@ -1,6 +1,8 @@
 package datacollector
 
 import (
+	"os"
+
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/source"
@@ -52,6 +54,7 @@ func (handler *dataHandler) writeStop() error {
 //
 // A ParquetWriter to the data file in question.
 func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) (source.ParquetFile, *writer.ParquetWriter) {
+	os.Remove(dataFilePath)
 	dataFileWriter, _ := local.NewLocalFileWriter(dataFilePath)
 	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 4)
 	parquetDataWriter.RowGroupSize = 128 * 1024 * 1024 //128MB

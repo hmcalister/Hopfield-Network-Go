@@ -7,7 +7,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/hmcalister/gonum-matrix-io/pkg/gonumio"
 	"github.com/pkg/profile"
+	"gonum.org/v1/gonum/mat"
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
@@ -16,20 +18,42 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 )
 
+const (
+	LEARNED_MATRIX_BINARY_SAVE_FILE = "matrix.bin"
+	TARGET_STATES_BINARY_SAVE_FILE  = "targetStates.bin"
+	PROBE_STATES_BINARY_SAVE_FILE   = "probeStates.bin"
+)
+
 var (
-	numThreads             = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	// General network flags
+
+	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
 	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
-	learningRuleInt        = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numEpochs              = flag.Int("epochs", 100, "The number of epochs to train for.")
+	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
+
+	// Learning rule flags
+
+	learningRuleInt = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs       = flag.Int("epochs", 100, "The number of epochs to train for.")
+
+	// Target and Probe state flags
+
 	numTargetStates        = flag.Int("targetStates", 1, "The number of learned states.")
+	targetStatesBinaryFile = flag.String("targetStatesFile", "", "Path to the binary file containing the vector collection to use as target states. If present, this method overrides random generation using numTargetStates.")
 	numProbeStates         = flag.Int("probeStates", 1000, "The number of probe states to use for each trial.")
+	probeStatesBinaryFile  = flag.String("probeStatesFile", "", "Path to the binary file containing the vector collection to use as probe states. If present, this method overrides random generation using numProbeStates.")
+
+	// Learning noise flags
+
 	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScale Flag.\n0: No Noise\n1: Maximal Inversion\n2:  Random SubMaximal Inversion\n3: Gaussian Application")
 	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
-	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
-	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
-	dataDirectory          = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath            = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose                = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+
+	// General program flags
+
+	numThreads    = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath   = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	verbose       = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
@@ -64,8 +88,6 @@ func init() {
 	logger = log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Remove old data directory and recreate
-	logger.Printf("Removing data directory %#v\n", *dataDirectory)
-	os.RemoveAll(*dataDirectory)
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
@@ -121,8 +143,20 @@ func main() {
 	// LEARNING PHASE -----------------------------------------------------------------------------
 	logger.SetPrefix("Network Learning: ")
 	// Make some states and learn them
-	targetStates := stateGenerator.CreateStateCollection(*numTargetStates)
+
+	var targetStates []*mat.VecDense
+	var err error
+	if *targetStatesBinaryFile == "" {
+		targetStates = stateGenerator.CreateStateCollection(*numTargetStates)
+	} else {
+		targetStates, err = gonumio.LoadVectorCollection(*targetStatesBinaryFile)
+		if err != nil {
+			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
+		}
+	}
+	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	network.LearnStates(targetStates)
+	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
 	for stateIndex := range targetStates {
@@ -142,8 +176,18 @@ func main() {
 	// PROBING PHASE ------------------------------------------------------------------------------
 	logger.SetPrefix("Network Probing: ")
 	// Create and relax a set of probe states
-	probeStates := stateGenerator.CreateStateCollection(*numProbeStates)
+
+	var probeStates []*mat.VecDense
+	if *probeStatesBinaryFile == "" {
+		probeStates = stateGenerator.CreateStateCollection(*numProbeStates)
+	} else {
+		probeStates, err = gonumio.LoadVectorCollection(*probeStatesBinaryFile)
+		if err != nil {
+			log.Fatalf("ERROR: %v\nPROBE STATES LOADING FAILED", err)
+		}
+	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
+	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
