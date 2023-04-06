@@ -91,21 +91,6 @@ func init() {
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
 	os.MkdirAll(*dataDirectory, 0700)
 
-	// Save to data directory a record of this trial
-	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
-		NetworkDimension:       *networkDimension,
-		LearningRule:           learningRule.String(),
-		Epochs:                 *numEpochs,
-		LearningNoiseMethod:    learningNoiseMethod.String(),
-		LearningNoiseScale:     *learningNoiseScale,
-		UnitsUpdated:           *unitsUpdated,
-		AsymmetricWeightMatrix: *asymmetricWeightMatrix,
-		Threads:                *numThreads,
-		TargetStates:           *numTargetStates,
-		ProbeStates:            *numProbeStates,
-	}
-	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
-
 	// Set up data collector to handle events during this trial
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
@@ -153,6 +138,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
 		}
+		*numTargetStates = len(targetStates)
 	}
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	network.LearnStates(targetStates)
@@ -185,6 +171,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ERROR: %v\nPROBE STATES LOADING FAILED", err)
 		}
+		*numProbeStates = len(probeStates)
 	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
 	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
@@ -224,6 +211,21 @@ func main() {
 
 	// CLEAN UP & FINISH --------------------------------------------------------------------------
 	logger.SetPrefix("Clean Up: ")
+	// Save to data directory a record of this trial
+	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
+		NetworkDimension:       *networkDimension,
+		LearningRule:           learningRule.String(),
+		Epochs:                 *numEpochs,
+		LearningNoiseMethod:    learningNoiseMethod.String(),
+		LearningNoiseScale:     *learningNoiseScale,
+		UnitsUpdated:           *unitsUpdated,
+		AsymmetricWeightMatrix: *asymmetricWeightMatrix,
+		Threads:                *numThreads,
+		TargetStates:           *numTargetStates,
+		ProbeStates:            *numProbeStates,
+	}
+	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
+
 	if err := collector.WriteStop(); err != nil {
 		logger.Fatalf("ERR: %#v\n", err)
 	}
