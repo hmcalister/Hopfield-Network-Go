@@ -15,6 +15,7 @@ type RelaxationResultData struct {
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
 	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
+	FinalState         []float64 `parquet:"name=FinalState, type=DOUBLE, repetitiontype=REPEATED"`
 	DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
 	EnergyProfile      []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
