@@ -38,9 +38,9 @@ var (
 
 	// Target and Probe state flags
 
-	numTargetStates        = flag.Int("targetStates", 1, "The number of learned states.")
+	numTargetStates        = flag.Int("numTargetStates", 1, "The number of learned states.")
 	targetStatesBinaryFile = flag.String("targetStatesFile", "", "Path to the binary file containing the vector collection to use as target states. If present, this method overrides random generation using numTargetStates.")
-	numProbeStates         = flag.Int("probeStates", 1000, "The number of probe states to use for each trial.")
+	numProbeStates         = flag.Int("numProbeStates", 1000, "The number of probe states to use for each trial.")
 	probeStatesBinaryFile  = flag.String("probeStatesFile", "", "Path to the binary file containing the vector collection to use as probe states. If present, this method overrides random generation using numProbeStates.")
 
 	// Learning noise flags
