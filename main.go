@@ -153,6 +153,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
 		}
+		*numTargetStates = len(targetStates)
 	}
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	network.LearnStates(targetStates)
@@ -185,6 +186,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("ERROR: %v\nPROBE STATES LOADING FAILED", err)
 		}
+		*numProbeStates = len(probeStates)
 	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
 	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
