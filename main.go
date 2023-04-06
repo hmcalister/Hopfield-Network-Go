@@ -221,7 +221,12 @@ func main() {
 		}
 	}
 
+	// CLEAN UP & FINISH --------------------------------------------------------------------------
+	logger.SetPrefix("Clean Up: ")
 	if err := collector.WriteStop(); err != nil {
 		logger.Fatalf("ERR: %#v\n", err)
 	}
+	logger.Printf("Data written successfully")
+
+	logger.Println("DONE")
 }
