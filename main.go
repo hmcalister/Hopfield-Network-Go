@@ -151,6 +151,7 @@ func main() {
 		targetStateData := datacollector.TargetStateProbeData{
 			TargetStateIndex: stateIndex,
 			IsStable:         network.StateIsStable(state),
+			State:            targetStates[stateIndex].RawVector().Data,
 			EnergyProfile:    network.AllUnitEnergies(state),
 		}
 		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
