@@ -21,7 +21,6 @@ import (
 const (
 	LEARNED_MATRIX_BINARY_SAVE_FILE = "matrix.bin"
 	TARGET_STATES_BINARY_SAVE_FILE  = "targetStates.bin"
-	PROBE_STATES_BINARY_SAVE_FILE   = "probeStates.bin"
 )
 
 var (
@@ -175,8 +174,6 @@ func main() {
 		*numProbeStates = len(probeStates)
 	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
-	logger.Printf("SAVING PROBE STATES")
-	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
