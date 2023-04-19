@@ -432,6 +432,7 @@ func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, nu
 
 	resultsReceived := 0
 	for wrappedResult := range resultChannel {
+		network.logger.Printf("Parsing Result %v/%v\n", resultsReceived, len(states))
 		results[wrappedResult.Index] = &wrappedResult.Data
 		resultsReceived++
 
