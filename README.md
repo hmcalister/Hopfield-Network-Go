@@ -1,6 +1,8 @@
 # Hopfield Network Go
 #### Author: Hayden McAlister
 
+![Badge for the Go build+test workflow](https://github.com/hmcalister/Hopfield-Network-Go/actions/workflows/go.yml/badge.svg?branch=main)
+
 ## Introduction
 
 This project is an investigation into implementing the Hopfield network (and some other supporting methods) in Go using gonum as a linear algebra backend. This project is intended to be clean and extensible, as well as blazing fast and scalable with CPU cores via threading. 
