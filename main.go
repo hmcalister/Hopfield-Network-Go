@@ -178,7 +178,7 @@ func main() {
 	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
 	for stateIndex, result := range relaxationResults {
-		logger.Printf("Processing State %v\n", stateIndex)
+		logger.Printf("Processing State %v/%v\n", stateIndex, len(relaxationResults))
 		event := datacollector.RelaxationResultData{
 			StateIndex:         stateIndex,
 			Stable:             result.Stable,
