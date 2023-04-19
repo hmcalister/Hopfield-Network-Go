@@ -175,6 +175,7 @@ func main() {
 		*numProbeStates = len(probeStates)
 	}
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
+	logger.Printf("SAVING PROBE STATES")
 	gonumio.SaveVectorCollection(probeStates, path.Join(*dataDirectory, PROBE_STATES_BINARY_SAVE_FILE))
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
