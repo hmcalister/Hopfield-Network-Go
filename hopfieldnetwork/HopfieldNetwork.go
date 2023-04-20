@@ -219,7 +219,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
 	network.learnedStates = append(network.learnedStates, states...)
 	for epoch := 0; epoch < network.epochs; epoch++ {
-		network.logger.SetPrefix(fmt.Sprintf("Network Learning: Epoch %v", epoch))
+		network.logger.SetPrefix(fmt.Sprintf("Network Learning: Epoch %v ", epoch))
 		learningRuleResult := network.learningRule(network, states)
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
