@@ -141,7 +141,18 @@ func main() {
 		*numTargetStates = len(targetStates)
 	}
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
-	network.LearnStates(targetStates)
+	learnStateData := network.LearnStates(targetStates)
+	for _, data := range learnStateData {
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_LearnState,
+			Data: datacollector.LearnStateData{
+				Epoch:            data.Epoch,
+				TargetStateIndex: data.TargetStateIndex,
+				PresentedIndex:   data.PresentedIndex,
+				EnergyProfile:    data.EnergyProfile,
+			},
+		}
+	}
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
