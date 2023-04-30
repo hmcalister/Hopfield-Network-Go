@@ -12,6 +12,7 @@ const (
 	DataCollectionEvent_RelaxationResult  = iota
 	DataCollectionEvent_RelaxationHistory = iota
 	DataCollectionEvent_TargetStateProbe  = iota
+	DataCollectionEvent_LearnState        = iota
 )
 
 // ------------------------------------------------------------------------------------------------
