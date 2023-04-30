@@ -95,7 +95,8 @@ func init() {
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
 		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
-		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq")))
+		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq"))).
+		AddHandler(datacollector.NewLearnStateHandler(path.Join(*dataDirectory, "learnEpoch.pq")))
 }
 
 // Main method for entry point
