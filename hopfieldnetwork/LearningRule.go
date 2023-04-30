@@ -2,11 +2,20 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldutils"
 
 	"gonum.org/v1/gonum/mat"
 )
 
 const private_DELTA_THREADS = 8
+
+// Defines a collection for information about learning states.
+type LearnStateData struct {
+	Epoch            int
+	TargetStateIndex int
+	PresentedIndex   int
+	EnergyProfile    []float64
+}
 
 // Define a learning rule as a function taking a network along with a collection of states.
 //
@@ -21,7 +30,7 @@ const private_DELTA_THREADS = 8
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-type LearningRule func(*HopfieldNetwork, []*mat.VecDense) *mat.Dense
+type LearningRule func(*HopfieldNetwork, []*mat.VecDense) (*mat.Dense, []*LearnStateData)
 
 // Define the different learning rule options.
 //
@@ -66,10 +75,11 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, []*LearnStateData) {
+	learnStateData := make([]*LearnStateData, len(states))
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
-	for _, state := range states {
+	for stateIndex, state := range states {
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
 				val := state.AtVec(i) * state.AtVec(j)
@@ -77,8 +87,13 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 				updatedMatrix.Set(i, j, val)
 			}
 		}
+		learnStateData[stateIndex] = &LearnStateData{
+			TargetStateIndex: stateIndex,
+			PresentedIndex:   0,
+			EnergyProfile:    network.AllUnitEnergies(state),
+		}
 	}
-	return updatedMatrix
+	return updatedMatrix, learnStateData
 }
 
 // Compute the Delta learning rule update for a network.
@@ -92,7 +107,25 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 // # Returns
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
-func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func delta(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, []*LearnStateData) {
+	learnStateData := make([]*LearnStateData, len(states))
+
+	// Create an array to randomly present the states to the delta rule
+	stateIndices := make([]int, len(states))
+	for i := range stateIndices {
+		stateIndices[i] = i
+	}
+	hopfieldutils.ShuffleList(network.randomGenerator, stateIndices)
+
+	// Gather data on the states being presented
+	for presentedIndex, stateIndex := range stateIndices {
+		learnStateData[stateIndex] = &LearnStateData{
+			TargetStateIndex: stateIndex,
+			PresentedIndex:   presentedIndex,
+			EnergyProfile:    network.AllUnitEnergies(states[stateIndex]),
+		}
+	}
+
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
@@ -103,7 +136,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
-	for stateIndex := range states {
+	for _, stateIndex := range stateIndices {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
@@ -128,5 +161,5 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		updatedMatrix.Add(updatedMatrix, stateContribution)
 	}
 
-	return updatedMatrix
+	return updatedMatrix, learnStateData
 }

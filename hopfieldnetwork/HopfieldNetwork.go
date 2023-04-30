@@ -34,7 +34,7 @@ type HopfieldNetwork struct {
 	learningNoiseScale             float64
 	unitsUpdatedPerStep            int
 	randomGenerator                *rand.Rand
-	learnedStates                  []*mat.VecDense
+	targetStates                   []*mat.VecDense
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
 }
@@ -106,7 +106,7 @@ func (network *HopfieldNetwork) GetDimension() int {
 //
 // A list of vectors representing the learned states of this network
 func (network *HopfieldNetwork) GetLearnedStates() []*mat.VecDense {
-	return network.learnedStates
+	return network.targetStates
 }
 
 // Implement Stringer for nicer formatting
@@ -216,18 +216,27 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 // # Arguments
 //
 // states []*mat.VecDense: A collection of states to learn
-func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) {
-	network.learnedStates = append(network.learnedStates, states...)
+func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*LearnStateData {
+	learnStateData := []*LearnStateData{}
+	network.targetStates = append(network.targetStates, states...)
 	for epoch := 0; epoch < network.epochs; epoch++ {
 		network.logger.SetPrefix(fmt.Sprintf("Network Learning: Epoch %v ", epoch))
-		learningRuleResult := network.learningRule(network, states)
+		learningRuleResult, epochLearnStateData := network.learningRule(network, states)
+
+		for _, data := range epochLearnStateData {
+			data.Epoch = epoch
+		}
+		learnStateData = append(learnStateData, epochLearnStateData...)
+
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
 
 		if network.AllStatesAreStable(states) {
-			return
+			return learnStateData
 		}
 	}
+
+	return learnStateData
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -303,7 +312,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		if network.StateIsStable(state) {
 			result := RelaxationResult{
 				Stable:             true,
-				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state, 1.0),
+				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 				StateHistory:       stateHistory[:stepIndex+1],
 				EnergyHistory:      energyHistory[:stepIndex+1],
 			}
@@ -315,7 +324,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	// and the state is STILL not stable. We return false to show the state is unstable
 	result := RelaxationResult{
 		Stable:             false,
-		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state, 1.0),
+		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 		StateHistory:       stateHistory,
 		EnergyHistory:      energyHistory,
 	}
@@ -367,7 +376,7 @@ StateRecvLoop:
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
 					Stable:             true,
-					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state, 1.0),
+					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 					StateHistory:       stateHistory[:stepIndex+1],
 					EnergyHistory:      energyHistory[:stepIndex+1],
 				}
@@ -384,7 +393,7 @@ StateRecvLoop:
 		// If we reach this then we did not relax correctly
 		result := RelaxationResult{
 			Stable:             false,
-			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.learnedStates, state, 1.0),
+			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 			StateHistory:       stateHistory,
 			EnergyHistory:      energyHistory,
 		}
