@@ -303,8 +303,11 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	newState := mat.NewVecDense(network.dimension, nil)
 	stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 	energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
-	stateHistory[0] = mat.VecDenseCopyOf(state)
-	copy(energyHistory[0], network.AllUnitEnergies(state))
+	// Only collect data on histories if allowed, as otherwise very intensive
+	if network.allowIntensiveDataCollection {
+		stateHistory[0] = mat.VecDenseCopyOf(state)
+		copy(energyHistory[0], network.AllUnitEnergies(state))
+	}
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
 	for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
