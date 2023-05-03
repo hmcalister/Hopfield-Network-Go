@@ -14,7 +14,6 @@ import (
 type LearnStateData struct {
 	Epoch            int       `parquet:"name=Epoch, type=INT32"`
 	TargetStateIndex int       `parquet:"name=TargetStateIndex, type=INT32"`
-	PresentedIndex   int       `parquet:"name=PresentedIndex, type=INT32"`
 	EnergyProfile    []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
