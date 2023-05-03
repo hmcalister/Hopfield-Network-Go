@@ -245,7 +245,7 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*LearnStat
 
 type RelaxationResult struct {
 	Stable             bool
-	DistancesToLearned []float64
+	DistancesToTargets []float64
 	StateHistory       []*mat.VecDense
 	EnergyHistory      [][]float64
 }
@@ -312,7 +312,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		if network.StateIsStable(state) {
 			result := RelaxationResult{
 				Stable:             true,
-				DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
+				DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 				StateHistory:       stateHistory[:stepIndex+1],
 				EnergyHistory:      energyHistory[:stepIndex+1],
 			}
@@ -324,7 +324,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	// and the state is STILL not stable. We return false to show the state is unstable
 	result := RelaxationResult{
 		Stable:             false,
-		DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
+		DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 		StateHistory:       stateHistory,
 		EnergyHistory:      energyHistory,
 	}
@@ -376,7 +376,7 @@ StateRecvLoop:
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
 					Stable:             true,
-					DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
+					DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 					StateHistory:       stateHistory[:stepIndex+1],
 					EnergyHistory:      energyHistory[:stepIndex+1],
 				}
@@ -393,7 +393,7 @@ StateRecvLoop:
 		// If we reach this then we did not relax correctly
 		result := RelaxationResult{
 			Stable:             false,
-			DistancesToLearned: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
+			DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
 			StateHistory:       stateHistory,
 			EnergyHistory:      energyHistory,
 		}
