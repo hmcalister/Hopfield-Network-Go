@@ -384,8 +384,11 @@ StateRecvLoop:
 		state = wrappedState.Data
 		stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 		energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
-		stateHistory[0] = mat.VecDenseCopyOf(state)
-		energyHistory[0] = network.AllUnitEnergies(state)
+		// Only collect data on histories if allowed, as otherwise very intensive
+		if network.allowIntensiveDataCollection {
+			stateHistory[0] = mat.VecDenseCopyOf(state)
+			copy(energyHistory[0], network.AllUnitEnergies(state))
+		}
 
 		for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
