@@ -425,6 +425,10 @@ StateRecvLoop:
 		} // for iterationIndex
 
 		// If we reach this then we did not relax correctly
+
+		// If we have reached this point we MUST collect the final state and energy manually
+		stateHistory[len(stateHistory)-1] = mat.VecDenseCopyOf(state)
+		energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 		result := RelaxationResult{
 			Stable:             false,
 			DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
