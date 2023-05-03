@@ -400,8 +400,12 @@ StateRecvLoop:
 				}
 				activationfunction.ActivationFunction(state)
 			}
-			stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
-			energyHistory[stepIndex] = network.AllUnitEnergies(state)
+
+			// Collect the current history item if requested
+			if network.allowIntensiveDataCollection || network.StateIsStable(state) {
+				stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
+				energyHistory[stepIndex] = network.AllUnitEnergies(state)
+			}
 
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
