@@ -107,6 +107,7 @@ func init() {
 func main() {
 	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
 	go collector.CollectData()
+	var err error
 
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 		SetNetworkDimension(*networkDimension).
@@ -132,20 +133,27 @@ func main() {
 
 	// LEARNING PHASE -----------------------------------------------------------------------------
 	logger.SetPrefix("Network Learning: ")
-	// Make some states and learn them
+	// Either load states from binary file or generate a random number of states, based on flags
 
+	// The target states of this network
 	var targetStates []*mat.VecDense
-	var err error
+
 	if *targetStatesBinaryFile == "" {
+		// If we are not given a file to load, generate a random collection
 		targetStates = stateGenerator.CreateStateCollection(*numTargetStates)
 	} else {
+		// We have a file to load, do so
 		targetStates, err = gonumio.LoadVectorCollection(*targetStatesBinaryFile)
 		if err != nil {
 			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
 		}
+		// Manually set the numTargetStates variable
 		*numTargetStates = len(targetStates)
 	}
+	// Save the vector collection to a binary file.
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
+
+	// Actually learn the target states
 	learnStateData := network.LearnStates(targetStates)
 
 	// If we have intensive data collection on, then network.LearnStates will return a non-empty list of
@@ -163,6 +171,7 @@ func main() {
 		}
 	}
 
+	// Save the weight matrix to the specified path.
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
@@ -195,6 +204,7 @@ func main() {
 		}
 		*numProbeStates = len(probeStates)
 	}
+
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
