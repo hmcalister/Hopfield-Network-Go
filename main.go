@@ -195,7 +195,7 @@ func main() {
 			Stable:             result.Stable,
 			NumSteps:           len(result.StateHistory),
 			FinalState:         result.StateHistory[len(result.StateHistory)-1].RawVector().Data,
-			DistancesToLearned: result.DistancesToLearned,
+			DistancesToTargets: result.DistancesToTargets,
 			EnergyProfile:      result.EnergyHistory[len(result.EnergyHistory)-1],
 		}
 
