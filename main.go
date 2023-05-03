@@ -89,6 +89,9 @@ func init() {
 
 	// Remove old data directory and recreate
 	logger.Printf("Creating data directory %#v\n", *dataDirectory)
+	if err := os.RemoveAll(*dataDirectory); err != nil {
+		panic(err)
+	}
 	os.MkdirAll(*dataDirectory, 0700)
 
 	// Set up data collector to handle events during this trial
