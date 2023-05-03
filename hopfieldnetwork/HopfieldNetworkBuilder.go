@@ -25,6 +25,7 @@ type HopfieldNetworkBuilder struct {
 	unitsUpdatedPerStep            int
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
+	allowIntensiveDataCollection   bool
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
