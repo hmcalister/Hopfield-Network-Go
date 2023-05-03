@@ -322,8 +322,12 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 			}
 			activationfunction.ActivationFunction(state)
 		}
-		stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
-		copy(energyHistory[stepIndex], network.AllUnitEnergies(state))
+
+		// Collect the current history item if requested
+		if network.allowIntensiveDataCollection || network.StateIsStable(state) {
+			stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
+			copy(energyHistory[stepIndex], network.AllUnitEnergies(state))
+		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
 		// and returning true (stable) if the number of unstable units is less than or equal to
