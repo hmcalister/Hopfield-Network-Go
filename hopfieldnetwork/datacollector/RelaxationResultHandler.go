@@ -10,13 +10,13 @@ import (
 // UnitEnergies is a vector representing the energies of each unit.
 // Stable is a bool representing if the state was stable when relaxation finished.
 // NumSteps is an int representing the number of steps taken when relaxation finished.
-// DistancesToAllLearned is an array of distances to all learned states.
+// DistancesToTargets is an array of distances to all Targets states.
 type RelaxationResultData struct {
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
 	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
 	FinalState         []float64 `parquet:"name=FinalState, type=DOUBLE, repetitiontype=REPEATED"`
-	DistancesToLearned []float64 `parquet:"name=DistancesToLearned, type=DOUBLE, repetitiontype=REPEATED"`
+	DistancesToTargets []float64 `parquet:"name=DistancesToTargets, type=DOUBLE, repetitiontype=REPEATED"`
 	EnergyProfile      []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
 
