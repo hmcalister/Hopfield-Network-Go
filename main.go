@@ -204,6 +204,7 @@ func main() {
 		}
 		*numProbeStates = len(probeStates)
 	}
+
 	relaxationResults := network.ConcurrentRelaxStates(probeStates, *numThreads)
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
