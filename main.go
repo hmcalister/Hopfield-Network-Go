@@ -137,13 +137,17 @@ func main() {
 
 	// The target states of this network
 	var targetStates []*mat.VecDense
+
 	if *targetStatesBinaryFile == "" {
+		// If we are not given a file to load, generate a random collection
 		targetStates = stateGenerator.CreateStateCollection(*numTargetStates)
 	} else {
+		// We have a file to load, do so
 		targetStates, err = gonumio.LoadVectorCollection(*targetStatesBinaryFile)
 		if err != nil {
 			log.Fatalf("ERROR: %v\nTARGET STATES LOADING FAILED", err)
 		}
+		// Manually set the numTargetStates variable
 		*numTargetStates = len(targetStates)
 	}
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
