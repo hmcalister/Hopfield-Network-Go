@@ -2,7 +2,6 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfield/hopfieldutils"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -13,7 +12,6 @@ const private_DELTA_THREADS = 8
 type LearnStateData struct {
 	Epoch            int
 	TargetStateIndex int
-	PresentedIndex   int
 	EnergyProfile    []float64
 }
 
@@ -89,7 +87,6 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, []*L
 		}
 		learnStateData[stateIndex] = &LearnStateData{
 			TargetStateIndex: stateIndex,
-			PresentedIndex:   0,
 			EnergyProfile:    network.AllUnitEnergies(state),
 		}
 	}
@@ -115,13 +112,12 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, []*Lea
 	for i := range stateIndices {
 		stateIndices[i] = i
 	}
-	hopfieldutils.ShuffleList(network.randomGenerator, stateIndices)
+	// hopfieldutils.ShuffleList(network.randomGenerator, stateIndices)
 
 	// Gather data on the states being presented
-	for presentedIndex, stateIndex := range stateIndices {
+	for _, stateIndex := range stateIndices {
 		learnStateData[stateIndex] = &LearnStateData{
 			TargetStateIndex: stateIndex,
-			PresentedIndex:   presentedIndex,
 			EnergyProfile:    network.AllUnitEnergies(states[stateIndex]),
 		}
 	}
