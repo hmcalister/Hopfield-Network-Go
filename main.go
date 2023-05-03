@@ -49,10 +49,11 @@ var (
 
 	// General program flags
 
-	numThreads    = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath   = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose       = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	numThreads                   = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	dataDirectory                = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath                  = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
+	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
