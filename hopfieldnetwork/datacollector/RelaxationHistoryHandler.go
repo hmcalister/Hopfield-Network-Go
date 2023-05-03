@@ -3,12 +3,12 @@ package datacollector
 import "github.com/xitongsys/parquet-go/writer"
 
 // StateIndex is the index of the state in the probe collection
-// HistoryIndex is the index of the states steps towards stability
+// StepIndex is the index of the states steps towards stability
 // State is the value of the state in this instance
 // EnergyProfile is the energy profile of the state in this instance
 type RelaxationHistoryData struct {
 	StateIndex    int       `parquet:"name=StateIndex, type=INT32"`
-	HistoryIndex  int       `parquet:"name=HistoryIndex, type=INT32"`
+	StepIndex     int       `parquet:"name=StepIndex, type=INT32"`
 	State         []float64 `parquet:"name=State, type=DOUBLE, repetitiontype=REPEATED"`
 	EnergyProfile []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
 }
