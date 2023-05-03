@@ -107,6 +107,7 @@ func init() {
 func main() {
 	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
 	go collector.CollectData()
+	var err error
 
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 		SetNetworkDimension(*networkDimension).
