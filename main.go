@@ -148,7 +148,6 @@ func main() {
 			Data: datacollector.LearnStateData{
 				Epoch:            data.Epoch,
 				TargetStateIndex: data.TargetStateIndex,
-				PresentedIndex:   data.PresentedIndex,
 				EnergyProfile:    data.EnergyProfile,
 			},
 		}
