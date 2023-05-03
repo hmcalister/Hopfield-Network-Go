@@ -215,17 +215,19 @@ func main() {
 			Data:  event,
 		}
 
-		for stepIndex, stateHistoryItem := range result.StateHistory {
-			historyEvent := datacollector.RelaxationHistoryData{
-				StateIndex:    stateIndex,
-				StepIndex:     stepIndex,
-				State:         stateHistoryItem.RawVector().Data,
-				EnergyProfile: result.EnergyHistory[stepIndex],
-			}
+		if *allowIntensiveDataCollection {
+			for stepIndex, stateHistoryItem := range result.StateHistory {
+				historyEvent := datacollector.RelaxationHistoryData{
+					StateIndex:    stateIndex,
+					StepIndex:     stepIndex,
+					State:         stateHistoryItem.RawVector().Data,
+					EnergyProfile: result.EnergyHistory[stepIndex],
+				}
 
-			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-				Index: datacollector.DataCollectionEvent_RelaxationHistory,
-				Data:  historyEvent,
+				collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+					Index: datacollector.DataCollectionEvent_RelaxationHistory,
+					Data:  historyEvent,
+				}
 			}
 		}
 	}
