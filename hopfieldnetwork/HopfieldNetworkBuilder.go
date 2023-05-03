@@ -230,6 +230,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 		dataCollector:                  networkBuilder.dataCollector,
 		logger:                         networkBuilder.logger,
+		allowIntensiveDataCollection:   networkBuilder.allowIntensiveDataCollection,
 	}
 
 }
