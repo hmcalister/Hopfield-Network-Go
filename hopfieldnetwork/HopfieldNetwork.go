@@ -208,6 +208,13 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 // LEARNING METHODS
 // ------------------------------------------------------------------------------------------------
 
+// Defines a collection for information about learning states.
+type LearnStateData struct {
+	Epoch            int
+	TargetStateIndex int
+	EnergyProfile    []float64
+}
+
 // Update the weight matrix of the network to learn a new set of states.
 //
 // Note this implementation currently simply adds the learning rule output
@@ -220,13 +227,21 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*LearnStat
 	learnStateData := []*LearnStateData{}
 	network.targetStates = append(network.targetStates, states...)
 	for epoch := 0; epoch < network.epochs; epoch++ {
-		network.logger.SetPrefix(fmt.Sprintf("Network Learning: Epoch %v ", epoch))
-		learningRuleResult, epochLearnStateData := network.learningRule(network, states)
+		learningRuleResult := network.learningRule(network, states)
 
-		for _, data := range epochLearnStateData {
-			data.Epoch = epoch
+		// Learn State Data is intensive, as it involves calculating th energy at every epoch
+		// Only collect if requested.
+		if network.allowIntensiveDataCollection {
+			tempLearnStateData := make([]*LearnStateData, len(states))
+			for stateIndex, state := range states {
+				tempLearnStateData[stateIndex] = &LearnStateData{
+					Epoch:            epoch,
+					TargetStateIndex: stateIndex,
+					EnergyProfile:    network.AllUnitEnergies(state),
+				}
+			}
+			learnStateData = append(learnStateData, tempLearnStateData...)
 		}
-		learnStateData = append(learnStateData, epochLearnStateData...)
 
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
