@@ -49,10 +49,11 @@ var (
 
 	// General program flags
 
-	numThreads    = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	dataDirectory = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
-	logFilePath   = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
-	verbose       = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	numThreads                   = flag.Int("threads", 1, "The number of threads to use for relaxation.")
+	dataDirectory                = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	logFilePath                  = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
+	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
+	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
@@ -94,9 +95,12 @@ func init() {
 	logger.Printf("Creating data collector")
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
-		AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
-		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq"))).
-		AddHandler(datacollector.NewLearnStateHandler(path.Join(*dataDirectory, "learnStateData.pq")))
+		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq")))
+	// Only add these collectors if we want to collect intensive data. Avoids creating additional files and extra listeners.
+	if *allowIntensiveDataCollection {
+		collector.AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
+			AddHandler(datacollector.NewLearnStateHandler(path.Join(*dataDirectory, "learnStateData.pq")))
+	}
 }
 
 // Main method for entry point
@@ -117,6 +121,7 @@ func main() {
 		SetUnitsUpdatedPerStep(*unitsUpdated).
 		SetDataCollector(collector).
 		SetLogger(logger).
+		SetAllowIntensiveDataCollection(*allowIntensiveDataCollection).
 		Build()
 
 	stateGenerator := states.NewStateGeneratorBuilder().
@@ -142,16 +147,22 @@ func main() {
 	}
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	learnStateData := network.LearnStates(targetStates)
-	for _, data := range learnStateData {
-		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-			Index: datacollector.DataCollectionEvent_LearnState,
-			Data: datacollector.LearnStateData{
-				Epoch:            data.Epoch,
-				TargetStateIndex: data.TargetStateIndex,
-				EnergyProfile:    data.EnergyProfile,
-			},
+
+	// If we have intensive data collection on, then network.LearnStates will return a non-empty list of
+	// data over the training epochs. We needs to process this only if we requested it.
+	if *allowIntensiveDataCollection {
+		for _, data := range learnStateData {
+			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+				Index: datacollector.DataCollectionEvent_LearnState,
+				Data: datacollector.LearnStateData{
+					Epoch:            data.Epoch,
+					TargetStateIndex: data.TargetStateIndex,
+					EnergyProfile:    data.EnergyProfile,
+				},
+			}
 		}
 	}
+
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
@@ -204,17 +215,19 @@ func main() {
 			Data:  event,
 		}
 
-		for stepIndex, stateHistoryItem := range result.StateHistory {
-			historyEvent := datacollector.RelaxationHistoryData{
-				StateIndex:    stateIndex,
-				StepIndex:     stepIndex,
-				State:         stateHistoryItem.RawVector().Data,
-				EnergyProfile: result.EnergyHistory[stepIndex],
-			}
+		if *allowIntensiveDataCollection {
+			for stepIndex, stateHistoryItem := range result.StateHistory {
+				historyEvent := datacollector.RelaxationHistoryData{
+					StateIndex:    stateIndex,
+					StepIndex:     stepIndex,
+					State:         stateHistoryItem.RawVector().Data,
+					EnergyProfile: result.EnergyHistory[stepIndex],
+				}
 
-			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-				Index: datacollector.DataCollectionEvent_RelaxationHistory,
-				Data:  historyEvent,
+				collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+					Index: datacollector.DataCollectionEvent_RelaxationHistory,
+					Data:  historyEvent,
+				}
 			}
 		}
 	}

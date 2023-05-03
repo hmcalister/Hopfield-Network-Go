@@ -37,6 +37,7 @@ type HopfieldNetwork struct {
 	targetStates                   []*mat.VecDense
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
+	allowIntensiveDataCollection   bool
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -302,8 +303,11 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	newState := mat.NewVecDense(network.dimension, nil)
 	stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 	energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
-	stateHistory[0] = mat.VecDenseCopyOf(state)
-	copy(energyHistory[0], network.AllUnitEnergies(state))
+	// Only collect data on histories if allowed, as otherwise very intensive
+	if network.allowIntensiveDataCollection {
+		stateHistory[0] = mat.VecDenseCopyOf(state)
+		copy(energyHistory[0], network.AllUnitEnergies(state))
+	}
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
 	for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
@@ -318,8 +322,12 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 			}
 			activationfunction.ActivationFunction(state)
 		}
-		stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
-		copy(energyHistory[stepIndex], network.AllUnitEnergies(state))
+
+		// Collect the current history item if requested
+		if network.allowIntensiveDataCollection || network.StateIsStable(state) {
+			stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
+			copy(energyHistory[stepIndex], network.AllUnitEnergies(state))
+		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
 		// and returning true (stable) if the number of unstable units is less than or equal to
@@ -337,6 +345,10 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
+
+	// If we have reached this point we MUST collect the final state and energy manually
+	stateHistory[len(stateHistory)-1] = mat.VecDenseCopyOf(state)
+	energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 	result := RelaxationResult{
 		Stable:             false,
 		DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
@@ -372,8 +384,11 @@ StateRecvLoop:
 		state = wrappedState.Data
 		stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 		energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
-		stateHistory[0] = mat.VecDenseCopyOf(state)
-		energyHistory[0] = network.AllUnitEnergies(state)
+		// Only collect data on histories if allowed, as otherwise very intensive
+		if network.allowIntensiveDataCollection {
+			stateHistory[0] = mat.VecDenseCopyOf(state)
+			copy(energyHistory[0], network.AllUnitEnergies(state))
+		}
 
 		for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
@@ -385,8 +400,12 @@ StateRecvLoop:
 				}
 				activationfunction.ActivationFunction(state)
 			}
-			stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
-			energyHistory[stepIndex] = network.AllUnitEnergies(state)
+
+			// Collect the current history item if requested
+			if network.allowIntensiveDataCollection || network.StateIsStable(state) {
+				stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
+				energyHistory[stepIndex] = network.AllUnitEnergies(state)
+			}
 
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
@@ -406,6 +425,10 @@ StateRecvLoop:
 		} // for iterationIndex
 
 		// If we reach this then we did not relax correctly
+
+		// If we have reached this point we MUST collect the final state and energy manually
+		stateHistory[len(stateHistory)-1] = mat.VecDenseCopyOf(state)
+		energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 		result := RelaxationResult{
 			Stable:             false,
 			DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),

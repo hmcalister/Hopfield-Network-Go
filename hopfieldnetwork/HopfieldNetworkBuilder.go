@@ -25,6 +25,7 @@ type HopfieldNetworkBuilder struct {
 	unitsUpdatedPerStep            int
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
+	allowIntensiveDataCollection   bool
 }
 
 // Get a new HopfieldNetworkBuilder filled with the default values.
@@ -42,6 +43,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		unitsUpdatedPerStep:            1,
 		dataCollector:                  datacollector.NewDataCollector(),
 		logger:                         log.Default(),
+		allowIntensiveDataCollection:   false,
 	}
 }
 
@@ -167,6 +169,14 @@ func (networkBuilder *HopfieldNetworkBuilder) SetLogger(logger *log.Logger) *Hop
 	return networkBuilder
 }
 
+// Set the flag relating to intensive data collection.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetAllowIntensiveDataCollection(allowIntensiveDataCollection bool) *HopfieldNetworkBuilder {
+	networkBuilder.allowIntensiveDataCollection = allowIntensiveDataCollection
+	return networkBuilder
+}
+
 // Build and return a new HopfieldNetwork using the parameters specified with builder methods.
 func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	if networkBuilder.dimension <= 0 {
@@ -220,6 +230,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
 		dataCollector:                  networkBuilder.dataCollector,
 		logger:                         networkBuilder.logger,
+		allowIntensiveDataCollection:   networkBuilder.allowIntensiveDataCollection,
 	}
 
 }
