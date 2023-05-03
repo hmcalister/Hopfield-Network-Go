@@ -43,6 +43,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		unitsUpdatedPerStep:            1,
 		dataCollector:                  datacollector.NewDataCollector(),
 		logger:                         log.Default(),
+		allowIntensiveDataCollection:   false,
 	}
 }
 
