@@ -135,8 +135,8 @@ func main() {
 	logger.SetPrefix("Network Learning: ")
 	// Either load states from binary file or generate a random number of states, based on flags
 
+	// The target states of this network
 	var targetStates []*mat.VecDense
-	var err error
 	if *targetStatesBinaryFile == "" {
 		targetStates = stateGenerator.CreateStateCollection(*numTargetStates)
 	} else {
