@@ -204,12 +204,12 @@ func main() {
 			Data:  event,
 		}
 
-		for historyIndex, stateHistoryItem := range result.StateHistory {
+		for stepIndex, stateHistoryItem := range result.StateHistory {
 			historyEvent := datacollector.RelaxationHistoryData{
 				StateIndex:    stateIndex,
-				HistoryIndex:  historyIndex,
+				StepIndex:     stepIndex,
 				State:         stateHistoryItem.RawVector().Data,
-				EnergyProfile: result.EnergyHistory[historyIndex],
+				EnergyProfile: result.EnergyHistory[stepIndex],
 			}
 
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
