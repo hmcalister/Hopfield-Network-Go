@@ -121,6 +121,7 @@ func main() {
 		SetUnitsUpdatedPerStep(*unitsUpdated).
 		SetDataCollector(collector).
 		SetLogger(logger).
+		SetAllowIntensiveDataCollection(*allowIntensiveDataCollection).
 		Build()
 
 	stateGenerator := states.NewStateGeneratorBuilder().
