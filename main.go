@@ -133,7 +133,7 @@ func main() {
 
 	// LEARNING PHASE -----------------------------------------------------------------------------
 	logger.SetPrefix("Network Learning: ")
-	// Make some states and learn them
+	// Either load states from binary file or generate a random number of states, based on flags
 
 	var targetStates []*mat.VecDense
 	var err error
