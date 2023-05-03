@@ -345,6 +345,10 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 
 	// If we have reached this statement we have iterated the maximum number of times
 	// and the state is STILL not stable. We return false to show the state is unstable
+
+	// If we have reached this point we MUST collect the final state and energy manually
+	stateHistory[len(stateHistory)-1] = mat.VecDenseCopyOf(state)
+	energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 	result := RelaxationResult{
 		Stable:             false,
 		DistancesToTargets: hopfieldutils.DistancesToVectorCollection(network.targetStates, state, 1.0),
