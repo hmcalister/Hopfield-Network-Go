@@ -169,6 +169,14 @@ func (networkBuilder *HopfieldNetworkBuilder) SetLogger(logger *log.Logger) *Hop
 	return networkBuilder
 }
 
+// Set the flag relating to intensive data collection.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetAllowIntensiveDataCollection(allowIntensiveDataCollection bool) *HopfieldNetworkBuilder {
+	networkBuilder.allowIntensiveDataCollection = allowIntensiveDataCollection
+	return networkBuilder
+}
+
 // Build and return a new HopfieldNetwork using the parameters specified with builder methods.
 func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	if networkBuilder.dimension <= 0 {
