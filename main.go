@@ -171,6 +171,7 @@ func main() {
 		}
 	}
 
+	// Save the weight matrix to the specified path.
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
