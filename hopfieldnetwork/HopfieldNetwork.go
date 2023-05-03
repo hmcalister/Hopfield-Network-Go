@@ -306,7 +306,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	// Only collect data on histories if allowed, as otherwise very intensive
 	if network.allowIntensiveDataCollection {
 		stateHistory[0] = mat.VecDenseCopyOf(state)
-		copy(energyHistory[0], network.AllUnitEnergies(state))
+		energyHistory[0] = network.AllUnitEnergies(state)
 	}
 
 	// We will loop up to the maximum number of iterations, only returning early if the state is stable
@@ -326,7 +326,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		// Collect the current history item if requested
 		if network.allowIntensiveDataCollection || network.StateIsStable(state) {
 			stateHistory[stepIndex] = mat.VecDenseCopyOf(state)
-			copy(energyHistory[stepIndex], network.AllUnitEnergies(state))
+			energyHistory[stepIndex] = network.AllUnitEnergies(state)
 		}
 
 		// Here we check the unit energies, counting how many unstable units there are (E>0)
@@ -387,7 +387,7 @@ StateRecvLoop:
 		// Only collect data on histories if allowed, as otherwise very intensive
 		if network.allowIntensiveDataCollection {
 			stateHistory[0] = mat.VecDenseCopyOf(state)
-			copy(energyHistory[0], network.AllUnitEnergies(state))
+			energyHistory[0] = network.AllUnitEnergies(state)
 		}
 
 		for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
