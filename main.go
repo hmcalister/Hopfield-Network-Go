@@ -152,6 +152,8 @@ func main() {
 	}
 	// Save the vector collection to a binary file.
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
+
+	// Actually learn the target states
 	learnStateData := network.LearnStates(targetStates)
 
 	// If we have intensive data collection on, then network.LearnStates will return a non-empty list of
