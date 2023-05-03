@@ -150,6 +150,7 @@ func main() {
 		// Manually set the numTargetStates variable
 		*numTargetStates = len(targetStates)
 	}
+	// Save the vector collection to a binary file.
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 	learnStateData := network.LearnStates(targetStates)
 
