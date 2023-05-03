@@ -37,6 +37,7 @@ type HopfieldNetwork struct {
 	targetStates                   []*mat.VecDense
 	dataCollector                  *datacollector.DataCollector
 	logger                         *log.Logger
+	allowIntensiveDataCollection   bool
 }
 
 // ------------------------------------------------------------------------------------------------
