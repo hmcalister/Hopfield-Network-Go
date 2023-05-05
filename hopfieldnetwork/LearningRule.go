@@ -103,7 +103,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
-	for stateIndex, _ := range relaxedStates {
+	for stateIndex := range relaxedStates {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
