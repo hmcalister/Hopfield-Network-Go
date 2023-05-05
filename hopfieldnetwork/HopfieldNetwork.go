@@ -224,6 +224,9 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacolle
 	for epoch := 0; epoch < network.epochs; epoch++ {
 		learningRuleResult := network.learningRule(network, states)
 
+		network.matrix.Add(network.matrix, learningRuleResult)
+		network.cleanMatrix()
+
 		// Learn State Data is intensive, as it involves calculating th energy at every epoch
 		// Only collect if requested.
 		if network.allowIntensiveDataCollection {
@@ -238,9 +241,6 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacolle
 			}
 			learnStateData = append(learnStateData, tempLearnStateData...)
 		}
-
-		network.matrix.Add(network.matrix, learningRuleResult)
-		network.cleanMatrix()
 
 		if network.AllStatesAreStable(states) {
 			return learnStateData
