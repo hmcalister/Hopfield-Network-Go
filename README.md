@@ -56,7 +56,7 @@ Collects data on the learning behavior of the network. In particular, measures p
 - `TargetStateIndex`
     - The target state this instances relates to. Integer.
 - `EnergyProfile`
-    - The energy profile of this instance *before* this epoch is applied. []float64.
+    - The energy profile of this instance *after* this epoch is applied. []float64.
 - `Stable`
     - A flag to represent if this target state is now stable in the network. Bool.
 
