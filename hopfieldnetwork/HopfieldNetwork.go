@@ -110,6 +110,39 @@ func (network *HopfieldNetwork) GetLearnedStates() []*mat.VecDense {
 	return network.targetStates
 }
 
+// A struct to collect all of the useful fields for a network summary
+//
+// Note some fields are excluded in comparison to the HopfieldNetwork struct.
+// This is because the summary doesn't need direct access to, for example, the logger!
+// The summary should also find learningRule and learningNoiseMethod elsewhere, as
+// these are stored in the network as a functions/encoded types.
+type HopfieldNetworkSummary struct {
+	Matrix                         *mat.Dense
+	Dimension                      int
+	ForceSymmetric                 bool
+	ForceZeroDiagonal              bool
+	Epochs                         int
+	MaximumRelaxationUnstableUnits int
+	MaximumRelaxationIterations    int
+	LearningNoiseScale             float64
+	UnitsUpdatedPerStep            int
+}
+
+// Returns the summary of the HopfieldNetwork as a struct.
+func (network *HopfieldNetwork) GetNetworkSummary() *HopfieldNetworkSummary {
+	return &HopfieldNetworkSummary{
+		Matrix:                         network.GetMatrix(),
+		Dimension:                      network.dimension,
+		ForceSymmetric:                 network.forceSymmetric,
+		ForceZeroDiagonal:              network.forceZeroDiagonal,
+		Epochs:                         network.epochs,
+		MaximumRelaxationUnstableUnits: network.maximumRelaxationUnstableUnits,
+		MaximumRelaxationIterations:    network.maximumRelaxationIterations,
+		LearningNoiseScale:             network.learningNoiseScale,
+		UnitsUpdatedPerStep:            network.unitsUpdatedPerStep,
+	}
+}
+
 // Implement Stringer for nicer formatting
 func (network *HopfieldNetwork) String() string {
 	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n",

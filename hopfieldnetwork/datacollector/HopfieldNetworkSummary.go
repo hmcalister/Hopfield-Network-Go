@@ -12,16 +12,17 @@ package datacollector
 // TargetStates is the number of states used for learning
 // ProbeStates is the number of states used for probing
 type HopfieldNetworkSummaryData struct {
-	NetworkDimension       int     `parquet:"name=NetworkDimension, type=INT32"`
-	LearningRule           string  `parquet:"name=LearningRule, type=BYTE_ARRAY"`
-	Epochs                 int     `parquet:"name=Epochs, type=INT32"`
-	LearningNoiseMethod    string  `parquet:"name=LearningNoiseMethod, type=BYTE_ARRAY"`
-	LearningNoiseScale     float64 `parquet:"name=LearningNoiseScale, type=DOUBLE"`
-	UnitsUpdated           int     `parquet:"name=UnitsUpdated, type=INT32"`
-	AsymmetricWeightMatrix bool    `parquet:"name=AsymmetricWeightMatrix, type=BOOLEAN"`
-	Threads                int     `parquet:"name=Threads, type=INT32"`
-	TargetStates           int     `parquet:"name=TargetStates, type=INT32"`
-	ProbeStates            int     `parquet:"name=ProbeStates, type=INT32"`
+	NetworkDimension            int     `parquet:"name=NetworkDimension, type=INT32"`
+	LearningRule                string  `parquet:"name=LearningRule, type=BYTE_ARRAY"`
+	Epochs                      int     `parquet:"name=Epochs, type=INT32"`
+	MaximumRelaxationIterations int     `parquet:"name=MaximumRelaxationIterations, type=INT32"`
+	LearningNoiseMethod         string  `parquet:"name=LearningNoiseMethod, type=BYTE_ARRAY"`
+	LearningNoiseScale          float64 `parquet:"name=LearningNoiseScale, type=DOUBLE"`
+	UnitsUpdated                int     `parquet:"name=UnitsUpdated, type=INT32"`
+	AsymmetricWeightMatrix      bool    `parquet:"name=AsymmetricWeightMatrix, type=BOOLEAN"`
+	Threads                     int     `parquet:"name=Threads, type=INT32"`
+	TargetStates                int     `parquet:"name=TargetStates, type=INT32"`
+	ProbeStates                 int     `parquet:"name=ProbeStates, type=INT32"`
 }
 
 // Write the HopfieldNetworkSummary struct to the specified data file, in a parquet format
