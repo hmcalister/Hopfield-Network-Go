@@ -233,6 +233,7 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacolle
 					Epoch:            epoch,
 					TargetStateIndex: stateIndex,
 					EnergyProfile:    network.AllUnitEnergies(state),
+					Stable:           network.StateIsStable(state),
 				}
 			}
 			learnStateData = append(learnStateData, tempLearnStateData...)

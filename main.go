@@ -165,11 +165,7 @@ func main() {
 		for _, data := range learnStateData {
 			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
 				Index: datacollector.DataCollectionEvent_LearnState,
-				Data: datacollector.LearnStateData{
-					Epoch:            data.Epoch,
-					TargetStateIndex: data.TargetStateIndex,
-					EnergyProfile:    data.EnergyProfile,
-				},
+				Data:  *data,
 			}
 		}
 	}
