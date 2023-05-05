@@ -93,13 +93,6 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
-	// Create an array to randomly present the states to the delta rule
-	stateIndices := make([]int, len(states))
-	for i := range stateIndices {
-		stateIndices[i] = i
-	}
-	// hopfieldutils.ShuffleList(network.randomGenerator, stateIndices)
-
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
@@ -110,7 +103,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
-	for _, stateIndex := range stateIndices {
+	for stateIndex, _ := range relaxedStates {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
