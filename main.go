@@ -243,18 +243,21 @@ func main() {
 
 	// CLEAN UP & FINISH --------------------------------------------------------------------------
 	logger.SetPrefix("Clean Up: ")
+
+	hopfieldNetworkSummary := network.GetNetworkSummary()
 	// Save to data directory a record of this trial
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
-		NetworkDimension:       *networkDimension,
-		LearningRule:           learningRule.String(),
-		Epochs:                 *numEpochs,
-		LearningNoiseMethod:    learningNoiseMethod.String(),
-		LearningNoiseScale:     *learningNoiseScale,
-		UnitsUpdated:           *unitsUpdated,
-		AsymmetricWeightMatrix: *asymmetricWeightMatrix,
-		Threads:                *numThreads,
-		TargetStates:           *numTargetStates,
-		ProbeStates:            *numProbeStates,
+		NetworkDimension:            hopfieldNetworkSummary.Dimension,
+		LearningRule:                learningRule.String(),
+		Epochs:                      hopfieldNetworkSummary.Epochs,
+		MaximumRelaxationIterations: hopfieldNetworkSummary.MaximumRelaxationIterations,
+		LearningNoiseMethod:         learningNoiseMethod.String(),
+		LearningNoiseScale:          hopfieldNetworkSummary.LearningNoiseScale,
+		UnitsUpdated:                hopfieldNetworkSummary.UnitsUpdatedPerStep,
+		AsymmetricWeightMatrix:      !hopfieldNetworkSummary.ForceSymmetric,
+		Threads:                     *numThreads,
+		TargetStates:                *numTargetStates,
+		ProbeStates:                 *numProbeStates,
 	}
 	datacollector.WriteHopfieldNetworkSummary(path.Join(*dataDirectory, "networkSummary.pq"), &networkSummaryData)
 
