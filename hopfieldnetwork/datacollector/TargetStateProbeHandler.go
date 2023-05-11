@@ -20,6 +20,7 @@ func NewTargetStateProbeHandler(dataFile string) *dataHandler {
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
 		handleEvent: handleTargetStateProbeEvent,
+		cleanupFn:   defaultCleanupFn,
 	}
 }
 

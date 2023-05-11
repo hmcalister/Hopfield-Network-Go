@@ -20,6 +20,7 @@ func NewRelaxationHistoryData(dataFile string) *dataHandler {
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
 		handleEvent: handleRelaxationHistoryEvent,
+		cleanupFn:   defaultCleanupFn,
 	}
 }
 
