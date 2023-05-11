@@ -19,11 +19,17 @@ var ActivationFunction = bipolarDomainMappingFunction
 //
 // - vector *mat.VecDense: The vector to apply a bipolar mapping to.
 func bipolarDomainMappingFunction(vector *mat.VecDense) {
+	UPPER_UNIT := 1.0
+	if vector.AtVec(0) < 0 {
+		UPPER_UNIT = -1.0
+	}
+	LOWER_UNIT := -1 * UPPER_UNIT
+
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < 0.0 {
-			vector.SetVec(n, -1.0)
+			vector.SetVec(n, LOWER_UNIT)
 		} else {
-			vector.SetVec(n, 1.0)
+			vector.SetVec(n, UPPER_UNIT)
 		}
 	}
 }
