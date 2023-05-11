@@ -25,6 +25,7 @@ func NewLearnStateHandler(dataFile string) *dataHandler {
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
 		handleEvent: handleLearnStateEvent,
+		cleanupFn:   defaultCleanupFn,
 	}
 }
 

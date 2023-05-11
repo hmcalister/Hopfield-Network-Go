@@ -27,6 +27,7 @@ func NewRelaxationResultHandler(dataFile string) *dataHandler {
 		dataWriter:  dataWriter,
 		fileHandle:  fileHandle,
 		handleEvent: handleRelaxationResultEvent,
+		cleanupFn:   defaultCleanupFn,
 	}
 }
 
