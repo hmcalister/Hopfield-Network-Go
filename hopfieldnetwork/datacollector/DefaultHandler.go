@@ -12,12 +12,17 @@ import (
 // Define the handleEvent function to be a template across all handlers
 type handleEventFn func(*writer.ParquetWriter, interface{})
 
+type cleanupFn func(*writer.ParquetWriter)
+
+func defaultCleanupFn(*writer.ParquetWriter) {}
+
 // A dataHandler specifies what events it listens to, and what to do when that event occurs
 type dataHandler struct {
 	eventID     int
 	dataWriter  *writer.ParquetWriter
 	fileHandle  source.ParquetFile
 	handleEvent handleEventFn
+	cleanupFn   cleanupFn
 }
 
 func (handler *dataHandler) getEventID() int {
@@ -25,6 +30,8 @@ func (handler *dataHandler) getEventID() int {
 }
 
 func (handler *dataHandler) writeStop() error {
+	handler.cleanupFn(handler.dataWriter)
+
 	if err := handler.dataWriter.WriteStop(); err != nil {
 		return err
 	}
