@@ -251,6 +251,9 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 //
 // states []*mat.VecDense: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacollector.LearnStateData {
+	for _, state := range states {
+		activationfunction.ActivationFunction(state)
+	}
 	learnStateData := []*datacollector.LearnStateData{}
 	network.targetStates = append(network.targetStates, states...)
 
