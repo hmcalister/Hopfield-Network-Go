@@ -93,6 +93,26 @@ Collects data on the results of relaxing probe states. Note this only involves t
 - `EnergyProfile`
     - A vector representing the energy profile of the final state with respect to the trained network. []float64.
 
+### `uniqueStates.pq`
+
+Like `relaxationResult.pq`, but only observes strictly unique states.
+
+#### Fields
+- `StateIndex`
+    - The probe state index this instance refers to. Integer.
+- `Stable`
+    - Flag to indicate if this state relaxed to a stable state. Boolean
+- `NumSteps`
+    - The number of steps required to relax to the final state. Integer.
+- `FinalState`
+    - The vector representing the final state this probe state mapped on to. []float64.
+- `DistancesToTargets`
+    - A vector representing the distances (Manhattan distance) to each target state. Note the index into this vector corresponds to `TargetStateIndex`. []float64.
+- `EnergyProfile`
+    - A vector representing the energy profile of the final state with respect to the trained network. []float64.
+- `Hits`
+    - How many times this unique attractor was found during probing.
+
 ### `RelaxationHistory.pq`
 
 Collects data on the relaxing probe states *during* relaxation. This involves a lot of data!
