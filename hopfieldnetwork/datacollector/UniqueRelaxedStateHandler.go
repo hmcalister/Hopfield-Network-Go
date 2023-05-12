@@ -42,7 +42,19 @@ func NewUniqueRelaxedStateHandler(dataFile string) *dataHandler {
 func handleUniqueRelaxedState(writer *writer.ParquetWriter, event interface{}) {
 	// Note result is coming from relaxation result, so we have to cast to that...
 	relaxationResult := event.(RelaxationResultData)
-	stateHash := fmt.Sprint(relaxationResult.FinalState)
+
+	var stateHash string
+	if relaxationResult.FinalState[0] < 0 {
+		for index := range relaxationResult.FinalState {
+			relaxationResult.FinalState[index] *= -1.0
+		}
+		stateHash = fmt.Sprint(relaxationResult.FinalState)
+		for index := range relaxationResult.FinalState {
+			relaxationResult.FinalState[index] *= -1.0
+		}
+	} else {
+		stateHash = fmt.Sprint(relaxationResult.FinalState)
+	}
 
 	// See if state has been seen before
 	val, ok := uniqueRelaxedStatesMap[stateHash]
