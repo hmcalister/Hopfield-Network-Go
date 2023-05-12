@@ -113,7 +113,7 @@ Like `relaxationResult.pq`, but only observes strictly unique states.
 - `Hits`
     - How many times this unique attractor was found during probing.
 
-### `RelaxationHistory.pq`
+### `relaxationHistory.pq`
 
 Collects data on the relaxing probe states *during* relaxation. This involves a lot of data!
 
