@@ -47,12 +47,12 @@ const (
 //
 // The learning rule from the family specified
 func getLearningRule(learningRule LearningRuleEnum) LearningRule {
-	learningRuleMaps := map[LearningRuleEnum]LearningRule{
+	learningRuleMap := map[LearningRuleEnum]LearningRule{
 		HebbianLearningRule: hebbian,
 		DeltaLearningRule:   delta,
 	}
 
-	return learningRuleMaps[learningRule]
+	return learningRuleMap[learningRule]
 }
 
 // Compute the Hebbian weight update for a bipolar domain network.
