@@ -30,10 +30,11 @@ var (
 	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
 	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 
-	// Learning rule flags
+	// Learning method and rule flags
 
-	learningRuleInt = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
-	numEpochs       = flag.Int("epochs", 100, "The number of epochs to train for.")
+	learningMethodInt = flag.Int("learningMethod", 0, "The learning method to use.\n0: Full Set")
+	learningRuleInt   = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
+	numEpochs         = flag.Int("epochs", 100, "The number of epochs to train for.")
 
 	// Target and Probe state flags
 
@@ -55,6 +56,7 @@ var (
 	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
 	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
+	learningMethod      hopfieldnetwork.LearningMethodEnum
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
 	collector           *datacollector.DataCollector
@@ -64,6 +66,7 @@ var (
 func init() {
 	// Parse the command line flags and do any mapping from ints (flag variable) to enum (hopfieldnetwork variable)
 	flag.Parse()
+	learningMethod = hopfieldnetwork.LearningMethodEnum(*learningMethodInt)
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 	learningNoiseMethod = noiseapplication.NoiseApplicationEnum(*learningNoiseMethodInt)
 
@@ -117,6 +120,7 @@ func main() {
 		SetNetworkDimension(*networkDimension).
 		SetRandMatrixInit(*asymmetricWeightMatrix).
 		SetForceSymmetric(*asymmetricWeightMatrix).
+		SetNetworkLearningMethod(learningMethod).
 		SetNetworkLearningRule(learningRule).
 		SetEpochs(*numEpochs).
 		SetMaximumRelaxationIterations(100).

@@ -16,6 +16,7 @@ type HopfieldNetworkBuilder struct {
 	dimension                      int
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
+	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	epochs                         int
 	maximumRelaxationUnstableUnits int
@@ -81,6 +82,16 @@ func (networkBuilder *HopfieldNetworkBuilder) SetForceSymmetric(symmetricFlag bo
 // This value defaults to true if not explicitly set.
 func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalFlag bool) *HopfieldNetworkBuilder {
 	networkBuilder.forceZeroDiagonal = zeroDiagonalFlag
+	return networkBuilder
+}
+
+// Set the learning method of this network based on the LearningMethodEnum selected.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+//
+// Must be specified before Build can be called.
+func (networkBuilder *HopfieldNetworkBuilder) SetNetworkLearningMethod(learningMethod LearningMethodEnum) *HopfieldNetworkBuilder {
+	networkBuilder.learningMethod = getLearningMethod(learningMethod)
 	return networkBuilder
 }
 
@@ -220,6 +231,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		dimension:                      networkBuilder.dimension,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
+		learningMethod:                 networkBuilder.learningMethod,
 		learningRule:                   networkBuilder.learningRule,
 		epochs:                         networkBuilder.epochs,
 		randomGenerator:                randomGenerator,
