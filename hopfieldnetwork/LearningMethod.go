@@ -33,3 +33,33 @@ func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
 	return learningMethodMap[learningMethod]
 }
 
+// Full Set Learning presents the entire set of states to learn at once.
+func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*datacollector.LearnStateData {
+	learnStateData := []*datacollector.LearnStateData{}
+	for epoch := 0; epoch < network.epochs; epoch++ {
+		learningRuleResult := network.learningRule(network, states)
+
+		network.matrix.Add(network.matrix, learningRuleResult)
+		network.cleanMatrix()
+
+		// Learn State Data is intensive, as it involves calculating th energy at every epoch
+		// Only collect if requested.
+		if network.allowIntensiveDataCollection {
+			tempLearnStateData := make([]*datacollector.LearnStateData, len(states))
+			for stateIndex, state := range states {
+				tempLearnStateData[stateIndex] = &datacollector.LearnStateData{
+					Epoch:            epoch,
+					TargetStateIndex: stateIndex,
+					EnergyProfile:    network.AllUnitEnergies(state),
+					Stable:           network.StateIsStable(state),
+				}
+			}
+			learnStateData = append(learnStateData, tempLearnStateData...)
+		}
+
+		if network.AllStatesAreStable(states) {
+			break
+		}
+	}
+	return learnStateData
+}
