@@ -23,3 +23,13 @@ const (
 	IterativeBatchMethod LearningMethodEnum = iota
 )
 
+// Map an option from the LearningMethodEnum to the specific learning method.
+func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
+	learningMethodMap := map[LearningMethodEnum]LearningMethod{
+		FullSetMethod: fullSetLearningMethod,
+		// IterativeBatchMethod: iterativeBatch,
+	}
+
+	return learningMethodMap[learningMethod]
+}
+
