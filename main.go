@@ -32,7 +32,7 @@ var (
 
 	// Learning method and rule flags
 
-	learningMethodInt = flag.Int("learningMethod", 0, "The learning method to use.\n0: Full Set")
+	learningMethodInt = flag.Int("learningMethod", 0, "The learning method to use.\n0: Full Set\n1: Iterative Batch")
 	learningRuleInt   = flag.Int("learningRule", 0, "The learning rule to use.\n0: Hebbian\n1: Delta")
 	numEpochs         = flag.Int("epochs", 100, "The number of epochs to train for.")
 

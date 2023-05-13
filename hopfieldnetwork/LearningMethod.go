@@ -26,8 +26,8 @@ const (
 // Map an option from the LearningMethodEnum to the specific learning method.
 func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
 	learningMethodMap := map[LearningMethodEnum]LearningMethod{
-		FullSetMethod: fullSetLearningMethod,
-		// IterativeBatchMethod: iterativeBatch,
+		FullSetMethod:        fullSetLearningMethod,
+		IterativeBatchMethod: iterativeBatchLearningMethod,
 	}
 
 	return learningMethodMap[learningMethod]
@@ -61,5 +61,33 @@ func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*
 			break
 		}
 	}
+	return learnStateData
+}
+
+// Iterative batch learning divides the set of states into subsets of a certain size.
+// Then, at iteration k, the first k batches are presented for a number of epochs.
+// This means the first batch is presented many times, the seconds batch presented one fewer times,
+// and the final batch presented only once.
+//
+// The parameters of this method are currently set as constants, although in future this could be
+// achieved through a command line flag.
+func iterativeBatchLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*datacollector.LearnStateData {
+	BATCHSIZE := 5
+	NUMBATCHES := len(states) / BATCHSIZE
+	learnStateData := []*datacollector.LearnStateData{}
+	var statesSubset []*mat.VecDense
+	totalEpochsPassed := 0
+
+	for iteration := 1; iteration <= NUMBATCHES; iteration++ {
+		statesSubset = states[:BATCHSIZE*iteration]
+		// We can be sneaky here and treat this subset as a fullSet problem!
+		iterationLearnStateData := fullSetLearningMethod(network, statesSubset)
+		for _, data := range iterationLearnStateData {
+			data.Epoch += totalEpochsPassed
+		}
+		totalEpochsPassed = iterationLearnStateData[len(iterationLearnStateData)-1].Epoch
+		learnStateData = append(learnStateData, iterationLearnStateData...)
+	}
+
 	return learnStateData
 }
