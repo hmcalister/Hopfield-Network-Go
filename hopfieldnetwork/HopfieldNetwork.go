@@ -26,6 +26,7 @@ type HopfieldNetwork struct {
 	dimension                      int
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
+	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
 	epochs                         int
@@ -254,36 +255,9 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacolle
 	for _, state := range states {
 		activationfunction.ActivationFunction(state)
 	}
-	learnStateData := []*datacollector.LearnStateData{}
 	network.targetStates = append(network.targetStates, states...)
 
-	for epoch := 0; epoch < network.epochs; epoch++ {
-		learningRuleResult := network.learningRule(network, states)
-
-		network.matrix.Add(network.matrix, learningRuleResult)
-		network.cleanMatrix()
-
-		// Learn State Data is intensive, as it involves calculating th energy at every epoch
-		// Only collect if requested.
-		if network.allowIntensiveDataCollection {
-			tempLearnStateData := make([]*datacollector.LearnStateData, len(states))
-			for stateIndex, state := range states {
-				tempLearnStateData[stateIndex] = &datacollector.LearnStateData{
-					Epoch:            epoch,
-					TargetStateIndex: stateIndex,
-					EnergyProfile:    network.AllUnitEnergies(state),
-					Stable:           network.StateIsStable(state),
-				}
-			}
-			learnStateData = append(learnStateData, tempLearnStateData...)
-		}
-
-		if network.AllStatesAreStable(states) {
-			return learnStateData
-		}
-	}
-
-	return learnStateData
+	return network.learningMethod(network, states)
 }
 
 // ------------------------------------------------------------------------------------------------
