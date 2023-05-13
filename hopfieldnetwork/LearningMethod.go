@@ -26,8 +26,8 @@ const (
 // Map an option from the LearningMethodEnum to the specific learning method.
 func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
 	learningMethodMap := map[LearningMethodEnum]LearningMethod{
-		FullSetMethod: fullSetLearningMethod,
-		// IterativeBatchMethod: iterativeBatch,
+		FullSetMethod:        fullSetLearningMethod,
+		IterativeBatchMethod: iterativeBatchLearningMethod,
 	}
 
 	return learningMethodMap[learningMethod]
