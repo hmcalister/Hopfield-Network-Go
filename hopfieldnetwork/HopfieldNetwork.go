@@ -213,7 +213,7 @@ func (network *HopfieldNetwork) StateIsStable(state *mat.VecDense) bool {
 
 	unstableCount := 0
 	for _, energy := range stateEnergies {
-		if energy > 0 {
+		if energy >= 0 {
 			unstableCount += 1
 		}
 	}
