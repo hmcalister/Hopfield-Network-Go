@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"log"
 	"time"
@@ -14,6 +15,7 @@ import (
 type HopfieldNetworkBuilder struct {
 	randMatrixInit                 bool
 	dimension                      int
+	domain                         domain.DomainEnum
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	learningMethod                 LearningMethod
@@ -37,6 +39,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 	return &HopfieldNetworkBuilder{
 		randMatrixInit:                 false,
 		dimension:                      0,
+		domain:                         domain.BipolarDomain,
 		forceSymmetric:                 true,
 		forceZeroDiagonal:              true,
 		maximumRelaxationUnstableUnits: 0,
@@ -62,6 +65,12 @@ func (networkBuilder *HopfieldNetworkBuilder) SetRandMatrixInit(randMatrixInitFl
 // Must be set specified Build can be called
 func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDimension(dimension int) *HopfieldNetworkBuilder {
 	networkBuilder.dimension = dimension
+	return networkBuilder
+}
+
+// Set domain of the network.
+func (networkBuilder *HopfieldNetworkBuilder) SetNetworkDomain(domain domain.DomainEnum) *HopfieldNetworkBuilder {
+	networkBuilder.domain = domain
 	return networkBuilder
 }
 
