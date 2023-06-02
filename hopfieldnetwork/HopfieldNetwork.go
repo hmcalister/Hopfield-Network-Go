@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldutils"
@@ -24,6 +25,7 @@ import (
 type HopfieldNetwork struct {
 	matrix                         *mat.Dense
 	dimension                      int
+	domain                         domain.DomainEnum
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	learningMethod                 LearningMethod
@@ -146,8 +148,8 @@ func (network *HopfieldNetwork) GetNetworkSummary() *HopfieldNetworkSummary {
 
 // Implement Stringer for nicer formatting
 func (network *HopfieldNetwork) String() string {
-	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n",
-		network.dimension)
+	return fmt.Sprintf("Hopfield Network\n\tDomain: %s\n\tDimension: %d\n",
+		network.domain, network.dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
