@@ -12,6 +12,7 @@ package datacollector
 // TargetStates is the number of states used for learning
 // ProbeStates is the number of states used for probing
 type HopfieldNetworkSummaryData struct {
+	NetworkDomain               string  `parquet:"name=NetworkDomain, type=BYTE_ARRAY"`
 	NetworkDimension            int     `parquet:"name=NetworkDimension, type=INT32"`
 	LearningRule                string  `parquet:"name=LearningRule, type=BYTE_ARRAY"`
 	Epochs                      int     `parquet:"name=Epochs, type=INT32"`
