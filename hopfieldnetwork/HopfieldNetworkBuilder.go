@@ -238,6 +238,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	return &HopfieldNetwork{
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
+		domain:                         networkBuilder.domain,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		learningMethod:                 networkBuilder.learningMethod,
