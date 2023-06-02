@@ -148,8 +148,8 @@ func (network *HopfieldNetwork) GetNetworkSummary() *HopfieldNetworkSummary {
 
 // Implement Stringer for nicer formatting
 func (network *HopfieldNetwork) String() string {
-	return fmt.Sprintf("Hopfield Network\n\tDimension: %d\n",
-		network.dimension)
+	return fmt.Sprintf("Hopfield Network\n\tDomain: %s\n\tDimension: %d\n",
+		network.domain, network.dimension)
 }
 
 // ------------------------------------------------------------------------------------------------
