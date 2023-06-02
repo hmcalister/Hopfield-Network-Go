@@ -1,6 +1,7 @@
 package hopfieldnetwork
 
 import (
+	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/learningmappingfunction"
 
@@ -73,9 +74,10 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	for _, state := range states {
 		stateCopy := mat.VecDenseCopyOf(state)
 		learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
+		fmt.Printf("%v\n", stateCopy)
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
-				val := state.AtVec(i) * state.AtVec(j)
+				val := stateCopy.AtVec(i) * stateCopy.AtVec(j)
 				val += updatedMatrix.At(i, j)
 				updatedMatrix.Set(i, j, val)
 			}
@@ -122,11 +124,16 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		stateHistory := relaxationResults[stateIndex].StateHistory
 		relaxedState := stateHistory[len(stateHistory)-1]
 
+		stateCopy := mat.VecDenseCopyOf(state)
+		learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
+		relaxedCopy := mat.VecDenseCopyOf(relaxedState)
+		learningmappingfunction.GetLearningMappingFunction(network.domain)(relaxedCopy)
+
 		relaxationDifference.Zero()
-		relaxationDifference.SubVec(state, relaxedState)
+		relaxationDifference.SubVec(stateCopy, relaxedCopy)
 
 		stateContribution.Zero()
-		stateContribution.Outer(0.5, relaxationDifference, state)
+		stateContribution.Outer(0.5, relaxationDifference, stateCopy)
 
 		updatedMatrix.Add(updatedMatrix, stateContribution)
 	}

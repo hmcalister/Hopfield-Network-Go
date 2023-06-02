@@ -24,11 +24,11 @@ func GetLearningMappingFunction(domainEnum domain.DomainEnum) LearningMappingFun
 }
 
 func binaryLearningMappingFunction(vector *mat.VecDense) {
-	oneVector := mat.NewVecDense(vector.Len(), nil)
-	for i := 0; i < oneVector.Len(); i++ {
-		oneVector.SetVec(i, 1.0)
+	negativeOneVector := mat.NewVecDense(vector.Len(), nil)
+	for i := 0; i < negativeOneVector.Len(); i++ {
+		negativeOneVector.SetVec(i, -1.0)
 	}
-	vector.AddScaledVec(oneVector, 2, vector)
+	vector.AddScaledVec(negativeOneVector, 2, vector)
 }
 
 func bipolarLearningMappingFunction(vector *mat.VecDense) {
