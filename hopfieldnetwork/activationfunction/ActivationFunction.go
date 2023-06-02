@@ -45,7 +45,7 @@ func binaryActivationFunction(vector *mat.VecDense) {
 // - vector *mat.VecDense: The vector to apply a bipolar mapping to.
 func bipolarActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) < 0.0 {
+		if vector.AtVec(n) <= 0.0 {
 			vector.SetVec(n, -1.0)
 		} else {
 			vector.SetVec(n, 1.0)
