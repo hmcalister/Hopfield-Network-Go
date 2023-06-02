@@ -7,6 +7,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
+	"hmcalister/hopfield/hopfieldnetwork/learningmappingfunction"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldutils"
 	"log"
@@ -167,7 +168,9 @@ func (network *HopfieldNetwork) String() string {
 // A float64 representing the energy of the given state with respect to the network.
 // Note a lower energy is more stable - but a negative state energy may still be unstable!
 func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
-	return energyfunction.StateEnergy(network.matrix, state)
+	stateCopy := mat.VecDenseCopyOf(state)
+	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
+	return energyfunction.StateEnergy(network.matrix, stateCopy)
 }
 
 // Get the energy of a given unit (indexed by i) in the state with respect to the network matrix.
@@ -181,7 +184,9 @@ func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
 //
 // A float64 representing the energy of the given unit within the state.
 func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) float64 {
-	return energyfunction.UnitEnergy(network.matrix, state, unitIndex)
+	stateCopy := mat.VecDenseCopyOf(state)
+	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
+	return energyfunction.UnitEnergy(network.matrix, stateCopy, unitIndex)
 }
 
 // Get the energy of a each unit within a state with respect to the network matrix.
@@ -194,7 +199,9 @@ func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) f
 //
 // A slice of float64 representing the energy of the given state's units with respect to the network.
 func (network *HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
-	unitEnergies := energyfunction.AllUnitEnergies(network.matrix, state)
+	stateCopy := mat.VecDenseCopyOf(state)
+	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
+	unitEnergies := energyfunction.AllUnitEnergies(network.matrix, stateCopy)
 	return unitEnergies.RawVector().Data
 }
 
