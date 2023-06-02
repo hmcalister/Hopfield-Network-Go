@@ -121,6 +121,7 @@ func main() {
 	var err error
 
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
+		SetNetworkDomain(networkDomain).
 		SetNetworkDimension(*networkDimension).
 		SetRandMatrixInit(*asymmetricWeightMatrix).
 		SetForceSymmetric(*asymmetricWeightMatrix).
@@ -140,6 +141,7 @@ func main() {
 	stateGenerator := states.NewStateGeneratorBuilder().
 		SetRandMin(-1).
 		SetRandMax(1).
+		SetGeneratorDomain(networkDomain).
 		SetGeneratorDimension(*networkDimension).
 		Build()
 
