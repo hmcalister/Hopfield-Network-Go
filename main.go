@@ -13,6 +13,7 @@ import (
 
 	"hmcalister/hopfield/hopfieldnetwork"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldnetwork/states"
 	"hmcalister/hopfield/hopfieldutils"
@@ -27,6 +28,7 @@ var (
 	// General network flags
 
 	asymmetricWeightMatrix = flag.Bool("asymmetricWeightMatrix", false, "Allow the weight matrix of the Hopfield network to be asymmetric.")
+	networkDomainInt       = flag.Int("domain", 0, "The network domain.\n0: Bipolar\n1: Binary")
 	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
 	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 
@@ -56,6 +58,7 @@ var (
 	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
 	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
 
+	networkDomain       domain.DomainEnum
 	learningMethod      hopfieldnetwork.LearningMethodEnum
 	learningRule        hopfieldnetwork.LearningRuleEnum
 	learningNoiseMethod noiseapplication.NoiseApplicationEnum
@@ -66,6 +69,7 @@ var (
 func init() {
 	// Parse the command line flags and do any mapping from ints (flag variable) to enum (hopfieldnetwork variable)
 	flag.Parse()
+	networkDomain = domain.DomainEnum(*networkDomainInt)
 	learningMethod = hopfieldnetwork.LearningMethodEnum(*learningMethodInt)
 	learningRule = hopfieldnetwork.LearningRuleEnum(*learningRuleInt)
 	learningNoiseMethod = noiseapplication.NoiseApplicationEnum(*learningNoiseMethodInt)
@@ -117,6 +121,7 @@ func main() {
 	var err error
 
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
+		SetNetworkDomain(networkDomain).
 		SetNetworkDimension(*networkDimension).
 		SetRandMatrixInit(*asymmetricWeightMatrix).
 		SetForceSymmetric(*asymmetricWeightMatrix).
@@ -136,6 +141,7 @@ func main() {
 	stateGenerator := states.NewStateGeneratorBuilder().
 		SetRandMin(-1).
 		SetRandMax(1).
+		SetGeneratorDomain(networkDomain).
 		SetGeneratorDimension(*networkDimension).
 		Build()
 
@@ -252,6 +258,7 @@ func main() {
 	hopfieldNetworkSummary := network.GetNetworkSummary()
 	// Save to data directory a record of this trial
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
+		NetworkDomain:               networkDomain.String(),
 		NetworkDimension:            hopfieldNetworkSummary.Dimension,
 		LearningRule:                learningRule.String(),
 		Epochs:                      hopfieldNetworkSummary.Epochs,
