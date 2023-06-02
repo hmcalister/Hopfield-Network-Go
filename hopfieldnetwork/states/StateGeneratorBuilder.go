@@ -1,6 +1,7 @@
 package states
 
 import (
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -23,6 +24,7 @@ type StateGeneratorBuilder struct {
 	randMax       float64
 	seed          uint64
 	seedGenerator *rand.Rand
+	domain        domain.DomainEnum
 	dimension     int
 }
 
@@ -34,6 +36,7 @@ func NewStateGeneratorBuilder() *StateGeneratorBuilder {
 		randMax:       1,
 		seed:          0,
 		seedGenerator: seedGen,
+		domain:        0,
 		dimension:     0,
 	}
 }
@@ -65,6 +68,12 @@ func (builder *StateGeneratorBuilder) SetRandMax(randMax float64) *StateGenerato
 // Note a reference to the builder is returned to allow for chaining.
 func (builder *StateGeneratorBuilder) SetSeed(seed uint64) *StateGeneratorBuilder {
 	builder.seed = seed
+	return builder
+}
+
+// Sets the domain of the state generator
+func (builder *StateGeneratorBuilder) SetGeneratorDomain(domain domain.DomainEnum) *StateGeneratorBuilder {
+	builder.domain = domain
 	return builder
 }
 
