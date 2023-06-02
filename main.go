@@ -258,6 +258,7 @@ func main() {
 	hopfieldNetworkSummary := network.GetNetworkSummary()
 	// Save to data directory a record of this trial
 	networkSummaryData := datacollector.HopfieldNetworkSummaryData{
+		NetworkDomain:               networkDomain.String(),
 		NetworkDimension:            hopfieldNetworkSummary.Dimension,
 		LearningRule:                learningRule.String(),
 		Epochs:                      hopfieldNetworkSummary.Epochs,
