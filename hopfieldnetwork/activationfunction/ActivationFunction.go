@@ -4,13 +4,22 @@
 package activationfunction
 
 import (
+	"hmcalister/hopfield/hopfieldnetwork/domain"
+
 	"gonum.org/v1/gonum/mat"
 )
 
-// Defines the activation to be used in the simulation.
-//
-// TODO(hayden): In future, consider a command line flag to set this.
-var ActivationFunction = binaryDomainMappingFunction
+// Defines the activation function as a mapping that alters a vector in place
+type ActivationFunction = func(*mat.VecDense)
+
+func GetActivationFunction(domainEnum domain.DomainEnum) ActivationFunction {
+	activationFunctionMap := map[domain.DomainEnum]ActivationFunction{
+		domain.BipolarDomain: bipolarActivationFunction,
+		domain.BinaryDomain:  binaryActivationFunction,
+	}
+
+	return activationFunctionMap[domainEnum]
+}
 
 // Apply a binary mapping to the given vector. The vector is modified in place.
 // Elements of the vector set according to sign.
@@ -18,7 +27,7 @@ var ActivationFunction = binaryDomainMappingFunction
 // # Arguments
 //
 // - vector *mat.VecDense: The vector to apply a binary mapping to.
-func binaryDomainMappingFunction(vector *mat.VecDense) {
+func binaryActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) <= 0.0 {
 			vector.SetVec(n, 0.0)
@@ -34,7 +43,7 @@ func binaryDomainMappingFunction(vector *mat.VecDense) {
 // # Arguments
 //
 // - vector *mat.VecDense: The vector to apply a bipolar mapping to.
-func bipolarDomainMappingFunction(vector *mat.VecDense) {
+func bipolarActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < 0.0 {
 			vector.SetVec(n, -1.0)
@@ -44,7 +53,7 @@ func bipolarDomainMappingFunction(vector *mat.VecDense) {
 	}
 }
 
-func continuousBipolarDomainMappingFunction(vector *mat.VecDense) {
+func continuousBipolarActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) < -1.0 {
 			vector.SetVec(n, -1.0)
