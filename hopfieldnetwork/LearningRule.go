@@ -72,7 +72,7 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	for _, state := range states {
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
-				val := state.AtVec(i) * state.AtVec(j)
+				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
 				val += updatedMatrix.At(i, j)
 				updatedMatrix.Set(i, j, val)
 			}
@@ -124,6 +124,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 		stateContribution.Zero()
 		stateContribution.Outer(0.5, relaxationDifference, state)
+		stateContribution.Apply(func(_, _ int, v float64) float64 { return 2*v - 1 }, stateContribution)
 
 		updatedMatrix.Add(updatedMatrix, stateContribution)
 	}
