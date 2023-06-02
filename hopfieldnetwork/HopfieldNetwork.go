@@ -255,7 +255,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 // states []*mat.VecDense: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacollector.LearnStateData {
 	for _, state := range states {
-		activationfunction.ActivationFunction(state)
+		activationfunction.GetActivationFunction(network.domain)(state)
 	}
 	network.targetStates = append(network.targetStates, states...)
 
@@ -291,7 +291,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
-		activationfunction.ActivationFunction(state)
+		activationfunction.GetActivationFunction(network.domain)(state)
 	}
 }
 
@@ -327,7 +327,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
-			activationfunction.ActivationFunction(state)
+			activationfunction.GetActivationFunction(network.domain)(state)
 		}
 
 		// Collect the current history item if requested
@@ -405,7 +405,7 @@ StateRecvLoop:
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
-				activationfunction.ActivationFunction(state)
+				activationfunction.GetActivationFunction(network.domain)(state)
 			}
 
 			// Collect the current history item if requested

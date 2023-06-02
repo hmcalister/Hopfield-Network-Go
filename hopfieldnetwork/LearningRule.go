@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
+	"hmcalister/hopfield/hopfieldnetwork/learningmappingfunction"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -70,9 +71,11 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
 	for _, state := range states {
+		stateCopy := mat.VecDenseCopyOf(state)
+		learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
-				val := (2*state.AtVec(i) - 1) * (2*state.AtVec(j) - 1)
+				val := state.AtVec(i) * state.AtVec(j)
 				val += updatedMatrix.At(i, j)
 				updatedMatrix.Set(i, j, val)
 			}
@@ -107,7 +110,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
-		activationfunction.ActivationFunction(relaxedStates[stateIndex])
+		activationfunction.GetActivationFunction(network.domain)(relaxedStates[stateIndex])
 	}
 
 	// This is the most important call - relax all the states!
@@ -124,7 +127,6 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 
 		stateContribution.Zero()
 		stateContribution.Outer(0.5, relaxationDifference, state)
-		stateContribution.Apply(func(_, _ int, v float64) float64 { return 2*v - 1 }, stateContribution)
 
 		updatedMatrix.Add(updatedMatrix, stateContribution)
 	}
