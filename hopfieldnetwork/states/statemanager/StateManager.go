@@ -10,7 +10,7 @@ type StateManager interface {
 	ActivationFunction(*mat.VecDense)
 	InvertState(*mat.VecDense)
 	UnitEnergy(*mat.Dense, *mat.VecDense, int) float64
-	AllUnitEnergies(*mat.Dense, *mat.VecDense) *mat.VecDense
+	AllUnitEnergies(*mat.Dense, *mat.VecDense) []float64
 	StateEnergy(*mat.Dense, *mat.VecDense) float64
 }
 
