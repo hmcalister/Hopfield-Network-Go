@@ -2,8 +2,7 @@
 package states
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfield/hopfieldnetwork/domain"
+	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
 
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat/distuv"
@@ -13,9 +12,9 @@ import (
 //
 // Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
-	domain    domain.DomainEnum
-	rng       distuv.Uniform
-	dimension int
+	domainStateManager statemanager.StateManager
+	rng                distuv.Uniform
+	dimension          int
 }
 
 // Creates and returns a fresh array that can store a state.
