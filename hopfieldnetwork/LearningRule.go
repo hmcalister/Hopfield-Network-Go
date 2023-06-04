@@ -1,6 +1,8 @@
 package hopfieldnetwork
 
 import (
+	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -95,13 +97,13 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+	bipolarManager := &statemanager.BipolarStateManager{}
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
 
 	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
-	stateContribution := mat.NewDense(network.dimension, network.dimension, nil)
 
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
@@ -121,13 +123,19 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		stateHistory := relaxationResults[stateIndex].StateHistory
 		relaxedState := stateHistory[len(stateHistory)-1]
 
+		a := mat.VecDenseCopyOf(state)
+		b := mat.VecDenseCopyOf(relaxedState)
+		bipolarManager.ActivationFunction(a)
+		bipolarManager.ActivationFunction(b)
+
 		relaxationDifference.Zero()
-		relaxationDifference.SubVec(state, relaxedState)
+		relaxationDifference.SubVec(b, a)
 
-		stateContribution.Zero()
-		stateContribution.Outer(0.5, relaxationDifference, state)
-
-		updatedMatrix.Add(updatedMatrix, stateContribution)
+		for i := 0; i < network.GetDimension(); i++ {
+			for j := 0; j < network.GetDimension(); j++ {
+				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)-relaxationDifference.AtVec(i)*a.AtVec(j))
+			}
+		}
 	}
 
 	return updatedMatrix
