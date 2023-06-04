@@ -3,12 +3,10 @@ package hopfieldnetwork
 
 import (
 	"fmt"
-	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
-	"hmcalister/hopfield/hopfieldnetwork/energyfunction"
-	"hmcalister/hopfield/hopfieldnetwork/learningmappingfunction"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
+	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
 	"hmcalister/hopfield/hopfieldutils"
 	"log"
 
@@ -27,6 +25,7 @@ type HopfieldNetwork struct {
 	matrix                         *mat.Dense
 	dimension                      int
 	domain                         domain.DomainEnum
+	domainStateManager             statemanager.StateManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	learningMethod                 LearningMethod
@@ -168,9 +167,7 @@ func (network *HopfieldNetwork) String() string {
 // A float64 representing the energy of the given state with respect to the network.
 // Note a lower energy is more stable - but a negative state energy may still be unstable!
 func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
-	stateCopy := mat.VecDenseCopyOf(state)
-	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
-	return energyfunction.StateEnergy(network.matrix, stateCopy)
+	return network.domainStateManager.StateEnergy(network.matrix, state)
 }
 
 // Get the energy of a given unit (indexed by i) in the state with respect to the network matrix.
@@ -184,9 +181,7 @@ func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
 //
 // A float64 representing the energy of the given unit within the state.
 func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) float64 {
-	stateCopy := mat.VecDenseCopyOf(state)
-	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
-	return energyfunction.UnitEnergy(network.matrix, stateCopy, unitIndex)
+	return network.domainStateManager.UnitEnergy(network.matrix, state, unitIndex)
 }
 
 // Get the energy of a each unit within a state with respect to the network matrix.
@@ -199,10 +194,7 @@ func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) f
 //
 // A slice of float64 representing the energy of the given state's units with respect to the network.
 func (network *HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
-	stateCopy := mat.VecDenseCopyOf(state)
-	learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
-	unitEnergies := energyfunction.AllUnitEnergies(network.matrix, stateCopy)
-	return unitEnergies.RawVector().Data
+	return network.domainStateManager.AllUnitEnergies(network.matrix, state)
 }
 
 // Determine if a given state is unstable.
@@ -262,7 +254,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 // states []*mat.VecDense: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacollector.LearnStateData {
 	for _, state := range states {
-		activationfunction.GetActivationFunction(network.domain)(state)
+		network.domainStateManager.ActivationFunction(state)
 	}
 	network.targetStates = append(network.targetStates, states...)
 
@@ -298,7 +290,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
-		activationfunction.GetActivationFunction(network.domain)(state)
+		network.domainStateManager.ActivationFunction(state)
 	}
 }
 
@@ -334,7 +326,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
-			activationfunction.GetActivationFunction(network.domain)(state)
+			network.domainStateManager.ActivationFunction(state)
 		}
 
 		// Collect the current history item if requested
@@ -412,7 +404,7 @@ StateRecvLoop:
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
-				activationfunction.GetActivationFunction(network.domain)(state)
+				network.domainStateManager.ActivationFunction(state)
 			}
 
 			// Collect the current history item if requested

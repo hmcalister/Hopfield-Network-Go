@@ -4,6 +4,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
+	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
 	"log"
 	"time"
 
@@ -239,6 +240,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
 		domain:                         networkBuilder.domain,
+		domainStateManager:             statemanager.GetDomainStateManager(networkBuilder.domain),
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		learningMethod:                 networkBuilder.learningMethod,
