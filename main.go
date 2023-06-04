@@ -15,7 +15,7 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
-	"hmcalister/hopfield/hopfieldnetwork/states"
+	states "hmcalister/hopfield/hopfieldnetwork/states/stategenerator"
 	"hmcalister/hopfield/hopfieldutils"
 )
 
