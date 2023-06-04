@@ -48,7 +48,7 @@ func (gen *StateGenerator) NextState(dataArray []float64) *mat.VecDense {
 	}
 
 	state := mat.NewVecDense(gen.dimension, dataArray)
-	activationfunction.GetActivationFunction(gen.domain)(state)
+	gen.domainStateManager.ActivationFunction(state)
 	return state
 }
 
