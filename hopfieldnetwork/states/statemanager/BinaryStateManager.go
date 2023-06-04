@@ -35,19 +35,19 @@ func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.Vec
 	return energy
 }
 
-func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) *mat.VecDense {
+func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
 	energyVector.MulElemVec(energyVector, vector)
 	energyVector.ScaleVec(-1, energyVector)
-	return energyVector
+	return energyVector.RawVector().Data
 }
 
 func (manager *BinaryStateManager) StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
 	energyVector := manager.AllUnitEnergies(matrix, vector)
 	energy := 0.0
-	for i := 0; i < energyVector.Len(); i++ {
-		energy += energyVector.AtVec(i)
+	for _, unitEnergy := range energyVector {
+		energy += unitEnergy
 	}
 	return energy
 }
