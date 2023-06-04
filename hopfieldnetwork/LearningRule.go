@@ -1,10 +1,6 @@
 package hopfieldnetwork
 
 import (
-	"fmt"
-	"hmcalister/hopfield/hopfieldnetwork/activationfunction"
-	"hmcalister/hopfield/hopfieldnetwork/learningmappingfunction"
-
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -69,17 +65,18 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 //
 // A pointer to a new matrix that stabilizes the given states as much as possible.
 func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+	var instanceContribution float64
 	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
 	updatedMatrix.Zero()
 	for _, state := range states {
-		stateCopy := mat.VecDenseCopyOf(state)
-		learningmappingfunction.GetLearningMappingFunction(network.domain)(stateCopy)
-		fmt.Printf("%v\n", stateCopy)
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
-				val := stateCopy.AtVec(i) * stateCopy.AtVec(j)
-				val += updatedMatrix.At(i, j)
-				updatedMatrix.Set(i, j, val)
+				if state.AtVec(i) == state.AtVec(j) {
+					instanceContribution = 1.0
+				} else {
+					instanceContribution = -1.0
+				}
+				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+instanceContribution)
 			}
 		}
 	}
