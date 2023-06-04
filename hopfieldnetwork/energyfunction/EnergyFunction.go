@@ -17,7 +17,7 @@ func UnitEnergy(matrix *mat.Dense, vector *mat.VecDense, i int) float64 {
 // Defines the overall energy for a state with respect to a matrix.
 func StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
 	energyVector := AllUnitEnergies(matrix, vector)
-	energy := 0.
+	energy := 0.0
 	for i := 0; i < energyVector.Len(); i++ {
 		energy += energyVector.AtVec(i)
 	}
