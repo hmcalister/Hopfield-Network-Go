@@ -35,18 +35,20 @@ func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.Vec
 	dimension, _ := vector.Dims()
 	energy := 0.0
 	for j := 0; j < dimension; j++ {
-		energy += -1 * matrix.At(i, j) * (2*vector.AtVec(i) - 1) * (2*vector.AtVec(j) - 1)
+		energy += -0.5 * matrix.At(i, j) * vector.AtVec(i) * (2*vector.AtVec(j) - 1)
 	}
 	return energy
 }
 
 func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
 	negativeOnesVector := manager.createCompatibleConstVector(vector, -1.0)
+	mappedVector := mat.VecDenseCopyOf(vector)
+	mappedVector.AddScaledVec(negativeOnesVector, 2.0, mappedVector)
+
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
-	energyVector.AddScaledVec(negativeOnesVector, 2.0, energyVector)
-	energyVector.MulElemVec(energyVector, vector)
-	energyVector.ScaleVec(-1.0, energyVector)
+	energyVector.MulElemVec(energyVector, mappedVector)
+	energyVector.ScaleVec(-0.5, energyVector)
 	return energyVector.RawVector().Data
 }
 
@@ -57,4 +59,22 @@ func (manager *BinaryStateManager) StateEnergy(matrix *mat.Dense, vector *mat.Ve
 		energy += unitEnergy
 	}
 	return energy
+}
+
+func (manager *BinaryStateManager) MeasureDistance(vec1 *mat.VecDense, vec2 *mat.VecDense, norm float64) float64 {
+	tempVec := mat.NewVecDense(vec1.Len(), nil)
+
+	tempVec.SubVec(vec1, vec2)
+	return tempVec.Norm(norm)
+}
+
+func (manager *BinaryStateManager) MeasureDistancesToCollection(vectorCollection []*mat.VecDense, vec2 *mat.VecDense, norm float64) []float64 {
+	tempVec := mat.NewVecDense(vec2.Len(), nil)
+	distances := make([]float64, len(vectorCollection))
+
+	for index, item := range vectorCollection {
+		tempVec.SubVec(item, vec2)
+		distances[index] = tempVec.Norm(norm)
+	}
+	return distances
 }
