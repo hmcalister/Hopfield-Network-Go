@@ -35,65 +35,6 @@ func IsInSlice[T comparable](slice []T, elem T) bool {
 	return false
 }
 
-// Finds the distances from a given vector to all vectors in a slice
-//
-// # Arguments
-//
-// slice: The slice to check over
-//
-// vector: The element to check the distance to
-//
-// norm: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
-//
-// # Return
-//
-// A []float64 representing the distances from the given vector to the slice vectors
-func DistancesToVectorCollection(slice []*mat.VecDense, vector *mat.VecDense, norm float64) []float64 {
-	tempVec := mat.NewVecDense(vector.Len(), nil)
-	distances := make([]float64, len(slice))
-	var d1 float64
-	var d2 float64
-	for index, item := range slice {
-		tempVec.SubVec(item, vector)
-		d1 = tempVec.Norm(norm)
-
-		tempVec.ScaleVec(-1.0, item)
-		tempVec.SubVec(tempVec, vector)
-		d2 = tempVec.Norm(norm)
-
-		if d1 < d2 {
-			distances[index] = d1
-		} else {
-			distances[index] = d2
-		}
-	}
-	return distances
-}
-
-// Finds the distance from a given vector to the closest vector in a slice
-//
-// # Arguments
-//
-// slice: The slice to check over
-//
-// vector: The element to check the distance to
-//
-// norm: The norm function to use. 1 for Hamming Distance, 2 for Euclidean...
-//
-// # Return
-//
-// A float64 representing the distance from the given vector to the closest vector in the slice
-func DistanceToClosestVec(slice []*mat.VecDense, vector *mat.VecDense, norm float64) float64 {
-	minDist := math.Inf(+1)
-	allDistances := DistancesToVectorCollection(slice, vector, norm)
-	for _, item := range allDistances {
-		if item < minDist {
-			minDist = item
-		}
-	}
-	return minDist
-}
-
 // Defines a very simple wrapper to assign an index to another type.
 //
 // This type could be a *mat.VecDense to index states, or it could be an entire struct!
