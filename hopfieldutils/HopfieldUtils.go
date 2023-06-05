@@ -1,11 +1,35 @@
 package hopfieldutils
 
 import (
-	"math"
-
+	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/rand"
-	"gonum.org/v1/gonum/mat"
 )
+
+type Number interface {
+	constraints.Integer | constraints.Float
+}
+
+// Find the minimum of a slice
+func MinimumOfSlice[T Number](slice []T) T {
+	currentMin := slice[0]
+	for _, elem := range slice {
+		if elem < currentMin {
+			currentMin = elem
+		}
+	}
+	return currentMin
+}
+
+// Find the maximum of a slice
+func MaximumOfSlice[T Number](slice []T) T {
+	currentMax := slice[0]
+	for _, elem := range slice {
+		if elem > currentMax {
+			currentMax = elem
+		}
+	}
+	return currentMax
+}
 
 // Shuffles the given list
 func ShuffleList[T comparable](randomGenerator *rand.Rand, list []T) {
