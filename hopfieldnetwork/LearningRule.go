@@ -129,11 +129,11 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 		bipolarManager.ActivationFunction(b)
 
 		relaxationDifference.Zero()
-		relaxationDifference.SubVec(b, a)
+		relaxationDifference.SubVec(a, b)
 
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
-				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)-relaxationDifference.AtVec(i)*a.AtVec(j))
+				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+relaxationDifference.AtVec(i)*a.AtVec(j))
 			}
 		}
 	}
