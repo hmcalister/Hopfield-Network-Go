@@ -45,3 +45,43 @@ func (manager *BipolarStateManager) StateEnergy(matrix *mat.Dense, vector *mat.V
 	}
 	return energy
 }
+
+func (manager *BipolarStateManager) MeasureDistance(vec1 *mat.VecDense, vec2 *mat.VecDense, norm float64) float64 {
+	tempVec := mat.NewVecDense(vec1.Len(), nil)
+
+	tempVec.SubVec(vec1, vec2)
+	d1 := tempVec.Norm(norm)
+
+	tempVec.CopyVec(vec2)
+	manager.InvertState(tempVec)
+	tempVec.SubVec(vec1, tempVec)
+	d2 := tempVec.Norm(norm)
+
+	if d1 < d2 {
+		return d1
+	} else {
+		return d2
+	}
+}
+
+func (manager *BipolarStateManager) MeasureDistancesToCollection(vectorCollection []*mat.VecDense, vec2 *mat.VecDense, norm float64) []float64 {
+	tempVec := mat.NewVecDense(vec2.Len(), nil)
+	distances := make([]float64, len(vectorCollection))
+
+	for index, item := range vectorCollection {
+		tempVec.SubVec(item, vec2)
+		d1 := tempVec.Norm(norm)
+
+		tempVec.CopyVec(vec2)
+		manager.InvertState(tempVec)
+		tempVec.SubVec(item, tempVec)
+		d2 := tempVec.Norm(norm)
+
+		if d1 < d2 {
+			distances[index] = d1
+		} else {
+			distances[index] = d2
+		}
+	}
+	return distances
+}
