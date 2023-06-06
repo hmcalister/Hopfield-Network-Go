@@ -17,6 +17,7 @@ type HopfieldNetworkSummaryData struct {
 	LearningRule                string  `parquet:"name=LearningRule, type=BYTE_ARRAY"`
 	Epochs                      int     `parquet:"name=Epochs, type=INT32"`
 	MaximumRelaxationIterations int     `parquet:"name=MaximumRelaxationIterations, type=INT32"`
+	LearningRate                float64 `parquet:"name=LearningRate, type=DOUBLE"`
 	LearningNoiseMethod         string  `parquet:"name=LearningNoiseMethod, type=BYTE_ARRAY"`
 	LearningNoiseScale          float64 `parquet:"name=LearningNoiseScale, type=DOUBLE"`
 	UnitsUpdated                int     `parquet:"name=UnitsUpdated, type=INT32"`
