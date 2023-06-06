@@ -131,6 +131,7 @@ func main() {
 		SetEpochs(*numEpochs).
 		SetMaximumRelaxationIterations(100).
 		SetMaximumRelaxationUnstableUnits(0).
+		SetLearningRate(*learningRate).
 		SetLearningNoiseMethod(learningNoiseMethod).
 		SetLearningNoiseRatio(*learningNoiseScale).
 		SetUnitsUpdatedPerStep(*unitsUpdated).
