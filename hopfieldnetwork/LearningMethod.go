@@ -39,6 +39,7 @@ func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*
 	for epoch := 0; epoch < network.epochs; epoch++ {
 		learningRuleResult := network.learningRule(network, states)
 
+		learningRuleResult.Scale(network.learningRate, learningRuleResult)
 		network.matrix.Add(network.matrix, learningRuleResult)
 		network.cleanMatrix()
 
