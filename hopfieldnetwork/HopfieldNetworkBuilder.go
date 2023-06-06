@@ -99,6 +99,16 @@ func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalF
 	return networkBuilder
 }
 
+// Set state of the ForceZeroBias flag in the network.
+//
+// If true, the network will always have a zero bias vector.
+//
+// This value defaults to true if not explicitly set.
+func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroBias(zeroBiasFlag bool) *HopfieldNetworkBuilder {
+	networkBuilder.forceZeroBias = zeroBiasFlag
+	return networkBuilder
+}
+
 // Set the learning method of this network based on the LearningMethodEnum selected.
 //
 // Note this method returns the builder pointer so chained calls can be used.
