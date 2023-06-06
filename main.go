@@ -127,6 +127,7 @@ func main() {
 		SetNetworkDimension(*networkDimension).
 		SetRandMatrixInit(*asymmetricWeightMatrix).
 		SetForceSymmetric(*asymmetricWeightMatrix).
+		SetForceZeroBias(*forceZeroBias).
 		SetNetworkLearningMethod(learningMethod).
 		SetNetworkLearningRule(learningRule).
 		SetEpochs(*numEpochs).
