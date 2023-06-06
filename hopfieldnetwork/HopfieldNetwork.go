@@ -301,6 +301,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
 		newState.MulVec(network.matrix, state)
+		newState.AddVec(newState, network.bias)
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
@@ -337,6 +338,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
 			newState.MulVec(network.matrix, state)
+			newState.AddVec(newState, network.bias)
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
@@ -415,6 +417,7 @@ StateRecvLoop:
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
 				newState.MulVec(network.matrix, state)
+				newState.AddVec(newState, network.bias)
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
