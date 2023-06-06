@@ -21,6 +21,7 @@ import (
 
 const (
 	LEARNED_MATRIX_BINARY_SAVE_FILE = "matrix.bin"
+	LEARNED_BIAS_BINARY_SAVE_FILE   = "bias.bin"
 	TARGET_STATES_BINARY_SAVE_FILE  = "targetStates.bin"
 )
 
@@ -187,6 +188,7 @@ func main() {
 
 	// Save the weight matrix to the specified path.
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
+	gonumio.SaveVector(network.GetBias(), path.Join(*dataDirectory, LEARNED_BIAS_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
 	for stateIndex := range targetStates {
