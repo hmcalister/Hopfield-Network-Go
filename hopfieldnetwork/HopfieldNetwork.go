@@ -263,9 +263,6 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 
 // Update the weight matrix of the network to learn a new set of states.
 //
-// Note this implementation currently simply adds the learning rule output
-// to the current weight matrix.
-//
 // # Arguments
 //
 // states []*mat.VecDense: A collection of states to learn
