@@ -23,11 +23,13 @@ import (
 // Should be created using the HopfieldNetworkBuilder methods.
 type HopfieldNetwork struct {
 	matrix                         *mat.Dense
+	bias                           *mat.VecDense
 	dimension                      int
 	domain                         domain.DomainEnum
 	domainStateManager             statemanager.StateManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
+	forceZeroBias                  bool
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
