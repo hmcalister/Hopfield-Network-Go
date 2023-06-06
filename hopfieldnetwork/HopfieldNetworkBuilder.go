@@ -24,6 +24,7 @@ type HopfieldNetworkBuilder struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	learningRate                   float64
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
 	learningNoiseScale             float64
 	unitsUpdatedPerStep            int
@@ -45,6 +46,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		forceZeroDiagonal:              true,
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
+		learningRate:                   1.0,
 		unitsUpdatedPerStep:            1,
 		dataCollector:                  datacollector.NewDataCollector(),
 		logger:                         log.Default(),
@@ -142,6 +144,16 @@ func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationUnstableUnits(
 // Note this method returns the builder pointer so chained calls can be used.
 func (networkBuilder *HopfieldNetworkBuilder) SetMaximumRelaxationIterations(maximumRelaxationIterations int) *HopfieldNetworkBuilder {
 	networkBuilder.maximumRelaxationIterations = maximumRelaxationIterations
+	return networkBuilder
+}
+
+// Set the learning rate of the network. Should be greater than 0.0
+//
+// Defaults to 1.0. This is typically a good enough value.
+//
+// Note this method returns the builder pointer so chained calls can be used.
+func (networkBuilder *HopfieldNetworkBuilder) SetLearningRate(learningRate float64) *HopfieldNetworkBuilder {
+	networkBuilder.learningRate = learningRate
 	return networkBuilder
 }
 
@@ -249,6 +261,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		randomGenerator:                randomGenerator,
 		maximumRelaxationUnstableUnits: networkBuilder.maximumRelaxationUnstableUnits,
 		maximumRelaxationIterations:    networkBuilder.maximumRelaxationIterations,
+		learningRate:                   networkBuilder.learningRate,
 		learningNoiseMethod:            networkBuilder.learningNoiseMethod,
 		learningNoiseScale:             networkBuilder.learningNoiseScale,
 		unitsUpdatedPerStep:            networkBuilder.unitsUpdatedPerStep,
