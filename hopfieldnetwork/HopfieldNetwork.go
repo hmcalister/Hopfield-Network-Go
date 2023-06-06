@@ -23,11 +23,13 @@ import (
 // Should be created using the HopfieldNetworkBuilder methods.
 type HopfieldNetwork struct {
 	matrix                         *mat.Dense
+	bias                           *mat.VecDense
 	dimension                      int
 	domain                         domain.DomainEnum
 	domainStateManager             statemanager.StateManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
+	forceZeroBias                  bool
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
@@ -91,6 +93,20 @@ func (network *HopfieldNetwork) getUnitIndices() []int {
 // A references to the matrix of this network
 func (network *HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
+}
+
+// Get a reference to the bias vector of this network.
+//
+// Note that this gives a reference to the matrix
+// meaning the caller can update the matrix!
+//
+// This behavior may change in future.
+//
+// # Returns
+//
+// A references to the bias of this network
+func (network *HopfieldNetwork) GetBias() *mat.VecDense {
+	return network.bias
 }
 
 // Get the dimension of the network
@@ -247,9 +263,6 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 
 // Update the weight matrix of the network to learn a new set of states.
 //
-// Note this implementation currently simply adds the learning rule output
-// to the current weight matrix.
-//
 // # Arguments
 //
 // states []*mat.VecDense: A collection of states to learn
@@ -288,6 +301,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
 		newState.MulVec(network.matrix, state)
+		newState.AddVec(newState, network.bias)
 		for _, unitIndex := range chunk {
 			state.SetVec(unitIndex, newState.AtVec(unitIndex))
 		}
@@ -324,6 +338,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
 			newState.MulVec(network.matrix, state)
+			newState.AddVec(newState, network.bias)
 			for _, unitIndex := range chunk {
 				state.SetVec(unitIndex, newState.AtVec(unitIndex))
 			}
@@ -402,6 +417,7 @@ StateRecvLoop:
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
 				newState.MulVec(network.matrix, state)
+				newState.AddVec(newState, network.bias)
 				for _, unitIndex := range chunk {
 					state.SetVec(unitIndex, newState.AtVec(unitIndex))
 				}
