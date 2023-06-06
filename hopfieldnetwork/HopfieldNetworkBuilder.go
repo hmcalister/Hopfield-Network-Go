@@ -244,24 +244,34 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	randomGenerator := rand.New(randSrc)
 
 	var matrix *mat.Dense
+	var bias *mat.VecDense
 	if networkBuilder.randMatrixInit {
 		normalDistribution := distuv.Normal{
 			Mu:    0,
 			Sigma: 0.01,
 			Src:   randSrc,
 		}
+
 		matrixData := make([]float64, networkBuilder.dimension*networkBuilder.dimension)
 		for i := range matrixData {
 			matrixData[i] = normalDistribution.Rand()
 		}
 		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, matrixData)
+
+		biasData := make([]float64, networkBuilder.dimension)
+		for i := range biasData {
+			biasData[i] = normalDistribution.Rand()
+		}
+		bias = mat.NewVecDense(networkBuilder.dimension, biasData)
 	} else {
 		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, nil)
+		bias = mat.NewVecDense(networkBuilder.dimension, nil)
 		matrix.Zero()
 	}
 
 	return &HopfieldNetwork{
 		matrix:                         matrix,
+		bias:                           bias,
 		dimension:                      networkBuilder.dimension,
 		domain:                         networkBuilder.domain,
 		domainStateManager:             statemanager.GetDomainStateManager(networkBuilder.domain),
