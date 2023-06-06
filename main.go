@@ -47,6 +47,7 @@ var (
 
 	// Learning noise flags
 
+	learningRate           = flag.Float64("learningRate", 1.0, "The learning rate of the network. Should be greater than 0.0.")
 	learningNoiseMethodInt = flag.Int("learningNoiseMethod", 0, "The method of applying noise to learned states. Noise scale is determined by the learningNoiseScale Flag.\n0: No Noise\n1: Maximal Inversion\n2: Random SubMaximal Inversion\n3: Gaussian Application")
 	learningNoiseScale     = flag.Float64("learningNoiseScale", 0.0, "The amount of noise to apply to target states during learning.")
 
@@ -130,6 +131,7 @@ func main() {
 		SetEpochs(*numEpochs).
 		SetMaximumRelaxationIterations(100).
 		SetMaximumRelaxationUnstableUnits(0).
+		SetLearningRate(*learningRate).
 		SetLearningNoiseMethod(learningNoiseMethod).
 		SetLearningNoiseRatio(*learningNoiseScale).
 		SetUnitsUpdatedPerStep(*unitsUpdated).
