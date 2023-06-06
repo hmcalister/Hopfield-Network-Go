@@ -19,6 +19,7 @@ type HopfieldNetworkBuilder struct {
 	domain                         domain.DomainEnum
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
+	forceZeroBias                  bool
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	epochs                         int
@@ -44,6 +45,7 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		domain:                         domain.BipolarDomain,
 		forceSymmetric:                 true,
 		forceZeroDiagonal:              true,
+		forceZeroBias:                  false,
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		learningRate:                   1.0,
