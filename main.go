@@ -265,6 +265,7 @@ func main() {
 		LearningRule:                learningRule.String(),
 		Epochs:                      hopfieldNetworkSummary.Epochs,
 		MaximumRelaxationIterations: hopfieldNetworkSummary.MaximumRelaxationIterations,
+		LearningRate:                *learningRate,
 		LearningNoiseMethod:         learningNoiseMethod.String(),
 		LearningNoiseScale:          hopfieldNetworkSummary.LearningNoiseScale,
 		UnitsUpdated:                hopfieldNetworkSummary.UnitsUpdatedPerStep,
