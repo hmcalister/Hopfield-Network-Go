@@ -20,8 +20,8 @@ const private_DELTA_THREADS = 8
 //
 // # Returns
 //
-// A pointer to a new matrix that stabilizes the given states as much as possible.
-type LearningRule func(*HopfieldNetwork, []*mat.VecDense) *mat.Dense
+// A pointer to a matrix update (i.e. this must be added to the current weight matrix) and a bias update
+type LearningRule func(*HopfieldNetwork, []*mat.VecDense) (*mat.Dense, *mat.VecDense)
 
 // Define the different learning rule options.
 //
@@ -55,24 +55,20 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 	return learningRuleMap[learningRule]
 }
 
-// Compute the Hebbian weight update for a bipolar domain network.
-//
-// # Arguments
-//
-// Network *HopfieldNetwork: A Hopfield Network that will be learned.
-//
-// States []*mat.VecDense: A slice of states to try and learn.
-//
-// # Returns
-//
-// A pointer to a new matrix that stabilizes the given states as much as possible.
-func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+// Compute the Hebbian weight update.
+func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.VecDense) {
 	var instanceContribution float64
-	updatedMatrix := mat.DenseCopyOf(network.GetMatrix())
+
+	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
+
+	updatedBias := mat.NewVecDense(network.dimension, nil)
+	updatedBias.Zero()
+
 	for _, state := range states {
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
+				// Calculate weight matrix update
 				if state.AtVec(i) == state.AtVec(j) {
 					instanceContribution = 1.0
 				} else {
@@ -80,27 +76,23 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 				}
 				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+instanceContribution)
 			}
+			// Calculate bias update
+			updatedBias.SetVec(i, state.AtVec(i))
 		}
 	}
-	return updatedMatrix
+	return updatedMatrix, updatedBias
 }
 
 // Compute the Delta learning rule update for a network.
-//
-// # Arguments
-//
-// Network *HopfieldNetwork: A Hopfield Network that will be learned.
-//
-// States []*mat.VecDense: A slice of states to try and learn.
-//
-// # Returns
-//
-// A pointer to a new matrix that stabilizes the given states as much as possible.
-func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
+func delta(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.VecDense) {
 	bipolarManager := &statemanager.BipolarStateManager{}
+
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedMatrix.Zero()
+
+	updatedBias := mat.NewVecDense(network.dimension, nil)
+	updatedBias.Zero()
 
 	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
@@ -135,8 +127,9 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) *mat.Dense {
 			for j := 0; j < network.GetDimension(); j++ {
 				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+relaxationDifference.AtVec(i)*a.AtVec(j))
 			}
+			updatedBias.SetVec(i, relaxationDifference.AtVec(i))
 		}
 	}
 
-	return updatedMatrix
+	return updatedMatrix, updatedBias
 }
