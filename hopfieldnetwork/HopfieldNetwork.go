@@ -95,6 +95,20 @@ func (network *HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
 }
 
+// Get a reference to the bias vector of this network.
+//
+// Note that this gives a reference to the matrix
+// meaning the caller can update the matrix!
+//
+// This behavior may change in future.
+//
+// # Returns
+//
+// A references to the bias of this network
+func (network *HopfieldNetwork) GetBias() *mat.VecDense {
+	return network.bias
+}
+
 // Get the dimension of the network
 //
 // # Returns
