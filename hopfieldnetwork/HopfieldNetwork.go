@@ -50,8 +50,10 @@ type HopfieldNetwork struct {
 // INTERNAL METHODS
 // ------------------------------------------------------------------------------------------------
 
-// Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set.
-func (network *HopfieldNetwork) cleanMatrix() {
+// Method run after each application of the learning rule.
+// Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set,
+// as well as zeros the bias if required
+func (network *HopfieldNetwork) enforceConstraints() {
 	if network.forceZeroDiagonal {
 		for i := 0; i < network.dimension; i++ {
 			network.matrix.Set(i, i, 0.0)
@@ -64,6 +66,10 @@ func (network *HopfieldNetwork) cleanMatrix() {
 				network.matrix.Set(j, i, network.matrix.At(i, j))
 			}
 		}
+	}
+
+	if network.forceZeroBias {
+		network.bias.Zero()
 	}
 }
 
