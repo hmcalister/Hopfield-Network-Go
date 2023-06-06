@@ -277,6 +277,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		domainStateManager:             statemanager.GetDomainStateManager(networkBuilder.domain),
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
+		forceZeroBias:                  networkBuilder.forceZeroBias,
 		learningMethod:                 networkBuilder.learningMethod,
 		learningRule:                   networkBuilder.learningRule,
 		epochs:                         networkBuilder.epochs,
