@@ -34,6 +34,7 @@ type HopfieldNetwork struct {
 	epochs                         int
 	maximumRelaxationUnstableUnits int
 	maximumRelaxationIterations    int
+	learningRate                   float64
 	learningNoiseScale             float64
 	unitsUpdatedPerStep            int
 	randomGenerator                *rand.Rand
