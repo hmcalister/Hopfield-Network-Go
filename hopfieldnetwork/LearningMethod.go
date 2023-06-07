@@ -37,13 +37,7 @@ func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
 func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*datacollector.LearnStateData {
 	learnStateData := []*datacollector.LearnStateData{}
 	for epoch := 0; epoch < network.epochs; epoch++ {
-		matrixUpdate, biasUpdate := network.learningRule(network, states)
-
-		matrixUpdate.Scale(network.learningRate, matrixUpdate)
-		biasUpdate.ScaleVec(network.learningRate, biasUpdate)
-		network.matrix.Add(network.matrix, matrixUpdate)
-		network.bias.AddVec(network.bias, biasUpdate)
-		network.enforceConstraints()
+		network.learningRule(network, states)
 
 		// Learn State Data is intensive, as it involves calculating th energy at every epoch
 		// Only collect if requested.
