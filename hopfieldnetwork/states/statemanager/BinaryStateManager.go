@@ -60,21 +60,3 @@ func (manager *BinaryStateManager) StateEnergy(matrix *mat.Dense, vector *mat.Ve
 	}
 	return energy
 }
-
-func (manager *BinaryStateManager) MeasureDistance(vec1 *mat.VecDense, vec2 *mat.VecDense, norm float64) float64 {
-	tempVec := mat.NewVecDense(vec1.Len(), nil)
-
-	tempVec.SubVec(vec1, vec2)
-	return tempVec.Norm(norm)
-}
-
-func (manager *BinaryStateManager) MeasureDistancesToCollection(vectorCollection []*mat.VecDense, vec2 *mat.VecDense, norm float64) []float64 {
-	tempVec := mat.NewVecDense(vec2.Len(), nil)
-	distances := make([]float64, len(vectorCollection))
-
-	for index, item := range vectorCollection {
-		tempVec.SubVec(item, vec2)
-		distances[index] = tempVec.Norm(norm)
-	}
-	return distances
-}
