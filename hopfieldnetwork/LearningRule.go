@@ -17,6 +17,7 @@ const private_DELTA_THREADS = 8
 // Network *HopfieldNetwork: A Hopfield Network that will be learned. This argument is required for some learning rules.
 //
 // States []*mat.VecDense: A slice of states to try and learn.
+type LearningRule func(*HopfieldNetwork, []*mat.VecDense)
 
 // Define the different learning rule options.
 //
