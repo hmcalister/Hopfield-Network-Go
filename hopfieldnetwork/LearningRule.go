@@ -52,7 +52,7 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 }
 
 // Compute the Hebbian weight update.
-func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.VecDense) {
+func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 	var instanceContribution float64
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
@@ -76,7 +76,6 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat
 			updatedBias.SetVec(i, state.AtVec(i))
 		}
 	}
-	return updatedMatrix, updatedBias
 }
 
 // Compute the Delta learning rule update for a network.
