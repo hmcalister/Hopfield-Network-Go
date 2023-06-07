@@ -10,18 +10,13 @@ const private_DELTA_THREADS = 8
 
 // Define a learning rule as a function taking a network along with a collection of states.
 //
-// A matrix is returned that is learned to stabilize the given states.
+// The network is update IN the learning method: nothing is returned!
 //
 // # Arguments
 //
 // Network *HopfieldNetwork: A Hopfield Network that will be learned. This argument is required for some learning rules.
 //
 // States []*mat.VecDense: A slice of states to try and learn.
-//
-// # Returns
-//
-// A pointer to a matrix update (i.e. this must be added to the current weight matrix) and a bias update
-type LearningRule func(*HopfieldNetwork, []*mat.VecDense) (*mat.Dense, *mat.VecDense)
 
 // Define the different learning rule options.
 //
