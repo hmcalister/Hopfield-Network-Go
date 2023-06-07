@@ -10,18 +10,14 @@ const private_DELTA_THREADS = 8
 
 // Define a learning rule as a function taking a network along with a collection of states.
 //
-// A matrix is returned that is learned to stabilize the given states.
+// The network is update IN the learning method: nothing is returned!
 //
 // # Arguments
 //
 // Network *HopfieldNetwork: A Hopfield Network that will be learned. This argument is required for some learning rules.
 //
 // States []*mat.VecDense: A slice of states to try and learn.
-//
-// # Returns
-//
-// A pointer to a matrix update (i.e. this must be added to the current weight matrix) and a bias update
-type LearningRule func(*HopfieldNetwork, []*mat.VecDense) (*mat.Dense, *mat.VecDense)
+type LearningRule func(*HopfieldNetwork, []*mat.VecDense)
 
 // Define the different learning rule options.
 //
@@ -56,7 +52,7 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 }
 
 // Compute the Hebbian weight update.
-func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.VecDense) {
+func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 	var instanceContribution float64
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
@@ -80,11 +76,16 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat
 			updatedBias.SetVec(i, state.AtVec(i))
 		}
 	}
-	return updatedMatrix, updatedBias
+
+	updatedMatrix.Scale(network.learningRate, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
+	network.matrix.Add(network.matrix, updatedMatrix)
+	network.bias.AddVec(network.bias, updatedBias)
+	network.enforceConstraints()
 }
 
 // Compute the Delta learning rule update for a network.
-func delta(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.VecDense) {
+func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	bipolarManager := &statemanager.BipolarStateManager{}
 
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
@@ -131,5 +132,9 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) (*mat.Dense, *mat.V
 		}
 	}
 
-	return updatedMatrix, updatedBias
+	updatedMatrix.Scale(network.learningRate, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
+	network.matrix.Add(network.matrix, updatedMatrix)
+	network.bias.AddVec(network.bias, updatedBias)
+	network.enforceConstraints()
 }
