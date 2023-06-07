@@ -3,6 +3,7 @@ package hopfieldutils
 import (
 	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/rand"
+	"gonum.org/v1/gonum/mat"
 )
 
 type Number interface {
@@ -103,4 +104,24 @@ func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
 	}
 
 	return chunkedSlices
+}
+
+// Measure the distance between vectors according to a norm
+func MeasureDistance(vec1 *mat.VecDense, vec2 *mat.VecDense, norm float64) float64 {
+	tempVec := mat.NewVecDense(vec1.Len(), nil)
+
+	tempVec.SubVec(vec1, vec2)
+	return tempVec.Norm(norm)
+}
+
+// Measure the distance between a vector and a collection of vectors
+func MeasureDistancesToCollection(vectorCollection []*mat.VecDense, vec2 *mat.VecDense, norm float64) []float64 {
+	tempVec := mat.NewVecDense(vec2.Len(), nil)
+	distances := make([]float64, len(vectorCollection))
+
+	for index, item := range vectorCollection {
+		tempVec.SubVec(item, vec2)
+		distances[index] = tempVec.Norm(norm)
+	}
+	return distances
 }
