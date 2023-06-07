@@ -76,6 +76,12 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 			updatedBias.SetVec(i, state.AtVec(i))
 		}
 	}
+
+	updatedMatrix.Scale(network.learningRate, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
+	network.matrix.Add(network.matrix, updatedMatrix)
+	network.bias.AddVec(network.bias, updatedBias)
+	network.enforceConstraints()
 }
 
 // Compute the Delta learning rule update for a network.
