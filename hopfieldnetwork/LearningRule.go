@@ -109,7 +109,8 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		state := states[stateIndex]
 
 		a := mat.VecDenseCopyOf(state)
-		b := mat.VecDenseCopyOf(relaxedState)
+		b := mat.VecDenseCopyOf(state)
+		network.UpdateState(b)
 		bipolarManager.ActivationFunction(a)
 		bipolarManager.ActivationFunction(b)
 
