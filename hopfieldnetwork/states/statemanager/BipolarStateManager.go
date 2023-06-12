@@ -1,6 +1,8 @@
 package statemanager
 
-import "gonum.org/v1/gonum/mat"
+import (
+	"gonum.org/v1/gonum/mat"
+)
 
 type BipolarStateManager struct {
 }
@@ -24,7 +26,7 @@ func (manager *BipolarStateManager) UnitEnergy(matrix *mat.Dense, bias *mat.VecD
 	dimension, _ := vector.Dims()
 	energy := 0.0
 	for j := 0; j < dimension; j++ {
-		energy += -1 * matrix.At(i, j) * vector.AtVec(i) * vector.AtVec(j)
+		energy += -0.5 * matrix.At(i, j) * vector.AtVec(i) * vector.AtVec(j)
 	}
 	energy += -1.0 * vector.AtVec(i) * bias.AtVec(i)
 
@@ -35,8 +37,12 @@ func (manager *BipolarStateManager) AllUnitEnergies(matrix *mat.Dense, bias *mat
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
 	energyVector.MulElemVec(energyVector, vector)
-	energyVector.ScaleVec(-1, energyVector)
-	energyVector.AddScaledVec(energyVector, -1.0, bias)
+	energyVector.ScaleVec(-0.5, energyVector)
+
+	biasTerm := mat.NewVecDense(vector.Len(), nil)
+	biasTerm.AddVec(bias, vector)
+	energyVector.AddScaledVec(energyVector, -1.0, biasTerm)
+
 	return energyVector.RawVector().Data
 }
 
