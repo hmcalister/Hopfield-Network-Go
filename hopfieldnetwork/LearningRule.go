@@ -73,7 +73,7 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+instanceContribution)
 			}
 			// Calculate bias update
-			updatedBias.SetVec(i, state.AtVec(i))
+			updatedBias.SetVec(i, updatedBias.AtVec(i)+state.AtVec(i))
 		}
 	}
 
@@ -128,7 +128,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 			for j := 0; j < network.GetDimension(); j++ {
 				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+relaxationDifference.AtVec(i)*a.AtVec(j))
 			}
-			updatedBias.SetVec(i, relaxationDifference.AtVec(i))
+			updatedBias.SetVec(i, updatedBias.AtVec(i)+relaxationDifference.AtVec(i))
 		}
 	}
 
