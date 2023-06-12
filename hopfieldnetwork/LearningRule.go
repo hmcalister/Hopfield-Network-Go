@@ -6,8 +6,6 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-const private_DELTA_THREADS = 8
-
 // Define a learning rule as a function taking a network along with a collection of states.
 //
 // The network is update IN the learning method: nothing is returned!
