@@ -127,7 +127,7 @@ func main() {
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 		SetNetworkDomain(networkDomain).
 		SetNetworkDimension(*networkDimension).
-		SetRandMatrixInit(*asymmetricWeightMatrix).
+		SetRandMatrixInit(*randomMatrixInit).
 		SetForceSymmetric(*forceSymmetric).
 		SetForceZeroBias(*forceZeroBias).
 		SetNetworkLearningMethod(learningMethod).
