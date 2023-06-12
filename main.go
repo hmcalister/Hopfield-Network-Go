@@ -28,11 +28,12 @@ const (
 var (
 	// General network flags
 
-	forceZeroBias          = flag.Bool("forceZeroBias", false, "Forces the bias vector of the network to always be zero.")
-	networkDomainInt       = flag.Int("domain", 0, "The network domain.\n0: Bipolar\n1: Binary")
-	networkDimension       = flag.Int("dimension", 100, "The network dimension to simulate.")
-	unitsUpdated           = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 	forceSymmetric   = flag.Bool("forceSymmetric", true, "Force the weight matrix of the Hopfield network to be symmetric.")
+	forceZeroBias    = flag.Bool("forceZeroBias", true, "Forces the bias vector of the network to always be zero.")
+	randomMatrixInit = flag.Bool("randomMatrixInit", false, "Flag to randomly initialize the matrix to small random values (for asymmetric seed).")
+	networkDomainInt = flag.Int("domain", 0, "The network domain.\n0: Bipolar\n1: Binary")
+	networkDimension = flag.Int("dimension", 100, "The network dimension to simulate.")
+	unitsUpdated     = flag.Int("unitsUpdated", 1, "The number of units to update at each step.")
 
 	// Learning method and rule flags
 
@@ -126,7 +127,7 @@ func main() {
 	network := hopfieldnetwork.NewHopfieldNetworkBuilder().
 		SetNetworkDomain(networkDomain).
 		SetNetworkDimension(*networkDimension).
-		SetRandMatrixInit(*asymmetricWeightMatrix).
+		SetRandMatrixInit(*randomMatrixInit).
 		SetForceSymmetric(*forceSymmetric).
 		SetForceZeroBias(*forceZeroBias).
 		SetNetworkLearningMethod(learningMethod).
