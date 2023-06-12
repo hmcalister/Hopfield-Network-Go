@@ -22,6 +22,7 @@ type HopfieldNetworkSummaryData struct {
 	LearningNoiseScale          float64 `parquet:"name=LearningNoiseScale, type=DOUBLE"`
 	UnitsUpdated                int     `parquet:"name=UnitsUpdated, type=INT32"`
 	ForceSymmetricWeightMatrix  bool    `parquet:"name=ForceSymmetricWeightMatrix, type=BOOLEAN"`
+	ForceZeroBias               bool    `parquet:"name=ForceZeroBias, type=BOOLEAN"`
 	Threads                     int     `parquet:"name=Threads, type=INT32"`
 	TargetStates                int     `parquet:"name=TargetStates, type=INT32"`
 	ProbeStates                 int     `parquet:"name=ProbeStates, type=INT32"`
