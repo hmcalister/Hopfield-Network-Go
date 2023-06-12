@@ -274,6 +274,7 @@ func main() {
 		LearningNoiseScale:          hopfieldNetworkSummary.LearningNoiseScale,
 		UnitsUpdated:                hopfieldNetworkSummary.UnitsUpdatedPerStep,
 		ForceSymmetricWeightMatrix:  hopfieldNetworkSummary.ForceSymmetric,
+		ForceZeroBias:               hopfieldNetworkSummary.ForceZeroBias,
 		Threads:                     *numThreads,
 		TargetStates:                *numTargetStates,
 		ProbeStates:                 *numProbeStates,
