@@ -7,7 +7,7 @@ package datacollector
 // LearningNoiseMethod is the method of noise used during training (as a string)
 // LearningNoiseScale is the scale of the noise applied to the network
 // UnitsUpdated is the amount of units updated at each step
-// AsymmetricWeightMatrix is a boolean flag indicating if the network is allowed to take asymmetric values
+// ForceSymmetricWeightMatrix is a boolean flag indicating if the network is allowed to take asymmetric values
 // Threads is the number of threads the network used to relax states
 // TargetStates is the number of states used for learning
 // ProbeStates is the number of states used for probing
@@ -21,7 +21,7 @@ type HopfieldNetworkSummaryData struct {
 	LearningNoiseMethod         string  `parquet:"name=LearningNoiseMethod, type=BYTE_ARRAY"`
 	LearningNoiseScale          float64 `parquet:"name=LearningNoiseScale, type=DOUBLE"`
 	UnitsUpdated                int     `parquet:"name=UnitsUpdated, type=INT32"`
-	AsymmetricWeightMatrix      bool    `parquet:"name=AsymmetricWeightMatrix, type=BOOLEAN"`
+	ForceSymmetricWeightMatrix  bool    `parquet:"name=ForceSymmetricWeightMatrix, type=BOOLEAN"`
 	Threads                     int     `parquet:"name=Threads, type=INT32"`
 	TargetStates                int     `parquet:"name=TargetStates, type=INT32"`
 	ProbeStates                 int     `parquet:"name=ProbeStates, type=INT32"`
