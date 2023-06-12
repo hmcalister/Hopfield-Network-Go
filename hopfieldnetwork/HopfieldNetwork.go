@@ -146,6 +146,7 @@ type HopfieldNetworkSummary struct {
 	Matrix                         *mat.Dense
 	Dimension                      int
 	ForceSymmetric                 bool
+	ForceZeroBias                  bool
 	ForceZeroDiagonal              bool
 	Epochs                         int
 	MaximumRelaxationUnstableUnits int
@@ -160,6 +161,7 @@ func (network *HopfieldNetwork) GetNetworkSummary() *HopfieldNetworkSummary {
 		Matrix:                         network.GetMatrix(),
 		Dimension:                      network.dimension,
 		ForceSymmetric:                 network.forceSymmetric,
+		ForceZeroBias:                  network.forceZeroBias,
 		ForceZeroDiagonal:              network.forceZeroDiagonal,
 		Epochs:                         network.epochs,
 		MaximumRelaxationUnstableUnits: network.maximumRelaxationUnstableUnits,
