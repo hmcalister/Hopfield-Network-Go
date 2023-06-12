@@ -105,10 +105,6 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
 	}
 
-	// This is the most important call - relax all the states!
-	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, private_DELTA_THREADS)
-
-	// Now states are relaxed we can compare them to the target states and use differences to determine weight updates
 	for stateIndex := range states {
 		state := states[stateIndex]
 		stateHistory := relaxationResults[stateIndex].StateHistory
