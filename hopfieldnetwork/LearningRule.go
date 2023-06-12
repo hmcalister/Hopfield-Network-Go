@@ -6,8 +6,6 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-const private_DELTA_THREADS = 8
-
 // Define a learning rule as a function taking a network along with a collection of states.
 //
 // The network is update IN the learning method: nothing is returned!
@@ -107,17 +105,12 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
 	}
 
-	// This is the most important call - relax all the states!
-	relaxationResults := network.ConcurrentRelaxStates(relaxedStates, private_DELTA_THREADS)
-
-	// Now states are relaxed we can compare them to the target states and use differences to determine weight updates
 	for stateIndex := range states {
 		state := states[stateIndex]
-		stateHistory := relaxationResults[stateIndex].StateHistory
-		relaxedState := stateHistory[len(stateHistory)-1]
 
 		a := mat.VecDenseCopyOf(state)
-		b := mat.VecDenseCopyOf(relaxedState)
+		b := mat.VecDenseCopyOf(state)
+		network.UpdateState(b)
 		bipolarManager.ActivationFunction(a)
 		bipolarManager.ActivationFunction(b)
 
