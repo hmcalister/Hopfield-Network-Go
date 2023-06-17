@@ -10,11 +10,12 @@ func _() {
 	var x [1]struct{}
 	_ = x[HebbianLearningRule-0]
 	_ = x[DeltaLearningRule-1]
+	_ = x[ThermalDeltaLearningRule-2]
 }
 
-const _LearningRuleEnum_name = "HebbianLearningRuleDeltaLearningRule"
+const _LearningRuleEnum_name = "HebbianLearningRuleDeltaLearningRuleThermalDeltaLearningRule"
 
-var _LearningRuleEnum_index = [...]uint8{0, 19, 36}
+var _LearningRuleEnum_index = [...]uint8{0, 19, 36, 60}
 
 func (i LearningRuleEnum) String() string {
 	if i < 0 || i >= LearningRuleEnum(len(_LearningRuleEnum_index)-1) {
