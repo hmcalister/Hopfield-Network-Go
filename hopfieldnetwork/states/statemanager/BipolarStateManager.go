@@ -40,7 +40,7 @@ func (manager *BipolarStateManager) AllUnitEnergies(matrix *mat.Dense, bias *mat
 	energyVector.ScaleVec(-0.5, energyVector)
 
 	biasTerm := mat.NewVecDense(vector.Len(), nil)
-	biasTerm.AddVec(bias, vector)
+	biasTerm.MulElemVec(bias, vector)
 	energyVector.AddScaledVec(energyVector, -1.0, biasTerm)
 
 	return energyVector.RawVector().Data
