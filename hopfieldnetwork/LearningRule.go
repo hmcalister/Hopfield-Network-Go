@@ -77,6 +77,8 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	updatedMatrix.Zero()
 	updatedBias.Zero()
 
+	relaxationDifference := mat.NewVecDense(network.dimension, nil)
+
 	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedBias.Zero()
 
