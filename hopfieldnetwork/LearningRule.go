@@ -71,7 +71,6 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 
 // Compute the Delta learning rule update for a network.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) {
-	bipolarManager := &statemanager.BipolarStateManager{}
 
 	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
