@@ -9,6 +9,7 @@ import (
 
 	"github.com/hmcalister/gonum-matrix-io/pkg/gonumio"
 	"github.com/pkg/profile"
+	"github.com/schollz/progressbar/v3"
 	"gonum.org/v1/gonum/mat"
 
 	"hmcalister/hopfield/hopfieldnetwork"
@@ -225,8 +226,9 @@ func main() {
 
 	// DATA PROCESSING ----------------------------------------------------------------------------
 	logger.SetPrefix("Data Processing: ")
+	bar := progressbar.Default(int64(len(relaxationResults)), "SAVING RELAXATION RESULTS")
 	for stateIndex, result := range relaxationResults {
-		logger.Printf("Processing State %v/%v\n", stateIndex, len(relaxationResults))
+		bar.Add(1)
 		event := datacollector.RelaxationResultData{
 			StateIndex:         stateIndex,
 			Stable:             result.Stable,
