@@ -147,8 +147,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
-	updatedBias.ScaleVec(network.learningRate, updatedBias)
 	network.matrix.Add(network.matrix, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
 	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
