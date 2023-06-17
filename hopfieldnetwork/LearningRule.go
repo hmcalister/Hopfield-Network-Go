@@ -58,19 +58,8 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 	updatedBias.Zero()
 
 	for _, state := range states {
-		for i := 0; i < network.GetDimension(); i++ {
-			for j := 0; j < network.GetDimension(); j++ {
-				// Calculate weight matrix update
-				if state.AtVec(i) == state.AtVec(j) {
-					instanceContribution = 1.0
-				} else {
-					instanceContribution = -1.0
-				}
-				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+instanceContribution)
-			}
-			// Calculate bias update
-			updatedBias.SetVec(i, updatedBias.AtVec(i)+state.AtVec(i))
-		}
+		updatedMatrix.RankOne(updatedMatrix, 1, state, state)
+		updatedBias.AddVec(updatedBias, state)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
