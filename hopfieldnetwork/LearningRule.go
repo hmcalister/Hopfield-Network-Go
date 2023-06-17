@@ -29,8 +29,9 @@ type LearningRule func(*HopfieldNetwork, []*mat.VecDense)
 type LearningRuleEnum int
 
 const (
-	HebbianLearningRule LearningRuleEnum = iota
-	DeltaLearningRule   LearningRuleEnum = iota
+	HebbianLearningRule      LearningRuleEnum = iota
+	DeltaLearningRule        LearningRuleEnum = iota
+	ThermalDeltaLearningRule LearningRuleEnum = iota
 )
 
 // Map an option from the LearningRule enum to the specific learning rule
@@ -44,8 +45,9 @@ const (
 // The learning rule from the family specified
 func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 	learningRuleMap := map[LearningRuleEnum]LearningRule{
-		HebbianLearningRule: hebbian,
-		DeltaLearningRule:   delta,
+		HebbianLearningRule:      hebbian,
+		DeltaLearningRule:        delta,
+		ThermalDeltaLearningRule: thermalDelta,
 	}
 
 	return learningRuleMap[learningRule]
