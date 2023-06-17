@@ -510,13 +510,10 @@ func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, nu
 	}
 	close(stateChannel)
 
-	bar.Reset()
-	bar.Describe("PARSING RELAXATION RESULTS")
 	resultsReceived := 0
 	for wrappedResult := range resultChannel {
 		results[wrappedResult.Index] = &wrappedResult.Data
 		resultsReceived++
-		bar.Add(1)
 
 		if resultsReceived >= len(states) {
 			break
