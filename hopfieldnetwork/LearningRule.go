@@ -71,12 +71,38 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 
 // Compute the Delta learning rule update for a network.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) {
-	bipolarManager := &statemanager.BipolarStateManager{}
 
-	// Create and zero out a new matrix to use as the updated weight matrix (after training)
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
+	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedMatrix.Zero()
+	updatedBias.Zero()
 
+	relaxationDifference := mat.NewVecDense(network.dimension, nil)
+
+	// Make a copy of each target state so we can relax these without affecting the originals
+	relaxedStates := make([]*mat.VecDense, len(states))
+	for stateIndex := range relaxedStates {
+		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
+		// We also apply some noise to the state to aide in learning
+		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
+		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
+		network.UpdateState(relaxedStates[stateIndex])
+	}
+
+	for stateIndex := range states {
+		relaxationDifference.Zero()
+		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
+
+		updatedMatrix.RankOne(updatedMatrix, 1.0, relaxationDifference, states[stateIndex])
+		updatedBias.AddVec(updatedBias, relaxationDifference)
+	}
+
+	updatedMatrix.Scale(network.learningRate, updatedMatrix)
+	network.matrix.Add(network.matrix, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
+	network.bias.AddVec(network.bias, updatedBias)
+	network.enforceConstraints()
+}
 	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedBias.Zero()
 
