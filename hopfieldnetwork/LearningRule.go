@@ -120,7 +120,6 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 	updatedBias.Zero()
 	stateBiasContribution.Zero()
 
-	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 
 	// Make a copy of each target state so we can relax these without affecting the originals
