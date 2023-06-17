@@ -111,11 +111,11 @@ func init() {
 	collector = datacollector.NewDataCollector().
 		AddHandler(datacollector.NewRelaxationResultHandler(path.Join(*dataDirectory, "relaxationResult.pq"))).
 		AddHandler(datacollector.NewTargetStateProbeHandler(path.Join(*dataDirectory, "targetStateProbe.pq"))).
-		AddHandler(datacollector.NewUniqueRelaxedStateHandler(path.Join(*dataDirectory, "uniqueStates.pq")))
+		AddHandler(datacollector.NewUniqueRelaxedStateHandler(path.Join(*dataDirectory, "uniqueStates.pq"))).
+		AddHandler(datacollector.NewLearnStateHandler(path.Join(*dataDirectory, "learnStateData.pq")))
 	// Only add these collectors if we want to collect intensive data. Avoids creating additional files and extra listeners.
 	if *allowIntensiveDataCollection {
-		collector.AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq"))).
-			AddHandler(datacollector.NewLearnStateHandler(path.Join(*dataDirectory, "learnStateData.pq")))
+		collector.AddHandler(datacollector.NewRelaxationHistoryData(path.Join(*dataDirectory, "relaxationHistory.pq")))
 	}
 }
 
