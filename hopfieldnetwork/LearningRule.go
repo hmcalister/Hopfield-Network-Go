@@ -111,8 +111,14 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 // Compute the thermal Delta learning rule update for a network.
 func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
+	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
+	stateMatrixContribution := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedBias := mat.NewVecDense(network.dimension, nil)
+	stateBiasContribution := mat.NewVecDense(network.dimension, nil)
+	updatedMatrix.Zero()
+	stateMatrixContribution.Zero()
 	updatedBias.Zero()
+	stateBiasContribution.Zero()
 
 	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
