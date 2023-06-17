@@ -51,12 +51,10 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 
 // Compute the Hebbian weight update.
 func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
-	var instanceContribution float64
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedMatrix.Zero()
-
 	updatedBias := mat.NewVecDense(network.dimension, nil)
+	updatedMatrix.Zero()
 	updatedBias.Zero()
 
 	for _, state := range states {
