@@ -10,6 +10,7 @@ import (
 	"hmcalister/hopfield/hopfieldutils"
 	"log"
 
+	"github.com/schollz/progressbar/v3"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/mat"
 )
@@ -501,19 +502,22 @@ func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, nu
 		go network.concurrentRelaxStateRoutine(stateChannel, resultChannel)
 	}
 
-	// var nextState hopfieldutils.IndexedWrapper[*mat.VecDense]
+	bar := progressbar.Default(int64(len(states)))
+	bar.Describe("RELAXING STATES")
 	for stateIndex := 0; stateIndex < len(states); stateIndex++ {
-		network.logger.Printf("Relaxing State %v/%v\n", stateIndex, len(states))
 		nextState := hopfieldutils.IndexedWrapper[*mat.VecDense]{Index: stateIndex, Data: states[stateIndex]}
 		stateChannel <- &nextState
+		bar.Add(1)
 	}
 	close(stateChannel)
 
+	bar.Reset()
+	bar.Describe("PARSING RELAXATION RESULTS")
 	resultsReceived := 0
 	for wrappedResult := range resultChannel {
-		network.logger.Printf("Parsing Result %v/%v\n", resultsReceived, len(states))
 		results[wrappedResult.Index] = &wrappedResult.Data
 		resultsReceived++
+		bar.Add(1)
 
 		if resultsReceived >= len(states) {
 			break
