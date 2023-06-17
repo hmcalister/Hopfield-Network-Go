@@ -63,7 +63,7 @@ func (handler *dataHandler) writeStop() error {
 func newParquetWriter[T interface{}](dataFilePath string, dataStruct T) (source.ParquetFile, *writer.ParquetWriter) {
 	os.Remove(dataFilePath)
 	dataFileWriter, _ := local.NewLocalFileWriter(dataFilePath)
-	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 4)
+	parquetDataWriter, _ := writer.NewParquetWriter(dataFileWriter, dataStruct, 8)
 	parquetDataWriter.RowGroupSize = 128 * 1024 * 1024 //128MB
 	parquetDataWriter.PageSize = 8 * 1024              //8K
 	parquetDataWriter.CompressionType = parquet.CompressionCodec_SNAPPY
