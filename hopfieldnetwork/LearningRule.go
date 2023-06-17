@@ -49,9 +49,12 @@ const (
 // The learning rule from the family specified
 func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 	learningRuleMap := map[LearningRuleEnum]LearningRule{
-		HebbianLearningRule:      hebbian,
-		DeltaLearningRule:        delta,
-		ThermalDeltaLearningRule: thermalDelta,
+		HebbianLearningRule:                   hebbian,
+		BipolarMappedHebbianLearningRule:      bipolarMappedHebbian,
+		DeltaLearningRule:                     delta,
+		BipolarMappedDeltaLearningRule:        bipolarMappedDelta,
+		ThermalDeltaLearningRule:              thermalDelta,
+		BipolarMappedThermalDeltaLearningRule: bipolarMappedThermalDelta,
 	}
 
 	return learningRuleMap[learningRule]
