@@ -62,11 +62,9 @@ func (network *HopfieldNetwork) enforceConstraints() {
 	}
 
 	if network.forceSymmetric {
-		for i := 0; i < network.dimension-1; i++ {
-			for j := i; j < network.dimension; j++ {
-				network.matrix.Set(j, i, network.matrix.At(i, j))
-			}
-		}
+		matrixTranspose := network.matrix.T()
+		network.matrix.Add(network.matrix, matrixTranspose)
+		network.matrix.Scale(0.5, network.matrix)
 	}
 
 	if network.forceZeroBias {
@@ -302,17 +300,16 @@ type RelaxationResult struct {
 // state *mat.VecDense: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
 func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	unitIndices := network.getUnitIndices()
-	newState := mat.NewVecDense(network.dimension, nil)
-
-	// First we must determine the (random) order of updating.
+	updatedState := mat.NewVecDense(network.dimension, nil)
 	hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
+
 	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
-	// Now we can update each index in a random order
 	for _, chunk := range chunkedIndices {
-		newState.MulVec(network.matrix, state)
-		newState.AddVec(newState, network.bias)
 		for _, unitIndex := range chunk {
-			state.SetVec(unitIndex, newState.AtVec(unitIndex))
+			matrixTargetRow := network.matrix.RowView(unitIndex)
+			updatedState.MulElemVec(matrixTargetRow, state)
+			updatedState.AddVec(updatedState, network.bias)
+			state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
 		}
 		network.domainStateManager.ActivationFunction(state)
 	}
@@ -330,7 +327,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResult {
 	// We create a list of unit indices to use for randomly updating units
 	unitIndices := network.getUnitIndices()
-	newState := mat.NewVecDense(network.dimension, nil)
+	updatedState := mat.NewVecDense(network.dimension, nil)
 	stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 	energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
 	// Only collect data on histories if allowed, as otherwise very intensive
@@ -346,10 +343,11 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 		for _, chunk := range chunkedIndices {
-			newState.MulVec(network.matrix, state)
-			newState.AddVec(newState, network.bias)
 			for _, unitIndex := range chunk {
-				state.SetVec(unitIndex, newState.AtVec(unitIndex))
+				matrixTargetRow := network.matrix.RowView(unitIndex)
+				updatedState.MulElemVec(matrixTargetRow, state)
+				updatedState.AddVec(updatedState, network.bias)
+				state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
 			}
 			network.domainStateManager.ActivationFunction(state)
 		}
@@ -403,7 +401,7 @@ func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *h
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
-	newState := mat.NewVecDense(network.dimension, nil)
+	updatedState := mat.NewVecDense(network.dimension, nil)
 	var state *mat.VecDense
 
 	// This loop will take an indexed state from the channel until the channel is closed by the sender.
@@ -425,10 +423,11 @@ StateRecvLoop:
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 			for _, chunk := range chunkedIndices {
-				newState.MulVec(network.matrix, state)
-				newState.AddVec(newState, network.bias)
 				for _, unitIndex := range chunk {
-					state.SetVec(unitIndex, newState.AtVec(unitIndex))
+					matrixTargetRow := network.matrix.RowView(unitIndex)
+					updatedState.MulElemVec(matrixTargetRow, state)
+					updatedState.AddVec(updatedState, network.bias)
+					state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
 				}
 				network.domainStateManager.ActivationFunction(state)
 			}
