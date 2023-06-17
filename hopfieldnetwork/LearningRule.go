@@ -133,7 +133,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 	}
 
 	for stateIndex := range states {
-		state := states[stateIndex]
+		relaxationDifference.Zero()
+		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
 		a := mat.VecDenseCopyOf(state)
 		b := mat.VecDenseCopyOf(state)
