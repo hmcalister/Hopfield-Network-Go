@@ -53,7 +53,7 @@ func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, bias *mat.
 	energyVector.ScaleVec(-0.5, energyVector)
 
 	biasTerm := mat.NewVecDense(vector.Len(), nil)
-	biasTerm.AddVec(bias, mappedVector)
+	biasTerm.MulElemVec(bias, mappedVector)
 	energyVector.AddScaledVec(energyVector, -1.0, biasTerm)
 	return energyVector.RawVector().Data
 }
