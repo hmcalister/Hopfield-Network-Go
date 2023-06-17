@@ -3,6 +3,7 @@ package hopfieldnetwork
 import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
 
+	"github.com/schollz/progressbar/v3"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -36,8 +37,10 @@ func getLearningMethod(learningMethod LearningMethodEnum) LearningMethod {
 // Full Set Learning presents the entire set of states to learn at once.
 func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*datacollector.LearnStateData {
 	learnStateData := []*datacollector.LearnStateData{}
+	bar := progressbar.Default(int64(network.epochs), "LEARNING EPOCHS")
 	for epoch := 0; epoch < network.epochs; epoch++ {
 		network.learningRule(network, states)
+		bar.Add(1)
 
 		// Learn State Data is intensive, as it involves calculating th energy at every epoch
 		// Only collect if requested.
