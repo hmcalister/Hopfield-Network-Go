@@ -170,8 +170,6 @@ func main() {
 		// Manually set the numTargetStates variable
 		*numTargetStates = len(targetStates)
 	}
-	// Save the vector collection to a binary file.
-	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 
 	// Actually learn the target states
 	learnStateData := network.LearnStates(targetStates)
@@ -190,6 +188,7 @@ func main() {
 	// Save the weight matrix to the specified path.
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
 	gonumio.SaveVector(network.GetBias(), path.Join(*dataDirectory, LEARNED_BIAS_BINARY_SAVE_FILE))
+	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
 	for stateIndex := range targetStates {
