@@ -502,7 +502,6 @@ func (network *HopfieldNetwork) ConcurrentRelaxStates(states []*mat.VecDense, nu
 		go network.concurrentRelaxStateRoutine(stateChannel, resultChannel)
 	}
 
-	// var nextState hopfieldutils.IndexedWrapper[*mat.VecDense]
 	bar := progressbar.Default(int64(len(states)))
 	bar.Describe("RELAXING STATES")
 	for stateIndex := 0; stateIndex < len(states); stateIndex++ {
