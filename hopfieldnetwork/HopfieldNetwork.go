@@ -62,11 +62,9 @@ func (network *HopfieldNetwork) enforceConstraints() {
 	}
 
 	if network.forceSymmetric {
-		for i := 0; i < network.dimension-1; i++ {
-			for j := i; j < network.dimension; j++ {
-				network.matrix.Set(j, i, network.matrix.At(i, j))
-			}
-		}
+		matrixTranspose := network.matrix.T()
+		network.matrix.Add(network.matrix, matrixTranspose)
+		network.matrix.Scale(0.5, network.matrix)
 	}
 
 	if network.forceZeroBias {
