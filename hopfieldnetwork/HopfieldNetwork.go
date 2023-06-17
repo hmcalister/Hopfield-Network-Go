@@ -300,16 +300,13 @@ type RelaxationResult struct {
 // state *mat.VecDense: The vector to relax. Note the vector is altered in place to avoid allocating new memory.
 func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	unitIndices := network.getUnitIndices()
-	updatedState := mat.NewVecDense(network.dimension, nil)
 	hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 
 	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
 	for _, chunk := range chunkedIndices {
 		for _, unitIndex := range chunk {
 			matrixTargetRow := network.matrix.RowView(unitIndex)
-			updatedState.MulElemVec(matrixTargetRow, state)
-			updatedState.AddVec(updatedState, network.bias)
-			state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
+			state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
 		}
 		network.domainStateManager.ActivationFunction(state)
 	}
