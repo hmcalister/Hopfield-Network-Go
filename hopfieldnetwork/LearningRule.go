@@ -136,11 +136,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		relaxationDifference.Zero()
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
-		a := mat.VecDenseCopyOf(state)
-		b := mat.VecDenseCopyOf(state)
-		network.UpdateState(b)
-		bipolarManager.ActivationFunction(a)
-		bipolarManager.ActivationFunction(b)
+		temperatureCalculationVector.MulVec(network.matrix, states[stateIndex])
+		temperatureFactor := math.Exp(-1.0 * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
 
 		relaxationDifference.Zero()
 		relaxationDifference.SubVec(a, b)
