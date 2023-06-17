@@ -7,6 +7,7 @@ require gonum.org/v1/gonum v0.12.0
 require (
 	github.com/hmcalister/gonum-matrix-io v0.0.0-20230404235649-bdcb5bf7e036
 	github.com/pkg/profile v1.7.0
+	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/xitongsys/parquet-go-source v0.0.0-20221025031416-9877e685ef65
 	golang.org/x/exp v0.0.0-20230315142452-642cacee5cc0
 )
@@ -14,6 +15,11 @@ require (
 require (
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
+	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
 )
 
 require (
