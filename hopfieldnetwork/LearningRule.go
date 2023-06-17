@@ -129,6 +129,7 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
 		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
+		network.UpdateState(relaxedStates[stateIndex])
 	}
 
 	for stateIndex := range states {
