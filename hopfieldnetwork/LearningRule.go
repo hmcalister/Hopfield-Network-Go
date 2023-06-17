@@ -80,6 +80,18 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 	network.enforceConstraints()
 }
 
+// Compute the bipolar mapped hebbian weight update
+func bipolarMappedHebbian(network *HopfieldNetwork, states []*mat.VecDense) {
+
+	bipolarStateManager := statemanager.BipolarStateManager{}
+	mappedTargetStates := make([]*mat.VecDense, len(states))
+	for stateIndex := range states {
+		mappedTargetStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
+		bipolarStateManager.ActivationFunction(mappedTargetStates[stateIndex])
+	}
+	hebbian(network, mappedTargetStates)
+}
+
 // Compute the Delta learning rule update for a network.
 func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 
