@@ -139,6 +139,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		temperatureCalculationVector.MulVec(network.matrix, states[stateIndex])
 		temperatureFactor := math.Exp(-1.0 * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
 
+		stateMatrixContribution.Outer(temperatureFactor, relaxationDifference, states[stateIndex])
+		stateBiasContribution.ScaleVec(temperatureFactor, relaxationDifference)
 
 		for i := 0; i < network.GetDimension(); i++ {
 			for j := 0; j < network.GetDimension(); j++ {
