@@ -395,7 +395,6 @@ func (network *HopfieldNetwork) concurrentRelaxStateRoutine(stateChannel chan *h
 	// We create a list of unit indices to use for randomly updating units
 	// Each goroutine gets a copy so they can work independently
 	unitIndices := network.getUnitIndices()
-	updatedState := mat.NewVecDense(network.dimension, nil)
 	var state *mat.VecDense
 
 	// This loop will take an indexed state from the channel until the channel is closed by the sender.
@@ -419,9 +418,7 @@ StateRecvLoop:
 			for _, chunk := range chunkedIndices {
 				for _, unitIndex := range chunk {
 					matrixTargetRow := network.matrix.RowView(unitIndex)
-					updatedState.MulElemVec(matrixTargetRow, state)
-					updatedState.AddVec(updatedState, network.bias)
-					state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
+					state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
 				}
 				network.domainStateManager.ActivationFunction(state)
 			}
