@@ -1,10 +1,12 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+	"math"
 
 	"gonum.org/v1/gonum/mat"
 )
+
+const private_THERMAL_DELTA_TEMPERATURE = 1.0
 
 // Define a learning rule as a function taking a network along with a collection of states.
 //
