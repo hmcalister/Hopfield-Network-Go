@@ -107,6 +107,10 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
+
+// Compute the thermal Delta learning rule update for a network.
+func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
+
 	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedBias.Zero()
 
