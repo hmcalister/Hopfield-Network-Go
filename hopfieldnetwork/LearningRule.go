@@ -1,6 +1,7 @@
 package hopfieldnetwork
 
 import (
+	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -29,9 +30,12 @@ type LearningRule func(*HopfieldNetwork, []*mat.VecDense)
 type LearningRuleEnum int
 
 const (
-	HebbianLearningRule      LearningRuleEnum = iota
-	DeltaLearningRule        LearningRuleEnum = iota
-	ThermalDeltaLearningRule LearningRuleEnum = iota
+	HebbianLearningRule                   LearningRuleEnum = iota
+	BipolarMappedHebbianLearningRule      LearningRuleEnum = iota
+	DeltaLearningRule                     LearningRuleEnum = iota
+	BipolarMappedDeltaLearningRule        LearningRuleEnum = iota
+	ThermalDeltaLearningRule              LearningRuleEnum = iota
+	BipolarMappedThermalDeltaLearningRule LearningRuleEnum = iota
 )
 
 // Map an option from the LearningRule enum to the specific learning rule
