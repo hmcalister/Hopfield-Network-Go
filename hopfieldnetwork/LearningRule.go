@@ -127,6 +127,18 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	network.enforceConstraints()
 }
 
+// Compute the bipolar mapped delta weight update
+func bipolarMappedDelta(network *HopfieldNetwork, states []*mat.VecDense) {
+
+	bipolarStateManager := statemanager.BipolarStateManager{}
+	mappedTargetStates := make([]*mat.VecDense, len(states))
+	for stateIndex := range states {
+		mappedTargetStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
+		bipolarStateManager.ActivationFunction(mappedTargetStates[stateIndex])
+	}
+	delta(network, mappedTargetStates)
+}
+
 // Compute the thermal Delta learning rule update for a network.
 func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
