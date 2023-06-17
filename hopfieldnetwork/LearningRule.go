@@ -116,7 +116,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		relaxationDifference.Zero()
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
-		updatedMatrix.RankOne(updatedMatrix, 1.0, relaxationDifference, states[stateIndex])
+		updatedMatrix.RankOne(updatedMatrix, 0.5, relaxationDifference, states[stateIndex])
 		updatedBias.AddVec(updatedBias, relaxationDifference)
 	}
 
