@@ -324,7 +324,6 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResult {
 	// We create a list of unit indices to use for randomly updating units
 	unitIndices := network.getUnitIndices()
-	updatedState := mat.NewVecDense(network.dimension, nil)
 	stateHistory := make([]*mat.VecDense, network.maximumRelaxationIterations+1)
 	energyHistory := make([][]float64, network.maximumRelaxationIterations+1)
 	// Only collect data on histories if allowed, as otherwise very intensive
@@ -342,9 +341,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		for _, chunk := range chunkedIndices {
 			for _, unitIndex := range chunk {
 				matrixTargetRow := network.matrix.RowView(unitIndex)
-				updatedState.MulElemVec(matrixTargetRow, state)
-				updatedState.AddVec(updatedState, network.bias)
-				state.SetVec(unitIndex, updatedState.AtVec(unitIndex))
+				state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
 			}
 			network.domainStateManager.ActivationFunction(state)
 		}
