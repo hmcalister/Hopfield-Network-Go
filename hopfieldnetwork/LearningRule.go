@@ -1,10 +1,12 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+	"math"
 
 	"gonum.org/v1/gonum/mat"
 )
+
+const private_THERMAL_DELTA_TEMPERATURE = 1.0
 
 // Define a learning rule as a function taking a network along with a collection of states.
 //
@@ -27,8 +29,9 @@ type LearningRule func(*HopfieldNetwork, []*mat.VecDense)
 type LearningRuleEnum int
 
 const (
-	HebbianLearningRule LearningRuleEnum = iota
-	DeltaLearningRule   LearningRuleEnum = iota
+	HebbianLearningRule      LearningRuleEnum = iota
+	DeltaLearningRule        LearningRuleEnum = iota
+	ThermalDeltaLearningRule LearningRuleEnum = iota
 )
 
 // Map an option from the LearningRule enum to the specific learning rule
@@ -42,8 +45,9 @@ const (
 // The learning rule from the family specified
 func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 	learningRuleMap := map[LearningRuleEnum]LearningRule{
-		HebbianLearningRule: hebbian,
-		DeltaLearningRule:   delta,
+		HebbianLearningRule:      hebbian,
+		DeltaLearningRule:        delta,
+		ThermalDeltaLearningRule: thermalDelta,
 	}
 
 	return learningRuleMap[learningRule]
@@ -103,12 +107,21 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
+
+// Compute the thermal Delta learning rule update for a network.
+func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
+
+	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
+	stateMatrixContribution := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedBias := mat.NewVecDense(network.dimension, nil)
+	stateBiasContribution := mat.NewVecDense(network.dimension, nil)
+	updatedMatrix.Zero()
+	stateMatrixContribution.Zero()
 	updatedBias.Zero()
+	stateBiasContribution.Zero()
 
-	// Create a couple of vectors for use in relaxing states
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
-
+	temperatureCalculationVector := mat.NewVecDense(network.dimension, nil)
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range relaxedStates {
@@ -116,31 +129,26 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
 		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
+		network.UpdateState(relaxedStates[stateIndex])
 	}
 
 	for stateIndex := range states {
-		state := states[stateIndex]
-
-		a := mat.VecDenseCopyOf(state)
-		b := mat.VecDenseCopyOf(state)
-		network.UpdateState(b)
-		bipolarManager.ActivationFunction(a)
-		bipolarManager.ActivationFunction(b)
-
 		relaxationDifference.Zero()
-		relaxationDifference.SubVec(a, b)
+		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
-		for i := 0; i < network.GetDimension(); i++ {
-			for j := 0; j < network.GetDimension(); j++ {
-				updatedMatrix.Set(i, j, updatedMatrix.At(i, j)+relaxationDifference.AtVec(i)*a.AtVec(j))
-			}
-			updatedBias.SetVec(i, updatedBias.AtVec(i)+relaxationDifference.AtVec(i))
-		}
+		temperatureCalculationVector.MulVec(network.matrix, states[stateIndex])
+		temperatureFactor := math.Exp(-1.0 * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
+
+		stateMatrixContribution.Outer(temperatureFactor, relaxationDifference, states[stateIndex])
+		stateBiasContribution.ScaleVec(temperatureFactor, relaxationDifference)
+
+		updatedMatrix.Add(updatedMatrix, stateMatrixContribution)
+		updatedBias.AddVec(updatedBias, stateBiasContribution)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
-	updatedBias.ScaleVec(network.learningRate, updatedBias)
 	network.matrix.Add(network.matrix, updatedMatrix)
+	updatedBias.ScaleVec(network.learningRate, updatedBias)
 	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
