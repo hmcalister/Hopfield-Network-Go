@@ -21,7 +21,6 @@ var (
 type UniqueRelaxedStateData struct {
 	StateIndex         int       `parquet:"name=StateIndex, type=INT32"`
 	Stable             bool      `parquet:"name=Stable, type=BOOLEAN"`
-	NumSteps           int       `parquet:"name=NumSteps, type=INT32"`
 	FinalState         []float64 `parquet:"name=FinalState, type=DOUBLE, repetitiontype=REPEATED"`
 	DistancesToTargets []float64 `parquet:"name=DistancesToTargets, type=DOUBLE, repetitiontype=REPEATED"`
 	EnergyProfile      []float64 `parquet:"name=EnergyProfile, type=DOUBLE, repetitiontype=REPEATED"`
@@ -50,7 +49,6 @@ func handleUniqueRelaxedState(writer *writer.ParquetWriter, event interface{}) {
 		result := UniqueRelaxedStateData{
 			StateIndex:         relaxationResult.StateIndex,
 			Stable:             relaxationResult.Stable,
-			NumSteps:           relaxationResult.NumSteps,
 			FinalState:         relaxationResult.FinalState,
 			DistancesToTargets: relaxationResult.DistancesToTargets,
 			EnergyProfile:      relaxationResult.EnergyProfile,
