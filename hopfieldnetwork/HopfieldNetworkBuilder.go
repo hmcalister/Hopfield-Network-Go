@@ -287,6 +287,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		forceZeroBias:                  networkBuilder.forceZeroBias,
+		distanceMeasure:                distanceMeasure,
 		learningMethod:                 networkBuilder.learningMethod,
 		learningRule:                   networkBuilder.learningRule,
 		epochs:                         networkBuilder.epochs,
