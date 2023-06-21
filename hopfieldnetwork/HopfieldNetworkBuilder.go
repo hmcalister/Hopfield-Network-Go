@@ -2,6 +2,7 @@ package hopfieldnetwork
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/distancemeasure"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
@@ -269,12 +270,20 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
+	domainStateManager := statemanager.GetDomainStateManager(networkBuilder.domain)
+	var distanceMeasure distancemeasure.DistanceMeasure
+	if networkBuilder.forceZeroBias {
+		distanceMeasure = distancemeasure.GetManhattanDistanceWithInversion(domainStateManager)
+	} else {
+		distanceMeasure = distancemeasure.GetManhattanDistance()
+	}
+
 	return &HopfieldNetwork{
 		matrix:                         matrix,
 		bias:                           bias,
 		dimension:                      networkBuilder.dimension,
 		domain:                         networkBuilder.domain,
-		domainStateManager:             statemanager.GetDomainStateManager(networkBuilder.domain),
+		domainStateManager:             domainStateManager,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		forceZeroBias:                  networkBuilder.forceZeroBias,
