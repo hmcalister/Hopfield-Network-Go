@@ -4,6 +4,7 @@ package hopfieldnetwork
 import (
 	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/distancemeasure"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
@@ -31,6 +32,7 @@ type HopfieldNetwork struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	forceZeroBias                  bool
+	distanceMeasure                distancemeasure.DistanceMeasure
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
