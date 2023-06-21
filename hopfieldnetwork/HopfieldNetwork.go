@@ -4,6 +4,7 @@ package hopfieldnetwork
 import (
 	"fmt"
 	"hmcalister/hopfield/hopfieldnetwork/datacollector"
+	"hmcalister/hopfield/hopfieldnetwork/distancemeasure"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
 	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
@@ -31,6 +32,7 @@ type HopfieldNetwork struct {
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	forceZeroBias                  bool
+	distanceMeasure                distancemeasure.DistanceMeasure
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	learningNoiseMethod            noiseapplication.NoiseApplicationMethod
@@ -358,7 +360,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		if network.StateIsStable(state) {
 			result := RelaxationResult{
 				Stable:             true,
-				DistancesToTargets: hopfieldutils.MeasureDistancesToCollection(network.targetStates, state, 1.0),
+				DistancesToTargets: distancemeasure.MeasureDistancesToCollection(network.targetStates, state, network.distanceMeasure),
 				StateHistory:       stateHistory[:stepIndex+1],
 				EnergyHistory:      energyHistory[:stepIndex+1],
 			}
@@ -374,7 +376,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 	energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 	result := RelaxationResult{
 		Stable:             false,
-		DistancesToTargets: hopfieldutils.MeasureDistancesToCollection(network.targetStates, state, 1.0),
+		DistancesToTargets: distancemeasure.MeasureDistancesToCollection(network.targetStates, state, network.distanceMeasure),
 		StateHistory:       stateHistory,
 		EnergyHistory:      energyHistory,
 	}
@@ -432,7 +434,7 @@ StateRecvLoop:
 			if network.StateIsStable(state) {
 				result := RelaxationResult{
 					Stable:             true,
-					DistancesToTargets: hopfieldutils.MeasureDistancesToCollection(network.targetStates, state, 1.0),
+					DistancesToTargets: distancemeasure.MeasureDistancesToCollection(network.targetStates, state, network.distanceMeasure),
 					StateHistory:       stateHistory[:stepIndex+1],
 					EnergyHistory:      energyHistory[:stepIndex+1],
 				}
@@ -453,7 +455,7 @@ StateRecvLoop:
 		energyHistory[len(energyHistory)-1] = network.AllUnitEnergies(state)
 		result := RelaxationResult{
 			Stable:             false,
-			DistancesToTargets: hopfieldutils.MeasureDistancesToCollection(network.targetStates, state, 1.0),
+			DistancesToTargets: distancemeasure.MeasureDistancesToCollection(network.targetStates, state, network.distanceMeasure),
 			StateHistory:       stateHistory,
 			EnergyHistory:      energyHistory,
 		}
