@@ -62,6 +62,7 @@ var (
 	logFilePath                  = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
 	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	enableProfiling              = flag.Bool("profile", false, "Enable profiling during this trial.")
 
 	networkDomain       domain.DomainEnum
 	learningMethod      hopfieldnetwork.LearningMethodEnum
