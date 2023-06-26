@@ -124,7 +124,9 @@ func init() {
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
+	if *enableProfiling {
+		defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
+	}
 	go collector.CollectData()
 	var err error
 
