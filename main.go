@@ -62,6 +62,7 @@ var (
 	logFilePath                  = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
 	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
+	enableProfiling              = flag.Bool("profile", false, "Enable profiling during this trial.")
 
 	networkDomain       domain.DomainEnum
 	learningMethod      hopfieldnetwork.LearningMethodEnum
@@ -81,7 +82,9 @@ func init() {
 
 	// Make the directories needed to save data of trials to (if needed)
 	os.MkdirAll("logs", 0700)
-	os.MkdirAll("profiles", 0700)
+	if *enableProfiling {
+		os.MkdirAll("profiles", 0700)
+	}
 
 	// Tries to open logging file, panics if not possible (since we can't log anything otherwise!)
 	logFile, err := os.Create(*logFilePath)
@@ -121,7 +124,9 @@ func init() {
 
 // Main method for entry point
 func main() {
-	defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
+	if *enableProfiling {
+		defer profile.Start(profile.ClockProfile, profile.ProfilePath("./profiles")).Stop()
+	}
 	go collector.CollectData()
 	var err error
 
