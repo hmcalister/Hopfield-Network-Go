@@ -82,7 +82,9 @@ func init() {
 
 	// Make the directories needed to save data of trials to (if needed)
 	os.MkdirAll("logs", 0700)
-	os.MkdirAll("profiles", 0700)
+	if *enableProfiling {
+		os.MkdirAll("profiles", 0700)
+	}
 
 	// Tries to open logging file, panics if not possible (since we can't log anything otherwise!)
 	logFile, err := os.Create(*logFilePath)
