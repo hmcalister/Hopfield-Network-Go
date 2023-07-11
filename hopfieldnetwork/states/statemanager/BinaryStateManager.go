@@ -36,13 +36,12 @@ func (manager *BinaryStateManager) InvertState(vector *mat.VecDense) {
 	manager.ActivationFunction(vector)
 }
 
-// TODO: ENERGIES
-
 func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, bias *mat.VecDense, vector *mat.VecDense, i int) float64 {
+	mappedVector := manager.mapVectorToBipolar(vector)
 	dimension, _ := vector.Dims()
 	energy := 0.0
 	for j := 0; j < dimension; j++ {
-		energy += -0.5 * matrix.At(i, j) * vector.AtVec(i) * (2*vector.AtVec(j) - 1)
+		energy += -0.5*matrix.At(i, j)*vector.AtVec(i)*mappedVector.AtVec(j) - 1
 	}
 	energy += -1.0 * vector.AtVec(i) * bias.AtVec(i)
 
@@ -50,9 +49,7 @@ func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, bias *mat.VecDe
 }
 
 func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, bias *mat.VecDense, vector *mat.VecDense) []float64 {
-	negativeOnesVector := manager.createCompatibleConstVector(vector, -1.0)
-	mappedVector := mat.VecDenseCopyOf(vector)
-	mappedVector.AddScaledVec(negativeOnesVector, 2.0, mappedVector)
+	mappedVector := manager.mapVectorToBipolar(vector)
 
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
@@ -60,7 +57,7 @@ func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, bias *mat.
 	energyVector.ScaleVec(-0.5, energyVector)
 
 	biasTerm := mat.NewVecDense(vector.Len(), nil)
-	biasTerm.MulElemVec(bias, mappedVector)
+	biasTerm.MulElemVec(bias, vector)
 	energyVector.AddScaledVec(energyVector, -1.0, biasTerm)
 	return energyVector.RawVector().Data
 }
