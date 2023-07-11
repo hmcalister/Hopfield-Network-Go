@@ -5,7 +5,14 @@ import "gonum.org/v1/gonum/mat"
 type BinaryStateManager struct {
 }
 
-func (binaryManager *BinaryStateManager) createCompatibleConstVector(origVector *mat.VecDense, vectorConst float64) *mat.VecDense {
+func (manager *BinaryStateManager) mapVectorToBipolar(vector *mat.VecDense) *mat.VecDense {
+	negativeOnesVector := manager.createCompatibleConstVector(vector, -1.0)
+	mappedVector := mat.VecDenseCopyOf(vector)
+	mappedVector.AddScaledVec(negativeOnesVector, 2.0, mappedVector)
+	return mappedVector
+}
+
+func (manager *BinaryStateManager) createCompatibleConstVector(origVector *mat.VecDense, vectorConst float64) *mat.VecDense {
 	constVector := mat.NewVecDense(origVector.Len(), nil)
 	for i := 0; i < constVector.Len(); i++ {
 		constVector.SetVec(i, vectorConst)
