@@ -179,15 +179,10 @@ func main() {
 
 	// Actually learn the target states
 	learnStateData := network.LearnStates(targetStates)
-
-	// If we have intensive data collection on, then network.LearnStates will return a non-empty list of
-	// data over the training epochs. We needs to process this only if we requested it.
-	if *allowIntensiveDataCollection {
-		for _, data := range learnStateData {
-			collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
-				Index: datacollector.DataCollectionEvent_LearnState,
-				Data:  *data,
-			}
+	for _, data := range learnStateData {
+		collector.EventChannel <- hopfieldutils.IndexedWrapper[interface{}]{
+			Index: datacollector.DataCollectionEvent_LearnState,
+			Data:  *data,
 		}
 	}
 
