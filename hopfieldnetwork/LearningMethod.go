@@ -42,20 +42,16 @@ func fullSetLearningMethod(network *HopfieldNetwork, states []*mat.VecDense) []*
 		network.learningRule(network, states)
 		bar.Add(1)
 
-		// Learn State Data is intensive, as it involves calculating th energy at every epoch
-		// Only collect if requested.
-		if network.allowIntensiveDataCollection {
-			tempLearnStateData := make([]*datacollector.LearnStateData, len(states))
-			for stateIndex, state := range states {
-				tempLearnStateData[stateIndex] = &datacollector.LearnStateData{
-					Epoch:            epoch,
-					TargetStateIndex: stateIndex,
-					EnergyProfile:    network.AllUnitEnergies(state),
-					Stable:           network.StateIsStable(state),
-				}
+		tempLearnStateData := make([]*datacollector.LearnStateData, len(states))
+		for stateIndex, state := range states {
+			tempLearnStateData[stateIndex] = &datacollector.LearnStateData{
+				Epoch:            epoch,
+				TargetStateIndex: stateIndex,
+				EnergyProfile:    network.AllUnitEnergies(state),
+				Stable:           network.StateIsStable(state),
 			}
-			learnStateData = append(learnStateData, tempLearnStateData...)
 		}
+		learnStateData = append(learnStateData, tempLearnStateData...)
 
 		if network.AllStatesAreStable(states) {
 			break
