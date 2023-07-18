@@ -148,6 +148,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	temperatureCalculationVector := mat.NewVecDense(network.dimension, nil)
+	weightFactor := 1 / (1 + mat.Norm(network.matrix, 2.0))
+
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range relaxedStates {
@@ -162,10 +164,7 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
 		temperatureCalculationVector.MulVec(network.matrix, states[stateIndex])
-		temperatureFactor := math.Exp(-1.0 * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
-
-		stateMatrixContribution.Outer(temperatureFactor, relaxationDifference, states[stateIndex])
-		stateBiasContribution.ScaleVec(temperatureFactor, relaxationDifference)
+		temperatureFactor := math.Exp(-1.0 * weightFactor * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
 
 		updatedMatrix.RankOne(updatedMatrix, temperatureFactor, relaxationDifference, states[stateIndex])
 		updatedBias.AddScaledVec(updatedBias, temperatureFactor, relaxationDifference)
