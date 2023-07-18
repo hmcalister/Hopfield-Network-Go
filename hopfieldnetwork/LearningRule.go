@@ -113,7 +113,6 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 	}
 
 	for stateIndex := range states {
-		relaxationDifference.Zero()
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
 		updatedMatrix.RankOne(updatedMatrix, 0.5, relaxationDifference, states[stateIndex])
@@ -164,7 +163,6 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 	}
 
 	for stateIndex := range states {
-		relaxationDifference.Zero()
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
 		temperatureCalculationVector.MulVec(network.matrix, states[stateIndex])
