@@ -142,13 +142,9 @@ func bipolarMappedDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	stateMatrixContribution := mat.NewDense(network.dimension, network.dimension, nil)
 	updatedBias := mat.NewVecDense(network.dimension, nil)
-	stateBiasContribution := mat.NewVecDense(network.dimension, nil)
 	updatedMatrix.Zero()
-	stateMatrixContribution.Zero()
 	updatedBias.Zero()
-	stateBiasContribution.Zero()
 
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	temperatureCalculationVector := mat.NewVecDense(network.dimension, nil)
@@ -171,8 +167,8 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		stateMatrixContribution.Outer(temperatureFactor, relaxationDifference, states[stateIndex])
 		stateBiasContribution.ScaleVec(temperatureFactor, relaxationDifference)
 
-		updatedMatrix.Add(updatedMatrix, stateMatrixContribution)
-		updatedBias.AddVec(updatedBias, stateBiasContribution)
+		updatedMatrix.RankOne(updatedMatrix, temperatureFactor, relaxationDifference, states[stateIndex])
+		updatedBias.AddScaledVec(updatedBias, temperatureFactor, relaxationDifference)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
