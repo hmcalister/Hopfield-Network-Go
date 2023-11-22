@@ -1,7 +1,7 @@
 package distancemeasure
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldutils"
 
 	"gonum.org/v1/gonum/mat"
@@ -25,7 +25,7 @@ func GetManhattanDistance() DistanceMeasure {
 	}
 }
 
-func GetManhattanDistanceWithInversion(manager domainmanager.DomainManager) DistanceMeasure {
+func GetManhattanDistanceWithInversion(manager domain.DomainManager) DistanceMeasure {
 	return func(a *mat.VecDense, b *mat.VecDense) float64 {
 		vectorDifference := mat.NewVecDense(a.Len(), nil)
 
@@ -49,7 +49,7 @@ func GetEuclideanDistance() DistanceMeasure {
 	}
 }
 
-func GetEuclideanDistanceWithInversion(manager domainmanager.DomainManager) DistanceMeasure {
+func GetEuclideanDistanceWithInversion(manager domain.DomainManager) DistanceMeasure {
 	return func(a *mat.VecDense, b *mat.VecDense) float64 {
 		vectorDifference := mat.NewVecDense(a.Len(), nil)
 
