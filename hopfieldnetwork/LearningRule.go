@@ -64,19 +64,14 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedMatrix.Zero()
-	updatedBias.Zero()
 
 	for _, state := range states {
 		updatedMatrix.RankOne(updatedMatrix, 1, state, state)
-		updatedBias.AddVec(updatedBias, state)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
-	updatedBias.ScaleVec(network.learningRate, updatedBias)
 	network.matrix.Add(network.matrix, updatedMatrix)
-	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
 
@@ -96,9 +91,7 @@ func bipolarMappedHebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedMatrix.Zero()
-	updatedBias.Zero()
 
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 
@@ -116,13 +109,10 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
 
 		updatedMatrix.RankOne(updatedMatrix, 0.5, relaxationDifference, states[stateIndex])
-		updatedBias.AddVec(updatedBias, relaxationDifference)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
 	network.matrix.Add(network.matrix, updatedMatrix)
-	updatedBias.ScaleVec(network.learningRate, updatedBias)
-	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
 
@@ -142,9 +132,7 @@ func bipolarMappedDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedBias := mat.NewVecDense(network.dimension, nil)
 	updatedMatrix.Zero()
-	updatedBias.Zero()
 
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	temperatureCalculationVector := mat.NewVecDense(network.dimension, nil)
@@ -167,13 +155,10 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		temperatureFactor := math.Exp(-1.0 * weightFactor * mat.Norm(temperatureCalculationVector, 2) / (private_THERMAL_DELTA_TEMPERATURE))
 
 		updatedMatrix.RankOne(updatedMatrix, temperatureFactor, relaxationDifference, states[stateIndex])
-		updatedBias.AddScaledVec(updatedBias, temperatureFactor, relaxationDifference)
 	}
 
 	updatedMatrix.Scale(network.learningRate, updatedMatrix)
 	network.matrix.Add(network.matrix, updatedMatrix)
-	updatedBias.ScaleVec(network.learningRate, updatedBias)
-	network.bias.AddVec(network.bias, updatedBias)
 	network.enforceConstraints()
 }
 
