@@ -2,7 +2,7 @@ package states
 
 import (
 	"hmcalister/hopfield/hopfieldnetwork/domain"
-	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -125,8 +125,8 @@ func (builder *StateGeneratorBuilder) Build() *StateGenerator {
 	}
 
 	return &StateGenerator{
-		domainStateManager: statemanager.GetDomainStateManager(builder.domain),
-		rng:                rand_dist,
-		dimension:          builder.dimension,
+		domainManager: domainmanager.GetDomainManager(builder.domain),
+		rng:           rand_dist,
+		dimension:     builder.dimension,
 	}
 }
