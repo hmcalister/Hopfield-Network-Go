@@ -2,7 +2,7 @@
 package states
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
+	"hmcalister/hopfield/hopfieldnetwork/domain"
 
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat/distuv"
@@ -12,7 +12,7 @@ import (
 //
 // Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
-	domainManager domainmanager.DomainManager
+	domainManager domain.DomainManager
 	rng           distuv.Uniform
 	dimension     int
 }
