@@ -25,13 +25,11 @@ import (
 // Should be created using the HopfieldNetworkBuilder methods.
 type HopfieldNetwork struct {
 	matrix                         *mat.Dense
-	bias                           *mat.VecDense
 	dimension                      int
 	domain                         domain.DomainEnum
 	domainStateManager             statemanager.StateManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
-	forceZeroBias                  bool
 	distanceMeasure                distancemeasure.DistanceMeasure
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
@@ -54,8 +52,7 @@ type HopfieldNetwork struct {
 // ------------------------------------------------------------------------------------------------
 
 // Method run after each application of the learning rule.
-// Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set,
-// as well as zeros the bias if required
+// Fixes the networks matrix according to the forceSymmetric and forceZeroDiagonal properties set
 func (network *HopfieldNetwork) enforceConstraints() {
 	if network.forceZeroDiagonal {
 		for i := 0; i < network.dimension; i++ {
@@ -67,10 +64,6 @@ func (network *HopfieldNetwork) enforceConstraints() {
 		matrixTranspose := network.matrix.T()
 		network.matrix.Add(network.matrix, matrixTranspose)
 		network.matrix.Scale(0.5, network.matrix)
-	}
-
-	if network.forceZeroBias {
-		network.bias.Zero()
 	}
 }
 
@@ -100,20 +93,6 @@ func (network *HopfieldNetwork) getUnitIndices() []int {
 // A references to the matrix of this network
 func (network *HopfieldNetwork) GetMatrix() *mat.Dense {
 	return network.matrix
-}
-
-// Get a reference to the bias vector of this network.
-//
-// Note that this gives a reference to the matrix
-// meaning the caller can update the matrix!
-//
-// This behavior may change in future.
-//
-// # Returns
-//
-// A references to the bias of this network
-func (network *HopfieldNetwork) GetBias() *mat.VecDense {
-	return network.bias
 }
 
 // Get the dimension of the network
@@ -147,7 +126,6 @@ type HopfieldNetworkSummary struct {
 	Matrix                         *mat.Dense
 	Dimension                      int
 	ForceSymmetric                 bool
-	ForceZeroBias                  bool
 	ForceZeroDiagonal              bool
 	Epochs                         int
 	MaximumRelaxationUnstableUnits int
@@ -162,7 +140,6 @@ func (network *HopfieldNetwork) GetNetworkSummary() *HopfieldNetworkSummary {
 		Matrix:                         network.GetMatrix(),
 		Dimension:                      network.dimension,
 		ForceSymmetric:                 network.forceSymmetric,
-		ForceZeroBias:                  network.forceZeroBias,
 		ForceZeroDiagonal:              network.forceZeroDiagonal,
 		Epochs:                         network.epochs,
 		MaximumRelaxationUnstableUnits: network.maximumRelaxationUnstableUnits,
@@ -193,7 +170,7 @@ func (network *HopfieldNetwork) String() string {
 // A float64 representing the energy of the given state with respect to the network.
 // Note a lower energy is more stable - but a negative state energy may still be unstable!
 func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
-	return network.domainStateManager.StateEnergy(network.matrix, network.bias, state)
+	return network.domainStateManager.StateEnergy(network.matrix, state)
 }
 
 // Get the energy of a given unit (indexed by i) in the state with respect to the network matrix.
@@ -207,7 +184,7 @@ func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
 //
 // A float64 representing the energy of the given unit within the state.
 func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) float64 {
-	return network.domainStateManager.UnitEnergy(network.matrix, network.bias, state, unitIndex)
+	return network.domainStateManager.UnitEnergy(network.matrix, state, unitIndex)
 }
 
 // Get the energy of a each unit within a state with respect to the network matrix.
@@ -220,7 +197,7 @@ func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) f
 //
 // A slice of float64 representing the energy of the given state's units with respect to the network.
 func (network *HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
-	return network.domainStateManager.AllUnitEnergies(network.matrix, network.bias, state)
+	return network.domainStateManager.AllUnitEnergies(network.matrix, state)
 }
 
 // Determine if a given state is unstable.
@@ -308,7 +285,7 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	for _, chunk := range chunkedIndices {
 		for _, unitIndex := range chunk {
 			matrixTargetRow := network.matrix.RowView(unitIndex)
-			state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
+			state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
 		}
 		network.domainStateManager.ActivationFunction(state)
 	}
@@ -343,7 +320,7 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		for _, chunk := range chunkedIndices {
 			for _, unitIndex := range chunk {
 				matrixTargetRow := network.matrix.RowView(unitIndex)
-				state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
+				state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
 			}
 			network.domainStateManager.ActivationFunction(state)
 		}
@@ -420,7 +397,7 @@ StateRecvLoop:
 			for _, chunk := range chunkedIndices {
 				for _, unitIndex := range chunk {
 					matrixTargetRow := network.matrix.RowView(unitIndex)
-					state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state)+network.bias.AtVec(unitIndex))
+					state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
 				}
 				network.domainStateManager.ActivationFunction(state)
 			}
