@@ -20,7 +20,6 @@ type HopfieldNetworkBuilder struct {
 	domain                         domain.DomainEnum
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
-	forceZeroBias                  bool
 	learningMethod                 LearningMethod
 	learningRule                   LearningRule
 	epochs                         int
@@ -46,7 +45,6 @@ func NewHopfieldNetworkBuilder() *HopfieldNetworkBuilder {
 		domain:                         domain.BipolarDomain,
 		forceSymmetric:                 true,
 		forceZeroDiagonal:              true,
-		forceZeroBias:                  false,
 		maximumRelaxationUnstableUnits: 0,
 		maximumRelaxationIterations:    100,
 		learningRate:                   1.0,
@@ -97,16 +95,6 @@ func (networkBuilder *HopfieldNetworkBuilder) SetForceSymmetric(symmetricFlag bo
 // This value defaults to true if not explicitly set.
 func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroDiagonal(zeroDiagonalFlag bool) *HopfieldNetworkBuilder {
 	networkBuilder.forceZeroDiagonal = zeroDiagonalFlag
-	return networkBuilder
-}
-
-// Set state of the ForceZeroBias flag in the network.
-//
-// If true, the network will always have a zero bias vector.
-//
-// This value defaults to true if not explicitly set.
-func (networkBuilder *HopfieldNetworkBuilder) SetForceZeroBias(zeroBiasFlag bool) *HopfieldNetworkBuilder {
-	networkBuilder.forceZeroBias = zeroBiasFlag
 	return networkBuilder
 }
 
@@ -245,7 +233,6 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 	randomGenerator := rand.New(randSrc)
 
 	var matrix *mat.Dense
-	var bias *mat.VecDense
 	if networkBuilder.randMatrixInit {
 		normalDistribution := distuv.Normal{
 			Mu:    0,
@@ -259,34 +246,21 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		}
 		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, matrixData)
 
-		biasData := make([]float64, networkBuilder.dimension)
-		for i := range biasData {
-			biasData[i] = normalDistribution.Rand()
-		}
-		bias = mat.NewVecDense(networkBuilder.dimension, biasData)
 	} else {
 		matrix = mat.NewDense(networkBuilder.dimension, networkBuilder.dimension, nil)
-		bias = mat.NewVecDense(networkBuilder.dimension, nil)
 		matrix.Zero()
 	}
 
 	domainStateManager := statemanager.GetDomainStateManager(networkBuilder.domain)
-	var distanceMeasure distancemeasure.DistanceMeasure
-	if networkBuilder.forceZeroBias {
-		distanceMeasure = distancemeasure.GetManhattanDistanceWithInversion(domainStateManager)
-	} else {
-		distanceMeasure = distancemeasure.GetManhattanDistance()
-	}
+	distanceMeasure := distancemeasure.GetManhattanDistanceWithInversion(domainStateManager)
 
 	return &HopfieldNetwork{
 		matrix:                         matrix,
-		bias:                           bias,
 		dimension:                      networkBuilder.dimension,
 		domain:                         networkBuilder.domain,
 		domainStateManager:             domainStateManager,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
-		forceZeroBias:                  networkBuilder.forceZeroBias,
 		distanceMeasure:                distanceMeasure,
 		learningMethod:                 networkBuilder.learningMethod,
 		learningRule:                   networkBuilder.learningRule,
