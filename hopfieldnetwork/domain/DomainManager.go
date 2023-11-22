@@ -1,8 +1,6 @@
-package domainmanager
+package domain
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/domain"
-
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -14,10 +12,10 @@ type DomainManager interface {
 	StateEnergy(*mat.Dense, *mat.VecDense) float64
 }
 
-func GetDomainManager(targetDomain domain.DomainEnum) DomainManager {
-	domainStateManagerMap := map[domain.DomainEnum]DomainManager{
-		domain.BipolarDomain: &BipolarDomainManager{},
-		domain.BinaryDomain:  &BinaryDomainManager{},
+func GetDomainManager(targetDomain DomainEnum) DomainManager {
+	domainStateManagerMap := map[DomainEnum]DomainManager{
+		BipolarDomain: &BipolarDomainManager{},
+		BinaryDomain:  &BinaryDomainManager{},
 	}
 
 	return domainStateManagerMap[targetDomain]
