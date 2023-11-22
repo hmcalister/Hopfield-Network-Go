@@ -1,7 +1,7 @@
 package hopfieldnetwork
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -78,7 +78,7 @@ func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 // Compute the bipolar mapped hebbian weight update
 func bipolarMappedHebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 
-	bipolarStateManager := statemanager.BipolarStateManager{}
+	bipolarStateManager := domainmanager.BinaryDomainManager{}
 	mappedTargetStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		mappedTargetStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
@@ -119,7 +119,7 @@ func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 // Compute the bipolar mapped delta weight update
 func bipolarMappedDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
-	bipolarStateManager := statemanager.BipolarStateManager{}
+	bipolarStateManager := domainmanager.BipolarDomainManager{}
 	mappedTargetStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		mappedTargetStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
@@ -165,7 +165,7 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 // Compute the bipolar mapped thermal delta weight update
 func bipolarMappedThermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
-	bipolarStateManager := statemanager.BipolarStateManager{}
+	bipolarStateManager := domainmanager.BipolarDomainManager{}
 	mappedTargetStates := make([]*mat.VecDense, len(states))
 	for stateIndex := range states {
 		mappedTargetStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
