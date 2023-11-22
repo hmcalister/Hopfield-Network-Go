@@ -7,7 +7,6 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/distancemeasure"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
-	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
 	"hmcalister/hopfield/hopfieldutils"
 	"log"
 
@@ -27,7 +26,7 @@ type HopfieldNetwork struct {
 	matrix                         *mat.Dense
 	dimension                      int
 	domain                         domain.DomainEnum
-	domainStateManager             domainmanager.DomainManager
+	domainStateManager             domain.DomainManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	distanceMeasure                distancemeasure.DistanceMeasure
