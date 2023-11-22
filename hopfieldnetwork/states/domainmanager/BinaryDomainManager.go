@@ -1,18 +1,18 @@
-package statemanager
+package domainmanager
 
 import "gonum.org/v1/gonum/mat"
 
-type BinaryStateManager struct {
+type BinaryDomainManager struct {
 }
 
-func (manager *BinaryStateManager) mapVectorToBipolar(vector *mat.VecDense) *mat.VecDense {
+func (manager *BinaryDomainManager) mapVectorToBipolar(vector *mat.VecDense) *mat.VecDense {
 	negativeOnesVector := manager.createCompatibleConstVector(vector, -1.0)
 	mappedVector := mat.VecDenseCopyOf(vector)
 	mappedVector.AddScaledVec(negativeOnesVector, 2.0, mappedVector)
 	return mappedVector
 }
 
-func (manager *BinaryStateManager) createCompatibleConstVector(origVector *mat.VecDense, vectorConst float64) *mat.VecDense {
+func (manager *BinaryDomainManager) createCompatibleConstVector(origVector *mat.VecDense, vectorConst float64) *mat.VecDense {
 	constVector := mat.NewVecDense(origVector.Len(), nil)
 	for i := 0; i < constVector.Len(); i++ {
 		constVector.SetVec(i, vectorConst)
@@ -20,7 +20,7 @@ func (manager *BinaryStateManager) createCompatibleConstVector(origVector *mat.V
 	return constVector
 }
 
-func (manager *BinaryStateManager) ActivationFunction(vector *mat.VecDense) {
+func (manager *BinaryDomainManager) ActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) <= 0.0 {
 			vector.SetVec(n, 0.0)
@@ -30,13 +30,13 @@ func (manager *BinaryStateManager) ActivationFunction(vector *mat.VecDense) {
 	}
 }
 
-func (manager *BinaryStateManager) InvertState(vector *mat.VecDense) {
+func (manager *BinaryDomainManager) InvertState(vector *mat.VecDense) {
 	onesVector := manager.createCompatibleConstVector(vector, 1.0)
 	vector.AddScaledVec(onesVector, -1.0, vector)
 	manager.ActivationFunction(vector)
 }
 
-func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.VecDense, i int) float64 {
+func (manager *BinaryDomainManager) UnitEnergy(matrix *mat.Dense, vector *mat.VecDense, i int) float64 {
 	mappedVector := manager.mapVectorToBipolar(vector)
 	dimension, _ := vector.Dims()
 	energy := 0.0
@@ -47,7 +47,7 @@ func (manager *BinaryStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.Vec
 	return energy
 }
 
-func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
+func (manager *BinaryDomainManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
 	mappedVector := manager.mapVectorToBipolar(vector)
 
 	energyVector := mat.NewVecDense(vector.Len(), nil)
@@ -58,7 +58,7 @@ func (manager *BinaryStateManager) AllUnitEnergies(matrix *mat.Dense, vector *ma
 	return energyVector.RawVector().Data
 }
 
-func (manager *BinaryStateManager) StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
+func (manager *BinaryDomainManager) StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
 	energyVector := manager.AllUnitEnergies(matrix, vector)
 	energy := 0.0
 	for _, unitEnergy := range energyVector {

@@ -1,13 +1,13 @@
-package statemanager
+package domainmanager
 
 import (
 	"gonum.org/v1/gonum/mat"
 )
 
-type BipolarStateManager struct {
+type BipolarDomainManager struct {
 }
 
-func (manager *BipolarStateManager) ActivationFunction(vector *mat.VecDense) {
+func (manager *BipolarDomainManager) ActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
 		if vector.AtVec(n) <= 0.0 {
 			vector.SetVec(n, -1.0)
@@ -17,12 +17,12 @@ func (manager *BipolarStateManager) ActivationFunction(vector *mat.VecDense) {
 	}
 }
 
-func (manager *BipolarStateManager) InvertState(vector *mat.VecDense) {
+func (manager *BipolarDomainManager) InvertState(vector *mat.VecDense) {
 	vector.ScaleVec(-1.0, vector)
 	manager.ActivationFunction(vector)
 }
 
-func (manager *BipolarStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.VecDense, i int) float64 {
+func (manager *BipolarDomainManager) UnitEnergy(matrix *mat.Dense, vector *mat.VecDense, i int) float64 {
 	dimension, _ := vector.Dims()
 	energy := 0.0
 	for j := 0; j < dimension; j++ {
@@ -32,7 +32,7 @@ func (manager *BipolarStateManager) UnitEnergy(matrix *mat.Dense, vector *mat.Ve
 	return energy
 }
 
-func (manager *BipolarStateManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
+func (manager *BipolarDomainManager) AllUnitEnergies(matrix *mat.Dense, vector *mat.VecDense) []float64 {
 	energyVector := mat.NewVecDense(vector.Len(), nil)
 	energyVector.MulVec(matrix, vector)
 	energyVector.MulElemVec(energyVector, vector)
@@ -41,7 +41,7 @@ func (manager *BipolarStateManager) AllUnitEnergies(matrix *mat.Dense, vector *m
 	return energyVector.RawVector().Data
 }
 
-func (manager *BipolarStateManager) StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
+func (manager *BipolarDomainManager) StateEnergy(matrix *mat.Dense, vector *mat.VecDense) float64 {
 	energyVector := manager.AllUnitEnergies(matrix, vector)
 	energy := 0.0
 	for _, unitEnergy := range energyVector {
