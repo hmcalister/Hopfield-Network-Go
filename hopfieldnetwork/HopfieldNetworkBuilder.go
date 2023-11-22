@@ -5,7 +5,6 @@ import (
 	"hmcalister/hopfield/hopfieldnetwork/distancemeasure"
 	"hmcalister/hopfield/hopfieldnetwork/domain"
 	"hmcalister/hopfield/hopfieldnetwork/noiseapplication"
-	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
 	"log"
 	"time"
 
@@ -251,7 +250,7 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
-	domainStateManager := domainmanager.GetDomainManager(networkBuilder.domain)
+	domainStateManager := domain.GetDomainManager(networkBuilder.domain)
 	distanceMeasure := distancemeasure.GetManhattanDistanceWithInversion(domainStateManager)
 
 	return &HopfieldNetwork{
