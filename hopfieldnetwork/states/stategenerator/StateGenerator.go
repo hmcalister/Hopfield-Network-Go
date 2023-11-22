@@ -2,7 +2,7 @@
 package states
 
 import (
-	"hmcalister/hopfield/hopfieldnetwork/states/statemanager"
+	"hmcalister/hopfield/hopfieldnetwork/states/domainmanager"
 
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/stat/distuv"
@@ -12,9 +12,9 @@ import (
 //
 // Note this struct should be initialized using the StateGeneratorBuilder from [hmcalister/hopfield/hopfieldnetwork/states].
 type StateGenerator struct {
-	domainStateManager statemanager.StateManager
-	rng                distuv.Uniform
-	dimension          int
+	domainManager domainmanager.DomainManager
+	rng           distuv.Uniform
+	dimension     int
 }
 
 // Creates and returns a fresh array that can store a state.
@@ -47,7 +47,7 @@ func (gen *StateGenerator) NextState(dataArray []float64) *mat.VecDense {
 	}
 
 	state := mat.NewVecDense(gen.dimension, dataArray)
-	gen.domainStateManager.ActivationFunction(state)
+	gen.domainManager.ActivationFunction(state)
 	return state
 }
 
