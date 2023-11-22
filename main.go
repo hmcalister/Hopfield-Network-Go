@@ -22,7 +22,6 @@ import (
 
 const (
 	LEARNED_MATRIX_BINARY_SAVE_FILE = "matrix.bin"
-	LEARNED_BIAS_BINARY_SAVE_FILE   = "bias.bin"
 	TARGET_STATES_BINARY_SAVE_FILE  = "targetStates.bin"
 )
 
@@ -30,7 +29,6 @@ var (
 	// General network flags
 
 	forceSymmetric   = flag.Bool("forceSymmetric", true, "Force the weight matrix of the Hopfield network to be symmetric.")
-	forceZeroBias    = flag.Bool("forceZeroBias", true, "Forces the bias vector of the network to always be zero.")
 	randomMatrixInit = flag.Bool("randomMatrixInit", false, "Flag to randomly initialize the matrix to small random values (for asymmetric seed).")
 	networkDomainInt = flag.Int("domain", 0, "The network domain.\n0: Bipolar\n1: Binary")
 	networkDimension = flag.Int("dimension", 100, "The network dimension to simulate.")
@@ -58,7 +56,7 @@ var (
 	// General program flags
 
 	numThreads                   = flag.Int("threads", 1, "The number of threads to use for relaxation.")
-	dataDirectory                = flag.String("dataDir", "data/trialdata", "The directory to store data files in. Warning: Removes contents of directory!")
+	dataDirectory                = flag.String("dataDir", "data/hopfieldData", "The directory to store data files in. Warning: Removes contents of directory!")
 	logFilePath                  = flag.String("logFile", "logs/log.txt", "The file to write logs to.")
 	allowIntensiveDataCollection = flag.Bool("allowIntensiveDataCollection", false, "Flag to allow data collection for very intensive methods, such as relaxationHistory")
 	verbose                      = flag.Bool("verbose", false, "Verbose flag to print log messages to stdout.")
@@ -135,7 +133,6 @@ func main() {
 		SetNetworkDimension(*networkDimension).
 		SetRandMatrixInit(*randomMatrixInit).
 		SetForceSymmetric(*forceSymmetric).
-		SetForceZeroBias(*forceZeroBias).
 		SetNetworkLearningMethod(learningMethod).
 		SetNetworkLearningRule(learningRule).
 		SetEpochs(*numEpochs).
@@ -188,7 +185,6 @@ func main() {
 
 	// Save the weight matrix to the specified path.
 	gonumio.SaveMatrix(network.GetMatrix(), path.Join(*dataDirectory, LEARNED_MATRIX_BINARY_SAVE_FILE))
-	gonumio.SaveVector(network.GetBias(), path.Join(*dataDirectory, LEARNED_BIAS_BINARY_SAVE_FILE))
 	gonumio.SaveVectorCollection(targetStates, path.Join(*dataDirectory, TARGET_STATES_BINARY_SAVE_FILE))
 
 	// Analyze specifically the learned states and save those results too
@@ -276,7 +272,6 @@ func main() {
 		LearningNoiseScale:          hopfieldNetworkSummary.LearningNoiseScale,
 		UnitsUpdated:                hopfieldNetworkSummary.UnitsUpdatedPerStep,
 		ForceSymmetricWeightMatrix:  hopfieldNetworkSummary.ForceSymmetric,
-		ForceZeroBias:               hopfieldNetworkSummary.ForceZeroBias,
 		Threads:                     *numThreads,
 		TargetStates:                *numTargetStates,
 		ProbeStates:                 *numProbeStates,
