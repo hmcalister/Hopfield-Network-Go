@@ -26,7 +26,7 @@ type HopfieldNetwork struct {
 	matrix                         *mat.Dense
 	dimension                      int
 	domain                         domain.DomainEnum
-	domainStateManager             domain.DomainManager
+	domainManager                  domain.DomainManager
 	forceSymmetric                 bool
 	forceZeroDiagonal              bool
 	distanceMeasure                distancemeasure.DistanceMeasure
@@ -169,7 +169,7 @@ func (network *HopfieldNetwork) String() string {
 // A float64 representing the energy of the given state with respect to the network.
 // Note a lower energy is more stable - but a negative state energy may still be unstable!
 func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
-	return network.domainStateManager.StateEnergy(network.matrix, state)
+	return network.domainManager.StateEnergy(network.matrix, state)
 }
 
 // Get the energy of a given unit (indexed by i) in the state with respect to the network matrix.
@@ -183,7 +183,7 @@ func (network *HopfieldNetwork) StateEnergy(state *mat.VecDense) float64 {
 //
 // A float64 representing the energy of the given unit within the state.
 func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) float64 {
-	return network.domainStateManager.UnitEnergy(network.matrix, state, unitIndex)
+	return network.domainManager.UnitEnergy(network.matrix, state, unitIndex)
 }
 
 // Get the energy of a each unit within a state with respect to the network matrix.
@@ -196,7 +196,7 @@ func (network *HopfieldNetwork) UnitEnergy(state *mat.VecDense, unitIndex int) f
 //
 // A slice of float64 representing the energy of the given state's units with respect to the network.
 func (network *HopfieldNetwork) AllUnitEnergies(state *mat.VecDense) []float64 {
-	return network.domainStateManager.AllUnitEnergies(network.matrix, state)
+	return network.domainManager.AllUnitEnergies(network.matrix, state)
 }
 
 // Determine if a given state is unstable.
@@ -253,7 +253,7 @@ func (network *HopfieldNetwork) AllStatesAreStable(states []*mat.VecDense) bool 
 // states []*mat.VecDense: A collection of states to learn
 func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacollector.LearnStateData {
 	for _, state := range states {
-		network.domainStateManager.ActivationFunction(state)
+		network.domainManager.ActivationFunction(state)
 	}
 	network.targetStates = append(network.targetStates, states...)
 
@@ -280,14 +280,13 @@ func (network *HopfieldNetwork) UpdateState(state *mat.VecDense) {
 	unitIndices := network.getUnitIndices()
 	hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
 
-	chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
-	for _, chunk := range chunkedIndices {
-		for _, unitIndex := range chunk {
-			matrixTargetRow := network.matrix.RowView(unitIndex)
-			state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
-		}
-		network.domainStateManager.ActivationFunction(state)
+	for _, unitIndex := range unitIndices {
+		matrixTargetRow := network.matrix.RowView(unitIndex)
+		unitActivity := mat.Dot(matrixTargetRow, state)
+		unitValue := network.domainManager.ActivationFunctionUnit(unitActivity)
+		state.SetVec(unitIndex, unitValue)
 	}
+	network.domainManager.ActivationFunction(state)
 }
 
 // Relax a state by updating until the number of unstable units is below the threshold defined by the network.
@@ -315,14 +314,13 @@ func (network *HopfieldNetwork) RelaxState(state *mat.VecDense) *RelaxationResul
 		network.logger.Printf("RelaxState stepIndex: %v\n", stepIndex)
 
 		hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-		chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
-		for _, chunk := range chunkedIndices {
-			for _, unitIndex := range chunk {
-				matrixTargetRow := network.matrix.RowView(unitIndex)
-				state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
-			}
-			network.domainStateManager.ActivationFunction(state)
+		for _, unitIndex := range unitIndices {
+			matrixTargetRow := network.matrix.RowView(unitIndex)
+			unitActivity := mat.Dot(matrixTargetRow, state)
+			unitValue := network.domainManager.ActivationFunctionUnit(unitActivity)
+			state.SetVec(unitIndex, unitValue)
 		}
+		network.domainManager.ActivationFunction(state)
 
 		// Collect the current history item if requested
 		if network.allowIntensiveDataCollection || network.StateIsStable(state) {
@@ -392,14 +390,13 @@ StateRecvLoop:
 
 		for stepIndex := 1; stepIndex <= network.maximumRelaxationIterations; stepIndex++ {
 			hopfieldutils.ShuffleList(network.randomGenerator, unitIndices)
-			chunkedIndices := hopfieldutils.ChunkSlice(unitIndices, network.unitsUpdatedPerStep)
-			for _, chunk := range chunkedIndices {
-				for _, unitIndex := range chunk {
-					matrixTargetRow := network.matrix.RowView(unitIndex)
-					state.SetVec(unitIndex, mat.Dot(matrixTargetRow, state))
-				}
-				network.domainStateManager.ActivationFunction(state)
+			for _, unitIndex := range unitIndices {
+				matrixTargetRow := network.matrix.RowView(unitIndex)
+				unitActivity := mat.Dot(matrixTargetRow, state)
+				unitValue := network.domainManager.ActivationFunctionUnit(unitActivity)
+				state.SetVec(unitIndex, unitValue)
 			}
+			network.domainManager.ActivationFunction(state)
 
 			// Collect the current history item if requested
 			if network.allowIntensiveDataCollection || network.StateIsStable(state) {
