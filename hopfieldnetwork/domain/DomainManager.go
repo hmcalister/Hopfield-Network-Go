@@ -6,6 +6,7 @@ import (
 
 type DomainManager interface {
 	ActivationFunction(*mat.VecDense)
+	ActivationFunctionUnit(float64) float64
 	InvertState(*mat.VecDense)
 	UnitEnergy(*mat.Dense, *mat.VecDense, int) float64
 	AllUnitEnergies(*mat.Dense, *mat.VecDense) []float64
