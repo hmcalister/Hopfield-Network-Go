@@ -64,7 +64,6 @@ func getLearningRule(learningRule LearningRuleEnum) LearningRule {
 func hebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedMatrix.Zero()
 
 	for _, state := range states {
 		updatedMatrix.RankOne(updatedMatrix, 1, state, state)
@@ -91,23 +90,21 @@ func bipolarMappedHebbian(network *HopfieldNetwork, states []*mat.VecDense) {
 func delta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedMatrix.Zero()
-
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 
 	// Make a copy of each target state so we can relax these without affecting the originals
 	relaxedStates := make([]*mat.VecDense, len(states))
+
 	for stateIndex := range relaxedStates {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
-		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
+		network.domainManager.ActivationFunction(relaxedStates[stateIndex])
 		network.UpdateState(relaxedStates[stateIndex])
 	}
 
 	for stateIndex := range states {
 		relaxationDifference.SubVec(states[stateIndex], relaxedStates[stateIndex])
-
 		updatedMatrix.RankOne(updatedMatrix, 0.5, relaxationDifference, states[stateIndex])
 	}
 
@@ -132,8 +129,6 @@ func bipolarMappedDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 
 	updatedMatrix := mat.NewDense(network.dimension, network.dimension, nil)
-	updatedMatrix.Zero()
-
 	relaxationDifference := mat.NewVecDense(network.dimension, nil)
 	temperatureCalculationVector := mat.NewVecDense(network.dimension, nil)
 	weightFactor := 1 / (1 + mat.Norm(network.matrix, 2.0))
@@ -144,7 +139,7 @@ func thermalDelta(network *HopfieldNetwork, states []*mat.VecDense) {
 		relaxedStates[stateIndex] = mat.VecDenseCopyOf(states[stateIndex])
 		// We also apply some noise to the state to aide in learning
 		network.learningNoiseMethod(network.randomGenerator, relaxedStates[stateIndex], network.learningNoiseScale)
-		network.domainStateManager.ActivationFunction(relaxedStates[stateIndex])
+		network.domainManager.ActivationFunction(relaxedStates[stateIndex])
 		network.UpdateState(relaxedStates[stateIndex])
 	}
 
