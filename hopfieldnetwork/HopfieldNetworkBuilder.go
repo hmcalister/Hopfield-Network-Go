@@ -250,14 +250,14 @@ func (networkBuilder *HopfieldNetworkBuilder) Build() *HopfieldNetwork {
 		matrix.Zero()
 	}
 
-	domainStateManager := domain.GetDomainManager(networkBuilder.domain)
-	distanceMeasure := distancemeasure.GetManhattanDistanceWithInversion(domainStateManager)
+	domainManager := domain.GetDomainManager(networkBuilder.domain)
+	distanceMeasure := distancemeasure.GetManhattanDistanceWithInversion(domainManager)
 
 	return &HopfieldNetwork{
 		matrix:                         matrix,
 		dimension:                      networkBuilder.dimension,
 		domain:                         networkBuilder.domain,
-		domainStateManager:             domainStateManager,
+		domainManager:                  domainManager,
 		forceSymmetric:                 networkBuilder.forceSymmetric,
 		forceZeroDiagonal:              networkBuilder.forceZeroDiagonal,
 		distanceMeasure:                distanceMeasure,
