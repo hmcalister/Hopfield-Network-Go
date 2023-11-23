@@ -9,11 +9,15 @@ type BipolarDomainManager struct {
 
 func (manager *BipolarDomainManager) ActivationFunction(vector *mat.VecDense) {
 	for n := 0; n < vector.Len(); n++ {
-		if vector.AtVec(n) <= 0.0 {
-			vector.SetVec(n, -1.0)
-		} else {
-			vector.SetVec(n, 1.0)
-		}
+		vector.SetVec(n, manager.ActivationFunctionUnit(vector.AtVec(n)))
+	}
+}
+
+func (manager *BipolarDomainManager) ActivationFunctionUnit(unitActivity float64) float64 {
+	if unitActivity <= 0.0 {
+		return -1.0
+	} else {
+		return 1.0
 	}
 }
 
