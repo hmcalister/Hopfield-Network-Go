@@ -256,8 +256,9 @@ func (network *HopfieldNetwork) LearnStates(states []*mat.VecDense) []*datacolle
 		network.domainManager.ActivationFunction(state)
 	}
 	network.targetStates = append(network.targetStates, states...)
-
-	return network.learningMethod(network, states)
+	learnStateData := network.learningMethod(network, states)
+	network.matrix.Scale(1/network.matrix.Norm(2), network.matrix)
+	return learnStateData
 }
 
 // ------------------------------------------------------------------------------------------------
